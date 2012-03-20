@@ -1,11 +1,12 @@
 package de.uni.trier.infsec.simplevoting;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 
-import de.uni.trier.infsec.crypto.real.CryptoException;
-import de.uni.trier.infsec.crypto.real.RealLibrary;
-import de.uni.trier.infsec.crypto.real.objects.Message;
+import org.bouncycastle.crypto.CryptoException;
+
 import de.uni.trier.infsec.pkenc.ideal.Decryptor;
+import de.uni.trier.infsec.simplevoting.VotingServer.NodeList;
 import de.uni.trier.infsec.untrusted.crypto.PublicKeyRepository;
 
 public class VotingProtocol {
@@ -15,11 +16,9 @@ public class VotingProtocol {
 
 	public static int VOTERS_COUNT = 10;
 
-	private RealLibrary lib = new RealLibrary(1024 / 8, 256 / 8, 128 / 8);
-	
-	private ArrayList<Voter>   voterList 	= new ArrayList<Voter>();
-	private ArrayList<Message> credentials 	= new ArrayList<Message>();
-	private Decryptor serverEnc 			= null;
+	private ArrayList<Voter> voterList 	= new ArrayList<Voter>();
+	private NodeList credentials 		= null;
+	private Decryptor serverEnc 		= null;
 
 	public static void main(String[] args) throws Exception {
 		VotingProtocol protocol = new VotingProtocol();
@@ -31,26 +30,23 @@ public class VotingProtocol {
 		serverEnc = new Decryptor();
 		PublicKeyRepository.registerPublicKey("SERVER", serverEnc.getEncryptor());
 
-		// Generate credentials and keypairs for all users
 		for (int i = 0; i < VOTERS_COUNT; i++) {
 			String identifier = "Voter" + i;
 			
 			Decryptor privKeyVoter = new Decryptor();
 			PublicKeyRepository.registerPublicKey(identifier, privKeyVoter.getEncryptor());
 
-			// Generate credential nonce
-			Message credential = lib.generateNonceMessage();
-			credentials.add(credential);
-
-			// encrypt credential using voters public interface
-			Message credentialEnc = Message.getMessageFromBytes(Message.TAG_DUMMY, PublicKeyRepository.getPublicKey(identifier).encrypt(credential.getBytes()));
-
-			// Voter gets: Random Vote, name, connection, kepair, encrypted
-			// credential, servers public key
+			byte[] credential = generateNonce(128); // TODO: Length of Nonce?
+			if (credentials == null) {
+				credentials = new NodeList(credential, null);
+			} else {				
+				credentials.add(credential);
+			}
 			Votes vote = Votes.values()[(int) (Math.random() * 3) % 3];
-			Message mVote = lib.getMessageFromString(vote.toString());
+			byte[] credentialEnc = PublicKeyRepository.getPublicKey(identifier).encrypt(credential);
+			byte[] mVote = vote.toString().getBytes();
 			
-			Voter voter = new Voter(lib, identifier, privKeyVoter, credentialEnc, PublicKeyRepository.getPublicKey("SERVER"), mVote);
+			Voter voter = new Voter(privKeyVoter, credentialEnc, PublicKeyRepository.getPublicKey("SERVER"), mVote);
 			voterList.add(voter);
 		}
 		System.out.println("STARTING PROTOCOL\n");
@@ -59,12 +55,18 @@ public class VotingProtocol {
 	private void run() throws Exception, InterruptedException, CryptoException {
 		VotingServer server = new VotingServer(serverEnc, credentials);
 
-		// Let all voters vote
 		for (Voter voter : voterList) {
 			voter.vote();
 		}
 		
 		server.collectVotes();
 	}
-
+	
+	// TODO --> All function codes in list!
+	public static byte[] generateNonce(int length) {
+		SecureRandom random = new SecureRandom();
+		byte[] out = new byte[length];
+		random.nextBytes(out);
+		return out;
+	}
 }

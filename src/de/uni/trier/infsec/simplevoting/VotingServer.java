@@ -1,72 +1,119 @@
 package de.uni.trier.infsec.simplevoting;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-
-import de.uni.trier.infsec.crypto.real.RealLibrary;
-import de.uni.trier.infsec.crypto.real.objects.Message;
 import de.uni.trier.infsec.pkenc.ideal.Decryptor;
 import de.uni.trier.infsec.simplevoting.VotingProtocol.Votes;
 import de.uni.trier.infsec.untrusted.network.Network;
 import de.uni.trier.infsec.untrusted.network.NetworkError;
+import de.uni.trier.infsec.utils.MessageTools;
 
 public class VotingServer {
 
-	private ArrayList<Message> credentials = null;
-
 	private Decryptor serverDec = null;
-	private int listenTime = 0;
+	
+	static class NodeMap {
+		byte[] valueA;
+		byte[] valueB;
+		NodeMap next;
+		NodeMap(byte[] vA, byte[] vB , NodeMap n) {
+			valueA = vA; valueB = vB; next = n;
+		}
+		
+		void put(byte[] vA, byte[] vB) {
+			if (valueA == vA) valueB = vB; 
+			else if (next != null) next.put(vA, vB); 
+			else next = new NodeMap(vA, vB, null);
+		}
+		
+		void clear() { valueA = null; valueB = null; if (next != null) next.clear(); next = null;}
+	}
+	
+	static class NodeList {
+		byte[] value;
+		NodeList next;
+		NodeList(byte[] v, NodeList n) {
+			value = v; next = n;
+		}
+		
+		void add(byte[] v) {
+			if (next != null) next.add(v); 
+			else next = new NodeList(v, null);
+		}
+		void clear() { value = null; if (next != null) next.clear(); next = null;}
+	}
+	
+	static class NodeCount {
+		byte[] value;
+		int count;
+		NodeCount next;
+		NodeCount(byte[] v, NodeCount n, int c) {
+			value = v; next = n; count = c;
+		}
+		
+		void inc(byte[] v) {
+			if (value == v) count++; 
+			else if (next != null) next.inc(v); 
+			else next = new NodeCount(v, null, 1);
+		}
+		void clear() { value = null; count = 0; if (next != null) next.clear(); next = null;}
+	}
+	
+	
 
-	private Hashtable<Message, Message> votes 	= new Hashtable<Message, Message>();
-	private ArrayList<Message> ballot 			= new ArrayList<Message>();
-	private Hashtable<Message, Integer> result 	= new Hashtable<Message, Integer>();
+	private NodeMap 	votes 	 	= null;
+	private NodeList 	credentials = null;
+	private NodeList 	ballot 	 	= null;
+	private NodeCount 	result 		= null;
 
-	public VotingServer(Decryptor serverDec, ArrayList<Message> credentials) {
+	public VotingServer(Decryptor serverDec, NodeList credentials) {
 		this.credentials = credentials;
 		this.serverDec = serverDec;
 	}
 
 	public void collectVotes() throws NetworkError {
-		long start = System.currentTimeMillis();
-		long end = System.currentTimeMillis();
-
-		// /////// COLLECTING VOTES /////////
-
-		System.out.println("[SERVER]\tListening for votes: " + listenTime + "ms");
-		while ((end - start) < listenTime) {
-			Message in = Message.getMessageFromBytes(Message.TAG_DUMMY, Network.networkIn());
+		///////// COLLECTING VOTES /////////
+		byte[] in = Network.networkIn();
+		while (in != null && in.length != 0) {
 			if (in != null) {
 				System.out.println("[SERVER]\tReceived vote:\t" + in.toString());
-				ballot.add(in);
+				if (ballot == null) {
+					ballot = new NodeList(in, null);
+				} else {					
+					ballot.add(in);
+				}
 			}
-			end = System.currentTimeMillis();
+			in = Network.networkIn();
 		}
-		System.out.println("[SERVER]\tListening time exceeded.");
-
+		
 		decryptVotes();
 		countAndPublish();
 	}
 
 	private void countAndPublish() {
-		// ///////////////////////// COUNTING VOTES ///////////////////////////
-
-		for (Message credential : credentials) { // check for each credential if a vote has been casted
-			Message vote = votes.get(credential);
-
-			if (vote == null) {
+		NodeList credential = credentials;
+		
+		while (credential != null) { // check for each credential if a vote has been casted			
+			byte[] theVote = null;
+			
+			NodeMap voteTmp = votes;
+			while (voteTmp != null) {
+				if (voteTmp.valueA == credential.value) {
+					theVote = voteTmp.valueB;
+				}
+			}
+			
+			if (theVote == null) {
 				System.out.println("[SERVER]\tNo vote for credential\t" + credential.toString());
+				credential = credential.next;
 				continue;
 			}
 			System.out.println("[SERVER]\tCounting vote for credential\t" + credential.toString());
 
-			Integer count = result.get(vote); // Count the vote
-			if (count == null) {
-				count = 1;
+			if (result == null) {
+				result = new NodeCount(theVote, null, 1);
 			} else {
-				count = count + 1;
+				result.inc(theVote);
 			}
-			System.out.println("[SERVER]\tVote for \t" + vote.toString() + "\tnew count is " + count);
-			result.put(vote, count);
+			credential = credential.next;
 		}
 
 		// ///////////////////////// GENERATING RESULTS ////////////////////////////////////
@@ -76,32 +123,32 @@ public class VotingServer {
 		System.out.println("*******************************************************\n");
 
 		for (Votes v : Votes.values()) { // Get the results for all possible votes
-			Message vMessage = Message.getMessageFromString(Message.TAG_DUMMY, v.toString());
-			System.out.println("[RESULT]\t" + v.toString() + " has " + (result.get(vMessage) == null ? "no" : result.get(vMessage)) + " votes");
+			NodeCount tmp = result;
+			int c = 0;
+			while (tmp != null) {
+				if (tmp.value == v.toString().getBytes()) {
+					c = tmp.count;
+				}
+			}
+			System.out.println("[RESULT]\t" + v.toString() + " has " + (c == 0 ? "no" : c + " votes"));
 		}
 		System.exit(0);
 	}
 
 	private void decryptVotes() {
-		// ///////////////////////// DECRYPTING VOTES ////////////////////////////////////
-
 		votes.clear();
-		for (Message m : ballot) {
+		NodeList m = ballot;
+		while (m != null) {
 			try {
-				Message mDec = Message.getMessageFromBytes(Message.TAG_DUMMY, serverDec.decrypt(m.getBytes())); // Decrypt the vote using servers private key
-				Message credential = RealLibrary.project0(mDec); // part1 is the credential
-				Message vote = RealLibrary.project1(mDec); // part2 the choice
-				
-				System.out.println("[SERVER]\tCredential " + credential + " voted " + vote);
-
-				if (votes.get(credential) != null) { // If two votes for one credential have been casted, the LAST one is used
-					System.out.println("[SERVER]\tDuplicate vote for " + credential + " new vote: " + vote);
-				}
+				byte[] mDec 		= serverDec.decrypt(m.value); // Decrypt the vote using servers private key
+				byte[] credential 	= MessageTools.project0(mDec); // part1 is the credential
+				byte[] vote 		= MessageTools.project1(mDec); // part2 the choice
 				votes.put(credential, vote);
 			} catch (Exception ce) {
 				// An invalid vote has been casted
 				System.out.println("[SERVER]\tInvalid vote has been casted. " + m.toString());
 			}
+			m = m.next;
 		}
 	}
 }

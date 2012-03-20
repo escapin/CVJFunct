@@ -1,5 +1,6 @@
 package de.uni.trier.infsec.utils;
 
+
 public class MessageTools {
 	
 	public static byte[] copyOf(byte[] message) {
@@ -25,4 +26,77 @@ public class MessageTools {
 		}
 		return zeroVector;
 	}	
+	
+	public static byte[] concatenate(byte[] m1, byte[] m2) {
+		// Concatenated Message --> byte[0] = Type, byte[1-4] = BigInteger,
+		// Length of Message 1
+		byte[] out = new byte[m1.length + m2.length + 4];
+
+		// 4 bytes for length
+		byte[] len = intToByteArray(m1.length);
+
+		// After all, copy all bytes to output array
+		System.arraycopy(len, 0, out, 0, 4);
+		System.arraycopy(m1, 0, out, 4, m1.length);
+		System.arraycopy(m2, 0, out, 4 + m1.length, m2.length);
+
+		return out;
+	}
+	/**
+	 * Projection of the message to its two parts (part 1 = position 0, part 2 = position 1) Structure of the expected data: 1 Byte Identifier [0x01], 4 Byte
+	 * length of m1, m1, m2
+	 */
+
+	private static byte[] project(byte[] message, int position) {
+		// integer, Length of Message 1
+		byte[] length = new byte[4];
+		System.arraycopy(message, 0, length, 0, 4);
+		int len = byteArrayToInt(length);
+
+		if (position == 0) {
+			byte[] m1 = new byte[len];
+			System.arraycopy(message, 4, m1, 0, len);
+			return m1;
+		} else if (position == 1) {
+			byte[] m2 = new byte[message.length - len - 4];
+			System.arraycopy(message, 4 + len, m2, 0, message.length - len - 4);
+			return m2;
+		}
+		return null;
+	}
+
+	public static byte[] project0(byte[] in) {
+		return project(in, 0);
+	}
+
+	public static byte[] project1(byte[] in) {
+		return project(in, 1);
+	}
+
+	public static byte[] hexStringToByteArray(String s) {
+	    int len = s.length();
+	    byte[] data = new byte[len / 2];
+	    for (int i = 0; i < len; i += 2) {
+	        data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
+	    }
+	    return data;
+	}
+	
+	public static final int byteArrayToInt(byte [] b) {
+        return (b[0] << 24)
+                + ((b[1] & 0xFF) << 16)
+                + ((b[2] & 0xFF) << 8)
+                + (b[3] & 0xFF);
+	}
+	
+
+	public static final byte[] intToByteArray(int value) {
+	        return new byte[] {
+	                (byte)(value >>> 24),
+	                (byte)(value >>> 16),
+	                (byte)(value >>> 8),
+	                (byte)value};
+	}
+
+	
 }
