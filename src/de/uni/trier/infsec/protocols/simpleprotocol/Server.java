@@ -1,6 +1,6 @@
-package de.uni.trier.infsec.simpleprotocol;
+package de.uni.trier.infsec.protocols.simpleprotocol;
 
-import de.uni.trier.infsec.pkenc.ideal.Decryptor;
+import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
 
 final public class Server {
 	private Decryptor BobPKE;

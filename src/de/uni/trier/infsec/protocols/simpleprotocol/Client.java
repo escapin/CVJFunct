@@ -1,9 +1,9 @@
-package de.uni.trier.infsec.simpleprotocol;
+package de.uni.trier.infsec.protocols.simpleprotocol;
 
-import de.uni.trier.infsec.pkenc.ideal.Encryptor;
+import de.uni.trier.infsec.environment.network.Network;
+import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
 
-import de.uni.trier.infsec.untrusted.network.Network;
-import de.uni.trier.infsec.untrusted.network.NetworkError;
 
 
 final public class Client {

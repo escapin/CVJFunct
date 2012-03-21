@@ -1,9 +1,9 @@
-package de.uni.trier.infsec.simplevoting;
+package de.uni.trier.infsec.protocols.simplevoting;
 
-import de.uni.trier.infsec.pkenc.ideal.Decryptor;
-import de.uni.trier.infsec.simplevoting.VotingProtocol.Votes;
-import de.uni.trier.infsec.untrusted.network.Network;
-import de.uni.trier.infsec.untrusted.network.NetworkError;
+import de.uni.trier.infsec.environment.network.Network;
+import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
+import de.uni.trier.infsec.protocols.simplevoting.VotingProtocol.Votes;
 import de.uni.trier.infsec.utils.MessageTools;
 
 public class VotingServer {

@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.untrusted.network;
+package de.uni.trier.infsec.environment.network;
 
 public class NetworkError extends Exception {	
 }

@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.pkenc.ideal;
+package de.uni.trier.infsec.functionalities.pkenc.ideal;
 
 import de.uni.trier.infsec.utils.MessageTools;
 

@@ -1,6 +1,6 @@
-package de.uni.trier.infsec.pkenc.ideal;
+package de.uni.trier.infsec.functionalities.pkenc.ideal;
 
-import de.uni.trier.infsec.untrusted.crypto.CryptoLib;
+import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**

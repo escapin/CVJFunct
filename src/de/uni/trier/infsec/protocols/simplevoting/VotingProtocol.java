@@ -1,13 +1,13 @@
-package de.uni.trier.infsec.simplevoting;
+package de.uni.trier.infsec.protocols.simplevoting;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
 import org.bouncycastle.crypto.CryptoException;
 
-import de.uni.trier.infsec.pkenc.ideal.Decryptor;
-import de.uni.trier.infsec.simplevoting.VotingServer.NodeList;
-import de.uni.trier.infsec.untrusted.crypto.PublicKeyRepository;
+import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
+import de.uni.trier.infsec.lib.crypto.PublicKeyRepository;
+import de.uni.trier.infsec.protocols.simplevoting.VotingServer.NodeList;
 
 public class VotingProtocol {
 	public enum Votes {

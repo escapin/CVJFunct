@@ -1,6 +1,6 @@
-package de.uni.trier.infsec.untrusted.crypto;
+package de.uni.trier.infsec.environment.crypto;
 
-import de.uni.trier.infsec.untrusted.environment.Environment;
+import de.uni.trier.infsec.environment.Environment;
 
 public class CryptoLib {
 

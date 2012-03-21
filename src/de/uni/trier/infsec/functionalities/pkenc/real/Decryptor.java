@@ -1,7 +1,7 @@
-package de.uni.trier.infsec.pkenc.real;
+package de.uni.trier.infsec.functionalities.pkenc.real;
 
-import de.uni.trier.infsec.untrusted.crypto.Encryption;
-import de.uni.trier.infsec.untrusted.crypto.KeyPair;
+import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.lib.crypto.Encryption;
 
 /**
  * Real functionality for public-key encryption: Decryptor

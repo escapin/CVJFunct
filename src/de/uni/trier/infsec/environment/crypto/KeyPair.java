@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.untrusted.crypto;
+package de.uni.trier.infsec.environment.crypto;
 
 public class KeyPair {
 	public byte[] publicKey;

@@ -1,6 +1,6 @@
-package de.uni.trier.infsec.untrusted.network;
+package de.uni.trier.infsec.environment.network;
 
-import de.uni.trier.infsec.untrusted.environment.Environment;
+import de.uni.trier.infsec.environment.Environment;
 
 
 public class Network {

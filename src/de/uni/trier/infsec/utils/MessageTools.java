@@ -42,15 +42,15 @@ public class MessageTools {
 
 		return out;
 	}
+
 	/**
 	 * Projection of the message to its two parts (part 1 = position 0, part 2 = position 1) Structure of the expected data: 1 Byte Identifier [0x01], 4 Byte
 	 * length of m1, m1, m2
 	 */
-
 	private static byte[] project(byte[] message, int position) {
 		// integer, Length of Message 1
 		byte[] length = new byte[4];
-		System.arraycopy(message, 0, length, 0, 4);
+		System.arraycopy(message, 0, length, 0, 4); //TODO [tt] Can we avoid the system call here? (the same below)
 		int len = byteArrayToInt(length);
 
 		if (position == 0) {
@@ -73,6 +73,7 @@ public class MessageTools {
 		return project(in, 1);
 	}
 
+	/*
 	public static byte[] hexStringToByteArray(String s) {
 	    int len = s.length();
 	    byte[] data = new byte[len / 2];
@@ -81,6 +82,7 @@ public class MessageTools {
 	    }
 	    return data;
 	}
+	*/
 	
 	public static final int byteArrayToInt(byte [] b) {
         return (b[0] << 24)
@@ -97,6 +99,4 @@ public class MessageTools {
 	                (byte)(value >>> 8),
 	                (byte)value};
 	}
-
-	
 }

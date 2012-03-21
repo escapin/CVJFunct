@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.untrusted.environment;
+package de.uni.trier.infsec.environment;
 
 class Node {
 	int value;

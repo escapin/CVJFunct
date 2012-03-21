@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.untrusted.crypto;
+package de.uni.trier.infsec.lib.crypto;
 
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
@@ -10,6 +10,8 @@ import java.security.spec.X509EncodedKeySpec;
 import javax.crypto.Cipher;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import de.uni.trier.infsec.environment.crypto.KeyPair;
 
 public class Encryption {
 

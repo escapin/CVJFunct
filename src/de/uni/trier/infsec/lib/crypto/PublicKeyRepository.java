@@ -1,8 +1,8 @@
-package de.uni.trier.infsec.untrusted.crypto;
+package de.uni.trier.infsec.lib.crypto;
 
 import java.util.HashMap;
 
-import de.uni.trier.infsec.pkenc.ideal.Encryptor;
+import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
 
 /**
  * 
