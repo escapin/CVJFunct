@@ -12,21 +12,48 @@ import de.uni.trier.infsec.environment.network.NetworkError;
 // Do we prefer some kind of state? (Add connect-String as parameter or make it stateful and add a connect-Method?)
 public class Network {
 	
-	public static final int PORT = 4242;
-	public static final String SERVER = "127.0.0.1";
+	public static final int DEFAULT_SOCKET = 4242;
+	public static final String DEFAULT_SERVER = "127.0.0.1";
+	
+	private static Socket socket = null;
+	
+	public static void connectToServer(String server, int port) {
+		try {
+			socket = new Socket(server, port);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
+	}
+		
+	public static void waitForClient(int port) {
+		try {
+			ServerSocket ss = new ServerSocket(port);
+			socket = ss.accept();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void disconnect() {
+		try {
+			if (socket != null) socket.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 	// NetworkOut is actually stateless - so connect, send a message and disconnect.
 	public static void networkOut(byte[] outEnc) throws NetworkError {
-		Socket s = null;
 		try {
-			s = new Socket(SERVER, PORT);
-			s.getOutputStream().write(outEnc.length);
-			s.getOutputStream().write(outEnc);
+			if (socket != null) 
+				return;
+			socket.getOutputStream().write(outEnc.length);
+			socket.getOutputStream().write(outEnc);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
 			try {
-				if (s != null) s.close();
+				if (socket != null) socket.close();
 			} catch (Exception e) {} // swallow exception
 		}
 	}
@@ -35,20 +62,16 @@ public class Network {
 	// Actually networkIn calls blocking read on Socket. 
 	// If we want to run it on one machine, we have to care for threading...
 	public static byte[] networkIn() throws NetworkError {
+		if (socket != null) 
+			return null;
+		
 		byte[] buffer = null;
-		Socket s = null;
 		try {
-			ServerSocket server = new ServerSocket(PORT);
-			s = server.accept();
-			int length = s.getInputStream().read();
+			int length = socket.getInputStream().read();
 			buffer = new byte[length];
-			s.getInputStream().read(buffer);
+			socket.getInputStream().read(buffer);
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				if (s != null) s.close();
-			} catch (Exception e) {} // swallow exception
 		}
 		return buffer;
 	}

@@ -3,6 +3,7 @@ package de.uni.trier.infsec.lib.crypto;
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Security;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -26,7 +27,7 @@ public class Encryption {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
 			//for private keys use PKCS8EncodedKeySpec; for public keys use X509EncodedKeySpec
 			X509EncodedKeySpec ks = new X509EncodedKeySpec(publicKey);
-			PrivateKey pk = kf.generatePrivate(ks);
+			PublicKey pk = kf.generatePublic(ks);
 
 			Cipher c = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC");
 			c.init(Cipher.ENCRYPT_MODE, pk);
