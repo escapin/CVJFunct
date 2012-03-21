@@ -48,18 +48,16 @@ public class MessageTools {
 	 * length of m1, m1, m2
 	 */
 	private static byte[] project(byte[] message, int position) {
-		// integer, Length of Message 1
 		byte[] length = new byte[4];
-		System.arraycopy(message, 0, length, 0, 4); //TODO [tt] Can we avoid the system call here? (the same below)
+		for (int i = 0; i < 4; i ++) message[i] = length[i];
 		int len = byteArrayToInt(length);
-
 		if (position == 0) {
 			byte[] m1 = new byte[len];
-			System.arraycopy(message, 4, m1, 0, len);
+			for (int i = 0; i < len; i ++) message[i + 4] = m1[i];
 			return m1;
 		} else if (position == 1) {
 			byte[] m2 = new byte[message.length - len - 4];
-			System.arraycopy(message, 4 + len, m2, 0, message.length - len - 4);
+			for (int i = 0; i < message.length - len - 4; i ++) message[i + 4 + len] = m2[i];
 			return m2;
 		}
 		return null;

@@ -62,7 +62,6 @@ public class VotingProtocol {
 		server.collectVotes();
 	}
 	
-	// TODO --> All function codes in list!
 	public static byte[] generateNonce(int length) {
 		SecureRandom random = new SecureRandom();
 		byte[] out = new byte[length];
