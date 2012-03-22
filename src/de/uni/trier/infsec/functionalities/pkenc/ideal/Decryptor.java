@@ -2,7 +2,8 @@ package de.uni.trier.infsec.functionalities.pkenc.ideal;
 
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.utils.MessageTools;
+import static de.uni.trier.infsec.utils.MessageTools.copyOf;
+
 
 /**
  * Ideal functionality for public-key encryption: Decryptor
@@ -15,8 +16,8 @@ public final class Decryptor {
 
 	public Decryptor() {
 		KeyPair keypair = CryptoLib.generateKeyPair();
-		publKey = MessageTools.copyOf(keypair.publicKey);  
-		privKey = MessageTools.copyOf(keypair.privateKey); 
+		publKey = copyOf(keypair.publicKey);  
+		privKey = copyOf(keypair.privateKey); 
 	}
 
     public Encryptor getEncryptor() {
@@ -24,11 +25,11 @@ public final class Decryptor {
     }
 
 	public byte[] decrypt(byte[] message) {
-		byte[] messageCopy = MessageTools.copyOf(message); 
+		byte[] messageCopy = copyOf(message); 
 		if (!log.contains(messageCopy)) {
-			return MessageTools.copyOf( CryptoLib.decrypt(MessageTools.copyOf(privKey), messageCopy) );
+			return copyOf( CryptoLib.pke_decrypt(copyOf(privKey), messageCopy) );
 		} else {
-			return MessageTools.copyOf( log.lookup(messageCopy) );
+			return copyOf( log.lookup(messageCopy) );
 		}
 	}
 }

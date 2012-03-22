@@ -1,7 +1,8 @@
 package de.uni.trier.infsec.functionalities.pkenc.ideal;
 
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
-import de.uni.trier.infsec.utils.MessageTools;
+import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
+import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 
 /**
  * Ideal functionality for public-key encryption: Encryptor
@@ -17,16 +18,15 @@ public final class Encryptor {
 	}
 		
 	public byte[] getPublicKey() {
-		return MessageTools.copyOf(publKey);
+		return copyOf(publKey);
 	}
 	
 	public byte[] encrypt(byte[] message) {
-		byte[] messageCopy = MessageTools.copyOf(message);
-		byte[] randomCipher = MessageTools.copyOf(CryptoLib.encrypt(MessageTools.getZeroMessage(1), 
-																	MessageTools.copyOf(publKey))); // Note the fixed size (1) of a message
+		byte[] messageCopy = copyOf(message);
+		byte[] randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), 
+													   copyOf(publKey)));
 		if( randomCipher == null ) return null;
 		log.add(messageCopy, randomCipher);
-		return MessageTools.copyOf(randomCipher);
+		return copyOf(randomCipher);
 	}
-	
 }

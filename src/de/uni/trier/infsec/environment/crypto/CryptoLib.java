@@ -4,7 +4,7 @@ import de.uni.trier.infsec.environment.Environment;
 
 public class CryptoLib {
 
-	public static byte[] encrypt(byte[] in, byte[] publKey) {
+	public static byte[] pke_encrypt(byte[] in, byte[] publKey) {
 		// input
 		Environment.untrustedOuput(0x66); // Function code for encryption
 		Environment.untrustedOuput(in.length);
@@ -28,7 +28,7 @@ public class CryptoLib {
 		return returnval;
 	}
 
-	public static byte[] decrypt(byte[] message, byte[] privKey) {
+	public static byte[] pke_decrypt(byte[] message, byte[] privKey) {
 		// input
 		Environment.untrustedOuput(0x77); // Function code for decryption
 		Environment.untrustedOuput(message.length);

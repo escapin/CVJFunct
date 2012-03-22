@@ -9,21 +9,21 @@ import de.uni.trier.infsec.utils.MessageTools;
 public class Voter {
 	protected Decryptor  voterDec    = null;
 	protected Encryptor  serverEnc   = null;
-	protected byte[] 	 credentials = null;
+	protected byte[] 	 credential = null;
 	protected byte[] 	 myVote 	 = null;
 
-	public Voter(Decryptor voterDec, byte[] credentials, Encryptor serverEnc, byte[] mVote) {
+	public Voter(Decryptor voterDec, byte[] credential, Encryptor serverEnc, byte[] mVote) {
 		this.voterDec = voterDec;
-		this.credentials = credentials;
+		this.credential = credential;
 		this.serverEnc = serverEnc;
 		this.myVote = mVote;
 	}
 
 	public void vote() throws NetworkError {
 		// the encrypted credential gets decrypted
-		byte[] credentialsDec = voterDec.decrypt(credentials); 				
+		byte[] credentialDec = voterDec.decrypt(credential); 				
 		// the credential and vote are concatenated...
-		byte[] out = MessageTools.concatenate(credentialsDec, myVote);  
+		byte[] out = MessageTools.concatenate(credentialDec, myVote);  
 		// ... and encrypted with the public key of the voting server
 		byte[] outEnc = serverEnc.encrypt(out);		 		
 		// This ciphertext is sent out (over an untrusted connection)
