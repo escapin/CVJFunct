@@ -141,8 +141,8 @@ public class VotingServer {
 		while (m != null) {
 			try {
 				byte[] mDec 		= serverDec.decrypt(m.value); // Decrypt the vote using servers private key
-				byte[] credential 	= MessageTools.project0(mDec); // part1 is the credential
-				byte[] vote 		= MessageTools.project1(mDec); // part2 the choice
+				byte[] credential 	= MessageTools.first(mDec); // part1 is the credential
+				byte[] vote 		= MessageTools.second(mDec); // part2 the choice
 				votes.put(credential, vote);
 			} catch (Exception ce) {
 				// An invalid vote has been casted

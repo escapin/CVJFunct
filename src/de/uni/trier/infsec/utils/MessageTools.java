@@ -63,11 +63,11 @@ public class MessageTools {
 		return null;
 	}
 
-	public static byte[] project0(byte[] in) {
+	public static byte[] first(byte[] in) {
 		return project(in, 0);
 	}
 
-	public static byte[] project1(byte[] in) {
+	public static byte[] second(byte[] in) {
 		return project(in, 1);
 	}
 

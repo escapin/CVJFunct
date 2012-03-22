@@ -7,11 +7,10 @@ import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
 import de.uni.trier.infsec.utils.MessageTools;
 
 public class Voter {
-	protected Decryptor  voterDec    = null;  // secret  
-	protected Encryptor  serverEnc   = null;  // public
-	protected byte[] 	 credentials = null;  // secret
-	protected byte[] 	 myVote 	 = null;  // secret
-	
+	protected Decryptor  voterDec    = null;
+	protected Encryptor  serverEnc   = null;
+	protected byte[] 	 credentials = null;
+	protected byte[] 	 myVote 	 = null;
 
 	public Voter(Decryptor voterDec, byte[] credentials, Encryptor serverEnc, byte[] mVote) {
 		this.voterDec = voterDec;
