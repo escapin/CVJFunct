@@ -12,25 +12,28 @@ import de.uni.trier.infsec.environment.network.NetworkError;
 // Do we prefer some kind of state? (Add connect-String as parameter or make it stateful and add a connect-Method?)
 public class Network {
 	
-	public static final int DEFAULT_SOCKET = 4242;
+	public static final int DEFAULT_PORT = 4242;
 	public static final String DEFAULT_SERVER = "127.0.0.1";
 	
 	private static Socket socket = null;
 	
-	public static void connectToServer(String server, int port) {
+	public static boolean connectToServer(String server, int port) {
 		try {
 			socket = new Socket(server, port);
+			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		}	
 	}
 		
-	public static void waitForClient(int port) {
+	public static boolean waitForClient(int port) {
 		try {
 			ServerSocket ss = new ServerSocket(port);
 			socket = ss.accept();
+			return true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			return false;
 		}
 	}
 	
@@ -45,16 +48,12 @@ public class Network {
 	// NetworkOut is actually stateless - so connect, send a message and disconnect.
 	public static void networkOut(byte[] outEnc) throws NetworkError {
 		try {
-			if (socket != null) 
+			if (socket == null) 
 				return;
 			socket.getOutputStream().write(outEnc.length);
 			socket.getOutputStream().write(outEnc);
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				if (socket != null) socket.close();
-			} catch (Exception e) {} // swallow exception
 		}
 	}
 
@@ -62,7 +61,7 @@ public class Network {
 	// Actually networkIn calls blocking read on Socket. 
 	// If we want to run it on one machine, we have to care for threading...
 	public static byte[] networkIn() throws NetworkError {
-		if (socket != null) 
+		if (socket == null) 
 			return null;
 		
 		byte[] buffer = null;
