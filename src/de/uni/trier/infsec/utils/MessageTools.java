@@ -35,10 +35,11 @@ public class MessageTools {
 		// 4 bytes for length
 		byte[] len = intToByteArray(m1.length);
 
-		// After all, copy all bytes to output array
-		System.arraycopy(len, 0, out, 0, 4);
-		System.arraycopy(m1, 0, out, 4, m1.length);
-		System.arraycopy(m2, 0, out, 4 + m1.length, m2.length);
+		// copy all bytes to output array
+		int j = 0;
+		for( int i=0; i<len.length; ++i ) out[j++] = len[i];
+		for( int i=0; i<m1.length;  ++i ) out[j++] = m1[i];
+		for( int i=0; i<m2.length;  ++i ) out[j++] = m2[i];
 
 		return out;
 	}
