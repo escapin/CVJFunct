@@ -5,8 +5,7 @@ import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
 // Because we do not have signatues yet, the server itself generates credentials .
 //
 // Class VotingServer should use this class (VotingServerCore) and glue it to the 
-// networking. VotingServer should take messages from the network, 
-// decide 
+// networking. 
 //
 public class VotingServerCore {
 
@@ -27,7 +26,7 @@ public class VotingServerCore {
 	 * the public key of a voter), if it is not generated yet.
 	 * The method returns an encrypted credential 
 	 */
-	public byte[] registration( byte[] voter ) {
+	public byte[] getCredential( byte[] voter ) {
 		// - check whether voter is in the list votersPK
 		// - check whether a credential for this voter has not been given yet
 		// - if not, generate a new credential, store it somewhere, encrypt it and return
