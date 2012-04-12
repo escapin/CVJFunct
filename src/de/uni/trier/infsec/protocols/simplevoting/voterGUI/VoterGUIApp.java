@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.lib.gui;
+package de.uni.trier.infsec.protocols.simplevoting.voterGUI;
 
 import org.apache.pivot.beans.BXMLSerializer;
 import org.apache.pivot.collections.Map;
