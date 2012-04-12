@@ -12,11 +12,11 @@ public class Voter {
 	protected byte[] 	 credential = null;
 	protected byte[] 	 myVote 	 = null;
 
-	public Voter(Decryptor voterDec, byte[] credential, Encryptor serverEnc, byte[] mVote) {
+	public Voter(Decryptor voterDec, byte[] credential, Encryptor serverEnc, byte vote) {
 		this.voterDec = voterDec;
 		this.credential = credential;
 		this.serverEnc = serverEnc;
-		this.myVote = mVote;
+		this.myVote = new byte[] {vote};
 	}
 
 	public void vote() throws NetworkError {
