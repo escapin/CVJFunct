@@ -27,7 +27,8 @@ public class Voter {
 		// ... and encrypted with the public key of the voting server
 		byte[] outEnc = serverEnc.encrypt(out);		 		
 		// This ciphertext is sent out (over an untrusted connection)
-		Network.networkOut(outEnc);											
+		
+		Network.networkOut(outEnc); // TODO: Change to real network for "production" system											
 	}
 	
 }

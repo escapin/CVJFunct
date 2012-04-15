@@ -20,15 +20,18 @@ import org.apache.pivot.wtk.Window;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
 import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
+import de.uni.trier.infsec.lib.network.Network;
 import de.uni.trier.infsec.protocols.simplevoting.Voter;
 import de.uni.trier.infsec.protocols.simplevoting.VotingProtocol.Votes;
 
 public class VotingWindow extends Window implements Bindable,
 		ButtonPressListener, ListViewSelectionListener {
 
-	PushButton button = null;
+	PushButton btnConnect = null;
+	PushButton btnSubmit = null;
 	ListView list = null;
 	Label vote = null;
+	Label status = null;
 	TextInput pubKey = null;
 	TextInput privKey = null;
 	TextInput credent = null;
@@ -36,10 +39,14 @@ public class VotingWindow extends Window implements Bindable,
 	@Override
 	public void initialize(Map<String, Object> namespace, URL location,
 			Resources resources) {
-		button = (PushButton) namespace.get("pushButton");
-		button.getButtonPressListeners().add(this);
+		btnConnect = (PushButton) namespace.get("btnConnect");
+		btnConnect.getButtonPressListeners().add(this);
+		
+		btnSubmit = (PushButton) namespace.get("btnSubmit");
+		btnSubmit.getButtonPressListeners().add(this);
 
 		vote = (Label) namespace.get("currentVote");
+		status = (Label) namespace.get("status");
 
 		pubKey = (TextInput) namespace.get("publickey");
 		privKey = (TextInput) namespace.get("privatekey");
@@ -53,24 +60,33 @@ public class VotingWindow extends Window implements Bindable,
 	@Override
 	public void buttonPressed(Button button) {
 		
-		byte[] publicKey = hexStringToByteArray(pubKey.getText());
-		byte[] privateKey = hexStringToByteArray(privKey.getText());
-		byte[] credential = hexStringToByteArray(credent.getText());
-		byte[] vote = list.getSelectedItem().toString().getBytes();
-		
-		Decryptor d = new Decryptor();
-		Encryptor e = d.getEncryptor();
-		// TODO: Decryptor.setPrivateKey etc
-		Encryptor se = new Decryptor().getEncryptor();
-		
-		
-		Voter voter = new Voter(d, credential, se, vote);
-		try {
-			voter.vote();
-		} catch (NetworkError e1) {
-			e1.printStackTrace();
+		if (button.equals(btnConnect)) {
+			status.setText("Connecting");
+			if (Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PORT)) {				
+				status.setText("Connected to server");
+			} else {
+				status.setText("Could not connect to server");
+			}
+		} else if (button.equals(btnSubmit)) {
+			// TODO How to handle key and credential distribution? Enter manually? Ask server for credential by button?
+			byte[] publicKey = hexStringToByteArray(pubKey.getText());
+			byte[] privateKey = hexStringToByteArray(privKey.getText());
+			byte[] credential = hexStringToByteArray(credent.getText());
+			byte vote = list.getSelectedItem().toString().getBytes()[0];
+			
+			Decryptor d = new Decryptor();
+			Encryptor e = d.getEncryptor();
+			// TODO: Decryptor.setPrivateKey etc
+			Encryptor se = new Decryptor().getEncryptor();
+			
+			
+			Voter voter = new Voter(d, credential, se, vote);
+			try {
+				voter.vote();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 		}
-		
 	}
 
 	public static byte[] hexStringToByteArray(String s) {

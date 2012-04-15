@@ -1,6 +1,6 @@
 <evoting:VotingWindow title="eVoting" maximized="true"
 	xmlns:wtkx="http://pivot.apache.org/wtkx" xmlns="org.apache.pivot.wtk"
-	xmlns:bxml="http://pivot.apache.org/bxml" xmlns:evoting="de.uni.trier.infsec.lib.gui">
+	xmlns:bxml="http://pivot.apache.org/bxml" xmlns:evoting="de.uni.trier.infsec.protocols.simplevoting.voterGUI">
 	<content>
 		<BoxPane orientation="vertical" styles="{padding:6, spacing:8, fill:true}">
 			<BoxPane orientation="horizontal" styles="{padding:6, spacing:8, fill:true}">
@@ -25,7 +25,10 @@
 				</BoxPane>
 			</BoxPane>
 			<BoxPane orientation="vertical" styles="{padding:6, spacing:8, fill:true}">
-				<PushButton bxml:id="pushButton" buttonData="Submit to Server"/>
+				<PushButton bxml:id="btnConnect" buttonData="Connect to Server"/>
+				<PushButton bxml:id="btnSubmit" buttonData="Submit to Server"/>
+				<Label text="Status:" styles="{font:'Arial 20', color:'#ff0000', horizontalAlignment:'left', verticalAlignment:'center'}" />
+				<Label bxml:id="status" text="" styles="{font:'Arial 20', color:'#ff0000', horizontalAlignment:'left', verticalAlignment:'center'}" />
 			</BoxPane>
 		</BoxPane>
 	</content>

@@ -8,14 +8,13 @@ import de.uni.trier.infsec.environment.network.NetworkError;
 
 // [tt] Should have the same interface as environment.network.Network, but provide a "real" networking.
 // (perhaps interface needs to be extended)
-// TODO [AK] This very simple implementation is stateless, so it can be used by a single call... 
-// Do we prefer some kind of state? (Add connect-String as parameter or make it stateful and add a connect-Method?)
 public class Network {
 	
 	public static final int DEFAULT_PORT = 4242;
 	public static final String DEFAULT_SERVER = "127.0.0.1";
 	
 	private static Socket socket = null;
+	private static ServerSocket ss = null;
 	
 	public static boolean connectToServer(String server, int port) {
 		try {
@@ -28,8 +27,14 @@ public class Network {
 	}
 		
 	public static boolean waitForClient(int port) {
+		if (ss == null) {
+			try {
+				ss = new ServerSocket(port);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		try {
-			ServerSocket ss = new ServerSocket(port);
 			socket = ss.accept();
 			return true;
 		} catch (IOException e) {
@@ -40,6 +45,7 @@ public class Network {
 	public static void disconnect() {
 		try {
 			if (socket != null) socket.close();
+			socket = null;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
