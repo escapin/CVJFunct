@@ -8,8 +8,8 @@ import de.uni.trier.infsec.lib.crypto.Encryption;
  */
 public final class Decryptor {
 	
-	private byte[] privKey = null; 
 	private byte[] publKey = null;
+	private byte[] privKey = null; 
 
 	public Decryptor() {
 		KeyPair keypair = Encryption.generateKeyPair();
@@ -24,4 +24,20 @@ public final class Decryptor {
 	public byte[] decrypt(byte[] message) {
 		return Encryption.decrypt(privKey, message);
 	}
+	
+	// methods not present in the ideal functionality:
+	
+	public Decryptor(byte[] publKey, byte[] privKey) {
+		this.publKey = publKey;
+		this.privKey = privKey;
+	}
+	
+	public byte[] pulicKey() {
+		return publKey;
+	}
+	
+	public byte[] privateKey() {
+		return privKey;
+	}
+		
 }

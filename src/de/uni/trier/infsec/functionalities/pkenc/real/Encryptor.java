@@ -9,7 +9,8 @@ public final class Encryptor {
 
 	private byte[] publKey = null;
 	
-	Encryptor(byte[] publicKey) { 
+	// Note that this constructor is not public in the ideal functionality. 
+	public Encryptor(byte[] publicKey) { 
 		publKey = publicKey;
 	}
 		
