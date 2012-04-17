@@ -23,7 +23,12 @@ public class VotingServerCore {
 	 * The server is initialized with his decryptor and the list of (public keys of) 
 	 * eligible voters.
 	 */
+	// TODO [tt]: lets change it to:
+	// public VotingServerCore( Encryptor[] votersEnc, Decryptor serverDecr ) 
 	public VotingServerCore( byte[][] votersPK, Decryptor serverDecr ) {
+		// TODO [tt]: At this point we know the number of voters (votersPK.length), 
+		// so we can allocate the remaining arrays once and for all (we do not need to 
+		// realocate them later).
 		this.votersPK = votersPK;
 		this.serverDecr = serverDecr;
 	}
@@ -50,10 +55,15 @@ public class VotingServerCore {
 			} else {
 				byte[] credential = null; // createNonce(); 
 				// TODO: Nonce generation -- where to put and how to generate? (length?)
+				// TODO [tt] Add a method that (for now) generates consecutive integers encoded as, 
+				// say, 16-byte byte-strings. Later we will switch to random nonces.    
 				
 				voterCredentials[i] = credential;
 				Encryptor voterEnc = null; // new Encryptor(null, voterCredentials[i]); 
-				// TODO: Visibility of Encryptor has to be public --> Need to generate Encryptor from Bytes AND set key
+				// TODO [tt] Visibility of Encryptor has to be public --> Need to generate Encryptor from Bytes AND set key
+				// TODO [tt] Lets change the constructor (see above). Yes we need to be able to construct encryptors from 
+				// byte-strings, but it seems that we can do it only for the real functionality, so this will 
+				// be done at the higher, application level (not in this class, which will be analyzed)
 				
 				byte[] credentialEnc = voterEnc.encrypt(credential);
 				return credentialEnc;
@@ -67,6 +77,8 @@ public class VotingServerCore {
 	 * of a voter who has not voted yet) collects it
 	 */
 	public void collectBallot( byte[] ballot ) {
+		// TODO [tt] It seems that the server accpets many ballots from the same voter.
+		// There should be some policy for revoting (for example, the first vote matters)
 		byte[] ballotDec = serverDecr.decrypt(ballot); // Decrypt the ballot using servers private key
 		byte[] credential 	= MessageTools.first(ballotDec); // part1 is the credential
 		byte[] vote 		= MessageTools.second(ballotDec); // part2 is the vote
@@ -100,7 +112,8 @@ public class VotingServerCore {
 			}
 		}
 		for (int i = 0; i < resultVotes.length; i++) {
-			// TODO: Format --> Specification needed			
+			// TODO: Format --> Specification needed
+			// TODO [tt] List of pairs  (choice, number of votes) however encoded
 		}
 		
 		return out;
@@ -113,7 +126,7 @@ public class VotingServerCore {
 	/**
 	 *	Helper to enlarge the Array which stores the credentials. Used to avoid usage of Lists 
 	 */
-	private byte[][] enlargeArray(byte[][] theArray, int i) {
+	private static byte[][] enlargeArray(byte[][] theArray, int i) {
 		if (theArray.length > i) return theArray;
 		
 		byte[][] newArray = new byte[i+1][theArray[0].length];
@@ -122,11 +135,14 @@ public class VotingServerCore {
 		}
 		return newArray;
 	}
+	
+	// TODO [tt] This kind of methods can be moved to utils package, if the methods 
+	// seem general enough
 
 	/**
 	 *	Checks two Arrays for equality 
 	 */
-	private boolean arrayEqual(byte[] voter, byte[] tmpVoter) {
+	private static boolean arrayEqual(byte[] voter, byte[] tmpVoter) {
 		if (voter.length != tmpVoter.length) return false;
 		for (int i = 0; i < voter.length; i++) {
 			if (voter[i] != tmpVoter[i]) return false;
