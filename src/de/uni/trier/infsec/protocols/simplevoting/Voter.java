@@ -1,25 +1,31 @@
 package de.uni.trier.infsec.protocols.simplevoting;
 
-import de.uni.trier.infsec.environment.network.Network;
-import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
 import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
 import de.uni.trier.infsec.utils.MessageTools;
 
+/*
+ * Voter client. It is initialized with the voter's decryptor (public/private key pair) and
+ * the server's encryptor (the servers public key).  
+ */
 public class Voter {
 	protected Decryptor  voterDec    = null;
 	protected Encryptor  serverEnc   = null;
 	protected byte[] 	 credential = null;
-	protected byte[] 	 myVote 	 = null;
 
-	public Voter(Decryptor voterDec, byte[] credential, Encryptor serverEnc, byte vote) {
+	public Voter(Decryptor voterDec, Encryptor serverEnc) {
 		this.voterDec = voterDec;
-		this.credential = credential;
 		this.serverEnc = serverEnc;
-		this.myVote = new byte[] {vote};
 	}
 
-	public void vote() throws NetworkError {
+	public void setCredential(byte[] credential) {
+		this.credential = credential;
+	}
+	
+	public byte[] makeBallot(byte vote) {
+		if (credential==null) return null; // not ready
+		
+		byte [] myVote = new byte[] {vote};
 		// the encrypted credential gets decrypted
 		byte[] credentialDec = voterDec.decrypt(credential); 				
 		// the credential and vote are concatenated...
@@ -28,7 +34,7 @@ public class Voter {
 		byte[] outEnc = serverEnc.encrypt(out);		 		
 		// This ciphertext is sent out (over an untrusted connection)
 		
-		Network.networkOut(outEnc); // TODO: Change to real network for "production" system											
+		return outEnc;											
 	}
 	
 }

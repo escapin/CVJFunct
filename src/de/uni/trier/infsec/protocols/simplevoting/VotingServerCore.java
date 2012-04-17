@@ -23,7 +23,7 @@ public class VotingServerCore {
 	 * The server is initialized with his decryptor and the list of (public keys of) 
 	 * eligible voters.
 	 */
-	public VotingServerCore( Encryptor[] votersEnc, Decryptor serverDecr ) {
+	public VotingServerCore( Decryptor serverDecr, Encryptor[] votersEnc ) {
 		// TODO [tt]: At this point we know the number of voters (votersPK.length), 
 		// so we can allocate the remaining arrays once and for all (we do not need to 
 		// realocate them later).
