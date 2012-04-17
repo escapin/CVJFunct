@@ -22,7 +22,6 @@ import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
 import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
 import de.uni.trier.infsec.lib.network.Network;
 import de.uni.trier.infsec.protocols.simplevoting.Voter;
-import de.uni.trier.infsec.protocols.simplevoting.VotingProtocol.Votes;
 
 public class VotingWindow extends Window implements Bindable,
 		ButtonPressListener, ListViewSelectionListener {
@@ -35,6 +34,11 @@ public class VotingWindow extends Window implements Bindable,
 	TextInput pubKey = null;
 	TextInput privKey = null;
 	TextInput credent = null;
+	
+	public enum Votes {  // TODO: What do votes look like? single Byte?
+		Candidate1, Candidate2, Candidate3
+	}
+
 
 	@Override
 	public void initialize(Map<String, Object> namespace, URL location,
@@ -80,9 +84,10 @@ public class VotingWindow extends Window implements Bindable,
 			Encryptor se = new Decryptor().getEncryptor();
 			
 			
-			Voter voter = new Voter(d, credential, se, vote);
+			Voter voter = new Voter(d, se);
+			voter.setCredential(credential);
 			try {
-				voter.vote();
+				Network.networkOut( voter.makeBallot(vote) );
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}

@@ -32,7 +32,9 @@ public class ClientOnlySetup {
 		// let the adversary determine the credential (even in this case the voter choice should remain secret)
 		byte[] credential = Network.networkIn();
 		
-		Voter voter = new Voter(voterDec, credential, serverEnc, vote);
-		voter.vote();
+		Voter voter = new Voter(voterDec, serverEnc);
+		voter.setCredential(credential);
+		byte[] ballot =  voter.makeBallot(vote);
+		Network.networkOut( ballot );
 	}
 }
