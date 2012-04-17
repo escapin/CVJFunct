@@ -12,7 +12,7 @@ import de.uni.trier.infsec.utils.MessageTools;
  */
 public class VotingServerCore {
 
-	private byte[][] votersPK;	// a collection of eligibe voters' public keys
+	private Encryptor[] votersEnc;	// a collection of eligibe voters' public keys
 	private byte[][] voterCredentials; // List of all credentials. Credentials for voters have same index as voter in votersPK
 	private byte[][] ballotBox; // Takes all ballots. Ballots that have been casted have same index as voter in votersPK
 	private byte[][] resultVotes; // Takes all the possible choices
@@ -23,13 +23,11 @@ public class VotingServerCore {
 	 * The server is initialized with his decryptor and the list of (public keys of) 
 	 * eligible voters.
 	 */
-	// TODO [tt]: lets change it to:
-	// public VotingServerCore( Encryptor[] votersEnc, Decryptor serverDecr ) 
-	public VotingServerCore( byte[][] votersPK, Decryptor serverDecr ) {
+	public VotingServerCore( Encryptor[] votersEnc, Decryptor serverDecr ) {
 		// TODO [tt]: At this point we know the number of voters (votersPK.length), 
 		// so we can allocate the remaining arrays once and for all (we do not need to 
 		// realocate them later).
-		this.votersPK = votersPK;
+		this.votersEnc = votersEnc;
 		this.serverDecr = serverDecr;
 	}
 	
@@ -40,10 +38,11 @@ public class VotingServerCore {
 	 */
 	public byte[] getCredential( byte[] voter ) {
 		
-		for (int i = 0; i < votersPK.length; i++) {
-			byte[] tmpVoter = votersPK[i];
+		for (int i = 0; i < votersEnc.length; i++) {
+			Encryptor voterEnc = votersEnc[i];
+			byte[] voterPK = voterEnc.getPublicKey();
 			
-			if (!arrayEqual(voter, tmpVoter)) continue;
+			if (!arrayEqual(voter, voterPK)) continue;
 			
 			// We found the voter in the list, so now check if credentials exist
 			if (voterCredentials.length <= i) {
@@ -53,18 +52,8 @@ public class VotingServerCore {
 			if (voterCredentials[i] != null) {
 				return voterCredentials[i]; // Credential exists
 			} else {
-				byte[] credential = null; // createNonce(); 
-				// TODO: Nonce generation -- where to put and how to generate? (length?)
-				// TODO [tt] Add a method that (for now) generates consecutive integers encoded as, 
-				// say, 16-byte byte-strings. Later we will switch to random nonces.    
-				
+				byte[] credential = freshCredential();
 				voterCredentials[i] = credential;
-				Encryptor voterEnc = null; // new Encryptor(null, voterCredentials[i]); 
-				// TODO [tt] Visibility of Encryptor has to be public --> Need to generate Encryptor from Bytes AND set key
-				// TODO [tt] Lets change the constructor (see above). Yes we need to be able to construct encryptors from 
-				// byte-strings, but it seems that we can do it only for the real functionality, so this will 
-				// be done at the higher, application level (not in this class, which will be analyzed)
-				
 				byte[] credentialEnc = voterEnc.encrypt(credential);
 				return credentialEnc;
 			}
@@ -120,7 +109,11 @@ public class VotingServerCore {
 	}
 	
 	
-	
+	private byte[] freshCredential() {
+		// TODO [tt] Let it (for now) generate consecutive integers encoded as,
+		// say, 16-byte byte-strings. Later we will switch to random nonces.
+		return null;
+	}
 	
 	
 	/**
