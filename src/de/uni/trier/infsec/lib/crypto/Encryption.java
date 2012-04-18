@@ -16,7 +16,7 @@ import de.uni.trier.infsec.environment.crypto.KeyPair;
 
 public class Encryption {
 
-	private static int pkKeySize = 1024;
+	private static final int pkKeySize = 1024;
 
 	static {
 		Security.addProvider(new BouncyCastleProvider());

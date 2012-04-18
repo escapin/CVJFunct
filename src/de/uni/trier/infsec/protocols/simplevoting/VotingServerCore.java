@@ -1,8 +1,11 @@
 package de.uni.trier.infsec.protocols.simplevoting;
 
-import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
-import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
+import de.uni.trier.infsec.functionalities.pkenc.real.Decryptor; // TODO: Change back
+import de.uni.trier.infsec.functionalities.pkenc.real.Encryptor; // TODO: Change back
 import de.uni.trier.infsec.utils.MessageTools;
+import de.uni.trier.infsec.utils.Utilities; // TODO: Remove
+import static de.uni.trier.infsec.utils.Utilities.arrayEqual;
+import static de.uni.trier.infsec.utils.Utilities.arrayEmpty;
 
 /**
  * Because we do not have signatues yet, the server itself generates credentials .
@@ -12,10 +15,14 @@ import de.uni.trier.infsec.utils.MessageTools;
  */
 public class VotingServerCore {
 
+	private static final int nonceLength = 16;
+	private static final int KEY_LENGTH = 1024; 
+	private static int currNonce = 1;
+	
 	private Encryptor[] votersEnc;	// a collection of eligibe voters' public keys
 	private byte[][] voterCredentials; // List of all credentials. Credentials for voters have same index as voter in votersPK
 	private byte[][] ballotBox; // Takes all ballots. Ballots that have been casted have same index as voter in votersPK
-	private byte[][] resultVotes; // Takes all the possible choices
+	private byte[] resultVotes; // Takes all the possible choices
 	private int[]   resultCount; // Takes the count for every choice
 	Decryptor serverDecr; 
 	
@@ -29,6 +36,11 @@ public class VotingServerCore {
 		// realocate them later).
 		this.votersEnc = votersEnc;
 		this.serverDecr = serverDecr;
+		
+		voterCredentials = new byte[nonceLength][votersEnc.length];
+		ballotBox = new byte[KEY_LENGTH][votersEnc.length];
+		resultVotes = new byte[5];
+		resultCount = new int[5];
 	}
 	
 	/**
@@ -45,16 +57,17 @@ public class VotingServerCore {
 			if (!arrayEqual(voter, voterPK)) continue;
 			
 			// We found the voter in the list, so now check if credentials exist
-			if (voterCredentials.length <= i) {
-				voterCredentials = enlargeArray(voterCredentials, i);
-			}
-			
-			if (voterCredentials[i] != null) {
-				return voterCredentials[i]; // Credential exists
+			if (voterCredentials[i] != null && !arrayEmpty(voterCredentials[i])) {
+				byte[] credentialEnc = voterEnc.encrypt(voterCredentials[i]);
+				System.out.println(String.format("Credential looked up: %s for voter %s", 
+						Utilities.byteArrayToHexString(credentialEnc), Utilities.byteArrayToHexString(voter)));
+				return credentialEnc; // Credential exists
 			} else {
 				byte[] credential = freshCredential();
 				voterCredentials[i] = credential;
 				byte[] credentialEnc = voterEnc.encrypt(credential);
+				System.out.println(String.format("Credential generated: %s for voter %s", 
+						Utilities.byteArrayToHexString(credentialEnc), Utilities.byteArrayToHexString(voter)));
 				return credentialEnc;
 			}
 		}
@@ -68,13 +81,12 @@ public class VotingServerCore {
 	public void collectBallot( byte[] ballot ) {
 		// TODO [tt] It seems that the server accpets many ballots from the same voter.
 		// There should be some policy for revoting (for example, the first vote matters)
-		byte[] ballotDec = serverDecr.decrypt(ballot); // Decrypt the ballot using servers private key
+		byte[] ballotDec 	= serverDecr.decrypt(ballot); // Decrypt the ballot using servers private key
 		byte[] credential 	= MessageTools.first(ballotDec); // part1 is the credential
 		byte[] vote 		= MessageTools.second(ballotDec); // part2 is the vote
 		
 		for (int i = 0; i < voterCredentials.length; i++) {
 			if (arrayEqual(voterCredentials[i], credential)) {
-				ballotBox = enlargeArray(ballotBox, i);
 				ballotBox[i] = ballot;
 				vote = null;
 			}
@@ -90,11 +102,11 @@ public class VotingServerCore {
 			byte[] ballot = ballotBox[i];
 			byte[] ballotDec = serverDecr.decrypt(ballot); 			// Decrypt the ballot using servers private key
 			byte[] credential 	= MessageTools.first(ballotDec); 	// part1 is the credential
-			byte[] vote 		= MessageTools.second(ballotDec); 	// part2 is the vote
+			byte vote 		= MessageTools.second(ballotDec)[0]; 	// part2 is the vote
 			
 			for (int j = 0; j < resultVotes.length; j++) {
-				byte[] choice = resultVotes[j];
-				if (arrayEqual(vote, choice)) {
+				byte choice = resultVotes[j];
+				if (vote == choice) {
 					resultCount[i] ++;
 					break;
 				}
@@ -110,36 +122,7 @@ public class VotingServerCore {
 	
 	
 	private byte[] freshCredential() {
-		// TODO [tt] Let it (for now) generate consecutive integers encoded as,
-		// say, 16-byte byte-strings. Later we will switch to random nonces.
-		return null;
+		return MessageTools.intToByteArray(currNonce ++); 
 	}
-	
-	
-	/**
-	 *	Helper to enlarge the Array which stores the credentials. Used to avoid usage of Lists 
-	 */
-	private static byte[][] enlargeArray(byte[][] theArray, int i) {
-		if (theArray.length > i) return theArray;
-		
-		byte[][] newArray = new byte[i+1][theArray[0].length];
-		for (int j = 0; j < theArray.length; j++) {
-			newArray[j] = theArray[j];
-		}
-		return newArray;
-	}
-	
-	// TODO [tt] This kind of methods can be moved to utils package, if the methods 
-	// seem general enough
 
-	/**
-	 *	Checks two Arrays for equality 
-	 */
-	private static boolean arrayEqual(byte[] voter, byte[] tmpVoter) {
-		if (voter.length != tmpVoter.length) return false;
-		for (int i = 0; i < voter.length; i++) {
-			if (voter[i] != tmpVoter[i]) return false;
-		}
-		return true;
-	}
 }

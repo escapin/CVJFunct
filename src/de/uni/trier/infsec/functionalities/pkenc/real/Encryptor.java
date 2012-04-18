@@ -19,7 +19,7 @@ public final class Encryptor {
 	}
 	
 	public byte[] encrypt(byte[] message) {
-		return Encryption.encrypt(publKey, message);
+		return Encryption.encrypt(message, publKey);
 	}
 	
 }

@@ -80,5 +80,15 @@ public class Network {
 		}
 		return buffer;
 	}
-	
+
+	public static void resetConnection() {
+		try {
+			ss.close();
+		} catch (Exception e) {}
+		try {
+			socket.close();
+		} catch (Exception e) {}
+		ss = null;
+		socket = null;
+	}
 }
