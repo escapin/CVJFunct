@@ -48,26 +48,26 @@ public class VotingServerCore {
 	 * the public key of a voter), if it is not generated yet.
 	 * The method returns an encrypted credential 
 	 */
-	public byte[] getCredential( byte[] voter ) {
+	public byte[] getCredential( byte[] voter_pk ) {
 		
 		for (int i = 0; i < votersEnc.length; i++) {
 			Encryptor voterEnc = votersEnc[i];
 			byte[] voterPK = voterEnc.getPublicKey();
 			
-			if (!arrayEqual(voter, voterPK)) continue;
+			if (!arrayEqual(voter_pk, voterPK)) continue;
 			
 			// We found the voter in the list, so now check if credentials exist
 			if (voterCredentials[i] != null && !arrayEmpty(voterCredentials[i])) {
 				byte[] credentialEnc = voterEnc.encrypt(voterCredentials[i]);
 				System.out.println(String.format("Credential looked up: %s for voter %s", 
-						Utilities.byteArrayToHexString(credentialEnc), Utilities.byteArrayToHexString(voter)));
+						Utilities.byteArrayToHexString(credentialEnc), Utilities.byteArrayToHexString(voter_pk)));
 				return credentialEnc; // Credential exists
 			} else {
 				byte[] credential = freshCredential();
 				voterCredentials[i] = credential;
 				byte[] credentialEnc = voterEnc.encrypt(credential);
 				System.out.println(String.format("Credential generated: %s for voter %s", 
-						Utilities.byteArrayToHexString(credentialEnc), Utilities.byteArrayToHexString(voter)));
+						Utilities.byteArrayToHexString(credentialEnc), Utilities.byteArrayToHexString(voter_pk)));
 				return credentialEnc;
 			}
 		}
