@@ -1,7 +1,7 @@
 package de.uni.trier.infsec.protocols.simplevoting;
 
-import de.uni.trier.infsec.functionalities.pkenc.real.Decryptor; // TODO: Change back
-import de.uni.trier.infsec.functionalities.pkenc.real.Encryptor; // TODO: Change back
+import de.uni.trier.infsec.functionalities.pkenc.real.Decryptor; // TODO: Change back to ideal
+import de.uni.trier.infsec.functionalities.pkenc.real.Encryptor; // TODO: Change back to ideal
 import de.uni.trier.infsec.utils.MessageTools;
 import static de.uni.trier.infsec.utils.Utilities.arrayEqual;
 import static de.uni.trier.infsec.utils.Utilities.arrayEmpty;
