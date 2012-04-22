@@ -4,10 +4,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.functionalities.pkenc.real.Decryptor;
 import de.uni.trier.infsec.functionalities.pkenc.real.Encryptor;
 import de.uni.trier.infsec.lib.network.Network;
+import de.uni.trier.infsec.protocols.simplevoting.voterGUI.VotingServerDialog;
 import de.uni.trier.infsec.utils.Utilities;
 
 public class VotingServerStandalone{
@@ -33,66 +33,144 @@ public class VotingServerStandalone{
 			"B2CF22AB27C2080F77F6B86102410088539B65FB126BCA6EBD597E351E97BCA196500AEC1F1263E852E5AFECECF4E4FEFEF7ED55" +
 			"07557C561CED4319639A59B77FC55C74A11B76BD40F1FDC7AFE560";
 	
+	public static final byte REQUEST_CREDENTIAL = 0x01;
+	public static final byte SUBMIT_BALLOT		= 0x02;
+	public static final byte SUBMIT_RESULT		= 0x03;
+	public static final byte ERROR_WRONG_PHASE	= 0x04;
+	public static final byte PUBLISH_RESULT		= 0x05;
+	public static final byte ERROR_NO_ERROR		= 0x00;
 	
-	private VotingServerCore server = null;
+	public static final int PHASE_REGISTRATION 		= 1;
+	public static final int PHASE_COLLECT_BALLOT 	= 2;
+	public static final int PHASE_COUNT_AND_SUBMIT 	= 3;
+	
+	
+	
+	private VotingServerCore serverCore = null;
+	private String votersPublicKeysFile = null; 
+	
+	
+	public VotingServerStandalone(String path) {
+		this.votersPublicKeysFile = path;
+		init();
+	}
 
-	public void startServer(String votersPublicKeys) throws IOException {
-		
-		BufferedReader br = new BufferedReader(new FileReader(votersPublicKeys));
-		int count = Integer.parseInt(br.readLine());
-		Encryptor[] encryptors = new Encryptor[count];
-		for (int i = 0; i < count; i++) {
-			String tmp = br.readLine();
-			byte[] publicKey = Utilities.hexStringToByteArray(tmp);
-			encryptors[i] = new Encryptor(publicKey);
-			
-			System.out.println(tmp);
+	private void init() {
+		BufferedReader br;
+		try {
+			br = new BufferedReader(new FileReader(votersPublicKeysFile));
+			int count = Integer.parseInt(br.readLine());
+			Encryptor[] encryptors = new Encryptor[count];
+			for (int i = 0; i < count; i++) {
+				String tmp = br.readLine();
+				byte[] publicKey = Utilities.hexStringToByteArray(tmp);
+				encryptors[i] = new Encryptor(publicKey);
+				
+				System.out.println(tmp);
+			}
+			byte[] pubKey = Utilities.hexStringToByteArray(publicKey);
+			byte[] privKey = Utilities.hexStringToByteArray(privateKey);
+			serverCore = new VotingServerCore(new Decryptor(pubKey, privKey), encryptors);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		
-		byte[] pubKey = Utilities.hexStringToByteArray(publicKey);
-		byte[] privKey = Utilities.hexStringToByteArray(privateKey);
-		server = new VotingServerCore(new Decryptor(pubKey, privKey), encryptors);
-		
-		
+	}
+
+	private int phase = -1;
+	public void setPhase(int phase) {
+		this.phase = phase;
+	}
+	
+	public void startServer() throws IOException {
 		while (true) {
+			switch (phase) {
+				case PHASE_REGISTRATION:
+					acceptRegistration();
+					break;
+				case PHASE_COLLECT_BALLOT:
+					acceptBallot();
+					break;
+				case PHASE_COUNT_AND_SUBMIT:
+					return;
+			}
+		}
+	}
+
+	public void countAndPublish() {
+		byte[] result = serverCore.getResult();
+		byte[] out = new byte[result.length + 1];
+		out[0] = PUBLISH_RESULT;
+		for (int i = 0; i < result.length; i++) out[i+1] = result[i];
+		sendToBulletinBoard(out);
+	}
+
+	private void acceptBallot() {
 			try {				
-				Network.waitForClient(Network.DEFAULT_PORT);
-				doProtocol();			
+				System.out.println("Waiting for ballot...");
+				if (!Network.waitForClient(Network.DEFAULT_PORT)) return;
+				byte[] input = Network.networkIn();
+				System.out.println("Received request via network: " + Utilities.byteArrayToHexString(input));
+				if (input[0] == SUBMIT_BALLOT) { // Ballot submitted
+					byte[] ballot = new byte[input.length - 1];
+					System.arraycopy(input, 1, ballot, 0, ballot.length);
+					serverCore.collectBallot(ballot);
+					Network.networkOut(new byte[] {ERROR_NO_ERROR});
+					sendToBulletinBoard(input);
+				} else {
+					Network.networkOut(new byte[] {ERROR_WRONG_PHASE});
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				Network.resetConnection();
 			}
-		}
 	}
 
-	
-	private void doProtocol() {
-		try {
-			byte[] input = Network.networkIn();
-			System.out.println("Received request via network: " + Utilities.byteArrayToHexString(input));
-			if (input[0] == 0x01) { // Ballot submitted
-				byte[] ballot = new byte[input.length - 1];
-				System.arraycopy(input, 1, ballot, 0, ballot.length);
-				server.collectBallot(ballot);
-			} else if (input[0] == 0x02) { // Registration
-				byte[] publicKey = new byte[input.length - 1];
-				System.arraycopy(input, 1, publicKey, 0, publicKey.length);
-				byte[] credential = server.getCredential(publicKey);
-				Network.networkOut(credential);
+	private void acceptRegistration() {
+			try {
+				System.out.println("Waiting for registration...");
+				if (!Network.waitForClient(Network.DEFAULT_PORT)) return;
+				byte[] input = Network.networkIn();
+				System.out.println("Received request via network: " + Utilities.byteArrayToHexString(input));
+				if (input[0] == REQUEST_CREDENTIAL) { // Registration
+					byte[] publicKey = new byte[input.length - 1];
+					System.arraycopy(input, 1, publicKey, 0, publicKey.length);
+					byte[] credential = serverCore.getCredential(publicKey);
+					byte[] out = new byte[credential.length + 1];
+					out[0] = ERROR_NO_ERROR;
+					for (int i = 0; i < credential.length; i++) out[i + 1] = credential[i];
+					Network.networkOut(out);
+				} else {
+					Network.networkOut(new byte[] {ERROR_WRONG_PHASE});
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				Network.resetConnection();
 			}
-		} catch (NetworkError e) {
-			e.printStackTrace();
-			return;
-		}
 	}
+
 
 	public static void main(String[] args) throws IOException {
-		VotingServerStandalone server = new VotingServerStandalone();
 		if (args.length < 1) {
 			System.out.println("Parameter missing. Usage: VotingServerStandalone <path-to-voters-publickeys>");
+			return;
 		}
-		server.startServer(args[0]);
+		VotingServerStandalone server = new VotingServerStandalone(args[0]);
+		VotingServerDialog window = new VotingServerDialog(server);
+		window.start();
+	}
+
+	public void sendToBulletinBoard(byte[] data) {
+		try {
+			Network.connectToServer(Network.DEFAULT_SERVER, 5656);
+			Network.networkOut(data);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {			
+			Network.resetConnection();
+		}
+		
 	}
 
 }

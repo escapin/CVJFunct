@@ -4,10 +4,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.util.Observable;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -16,10 +12,12 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
-import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.protocols.simplevoting.VoterStandalone;
 import de.uni.trier.infsec.protocols.simplevoting.VotingServerStandalone;
+import de.uni.trier.infsec.utils.Utilities;
 
 public class VotingClientDialog {
 
@@ -29,6 +27,12 @@ public class VotingClientDialog {
 	private JLabel lblTheCredential = null;
 	private JButton btnRegister = null;
 	private JButton btnVoteNow = null;
+	private JLabel lblChoice = null;
+	private JLabel lblCurrentstatus  = null;
+	private JLabel lblPrivateKey = null;
+	private JLabel lblPublicKey = null;
+	
+	private byte choice = 0x00;
 	
 	/**
 	 * Create the application.
@@ -58,21 +62,23 @@ public class VotingClientDialog {
 		frmEvotingClient.getContentPane().add(pnlStatus);
 		pnlStatus.setLayout(null);
 		
-		JLabel lblPublicKey = new JLabel("Your public Key");
-		lblPublicKey.setBounds(12, 198, 456, 15);
-		pnlStatus.add(lblPublicKey);
-		
 		JLabel lblCredential = new JLabel("Your encrypted credential");
 		lblCredential.setBounds(12, 144, 456, 15);
 		pnlStatus.add(lblCredential);
 		
-		lblTheCredential = new JLabel("theCredential");
+		lblTheCredential = new JLabel("- unregistered -");
 		lblTheCredential.setBounds(12, 171, 456, 15);
 		pnlStatus.add(lblTheCredential);
 		
-		JLabel lblThepubkey = new JLabel("thePubKey");
-		lblThepubkey.setBounds(12, 221, 456, 15);
-		pnlStatus.add(lblThepubkey);
+		lblPrivateKey = new JLabel("PrivateKey");
+		lblPrivateKey.setBounds(12, 221, 456, 15);
+		pnlStatus.add(lblPrivateKey);
+		lblPrivateKey.setText("Using private key from file " + handler.privateKeyPath);
+		
+		lblPublicKey = new JLabel("PublicKey");
+		lblPublicKey.setBounds(12, 198, 456, 15);
+		pnlStatus.add(lblPublicKey);
+		lblPublicKey.setText("Using public key from file " + handler.publicKeyPath);
 		
 		JLabel lblStatus = new JLabel("Status:");
 		lblStatus.setBounds(12, 13, 56, 15);
@@ -91,19 +97,24 @@ public class VotingClientDialog {
 					btnRegister.setEnabled(!handler.isRegistered());
 					btnVoteNow.setEnabled(handler.isRegistered());
 					lstChoices.setEnabled(handler.isRegistered());
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				} catch (NetworkError e1) {
-					e1.printStackTrace();
+					lblCurrentstatus.setText(handler.isRegistered()?"Registered":"Unregistered");
+				} catch (IllegalStateException s) {
+					s.printStackTrace();
+					new ErrorDialog(s.getMessage());
+				} catch (Exception ee) {
+					ee.printStackTrace();
+					new ErrorDialog(ee.getMessage());
 				}
 			}
 		});
 		btnRegister.setBounds(12, 96, 456, 25);
 		pnlStatus.add(btnRegister);
 		
-		JLabel lblCurrentstatus = new JLabel("currentStatus");
+		
+		lblCurrentstatus = new JLabel("currentStatus");
 		lblCurrentstatus.setVerticalAlignment(SwingConstants.TOP);
 		lblCurrentstatus.setBounds(81, 12, 387, 73);
+		lblCurrentstatus.setText(handler.isRegistered()?"Registered":"Unregistered");
 		pnlStatus.add(lblCurrentstatus);
 		
 		JPanel pnlChoices = new JPanel();
@@ -113,6 +124,12 @@ public class VotingClientDialog {
 		pnlChoices.setLayout(null);
 		
 		lstChoices = new JList(VotingServerStandalone.votes);
+		lstChoices.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				choice = Utilities.hexStringToByteArray(lstChoices.getSelectedValue().toString())[0];
+				lblChoice.setText(lstChoices.getSelectedValue().toString());
+			}
+		});
 		lstChoices.setEnabled(handler.isRegistered());
 		lstChoices.setBorder(new LineBorder(new Color(0, 0, 0), 2));
 		lstChoices.setBounds(22, 39, 184, 186);
@@ -122,9 +139,14 @@ public class VotingClientDialog {
 		btnVoteNow.setEnabled(handler.isRegistered());
 		btnVoteNow.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String error = handler.clickVote(lstChoices.getSelectedValue().toString());
-				if (error != null) {
-					// TODO: Dialog
+				try {
+					handler.clickVote(choice);
+				} catch (IllegalStateException s) {
+					s.printStackTrace();
+					new ErrorDialog(s.getMessage());
+				} catch (Exception ee) {
+					ee.printStackTrace();
+					new ErrorDialog(ee.getMessage());
 				}
 			}
 		});
@@ -136,8 +158,17 @@ public class VotingClientDialog {
 		pnlSelectedVote.setBorder(new LineBorder(new Color(255, 0, 0), 3));
 		pnlSelectedVote.setBounds(310, 12, 191, 176);
 		pnlChoices.add(pnlSelectedVote);
+		pnlSelectedVote.setLayout(null);
+		
+		lblChoice = new JLabel("- none -");
+		lblChoice.setHorizontalAlignment(SwingConstants.CENTER);
+		lblChoice.setFont(new Font("Dialog", Font.BOLD, 22));
+		lblChoice.setBounds(12, 39, 167, 125);
+		pnlSelectedVote.add(lblChoice);
 		
 		JLabel lblCurrentVote = new JLabel("Selected Vote");
+		lblCurrentVote.setHorizontalAlignment(SwingConstants.CENTER);
+		lblCurrentVote.setBounds(12, 12, 167, 25);
 		pnlSelectedVote.add(lblCurrentVote);
 		
 		JLabel lblPleaseChooseYour = new JLabel("Please choose your vote:");

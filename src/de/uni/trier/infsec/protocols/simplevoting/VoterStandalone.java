@@ -2,7 +2,6 @@ package de.uni.trier.infsec.protocols.simplevoting;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -15,8 +14,15 @@ import de.uni.trier.infsec.utils.Utilities;
 
 public class VoterStandalone {
 
-	private String publicKeyPath  = null;
-	private String privateKeyPath = null;
+	public String publicKeyPath  = null;
+	public String privateKeyPath = null;
+	
+	public static final byte REQUEST_CREDENTIAL = 0x01;
+	public static final byte SUBMIT_BALLOT		= 0x02;
+	public static final byte SUBMIT_RESULT		= 0x03;
+	public static final byte ERROR_WRONG_PHASE	= 0x04;
+	public static final byte ERROR_NO_ERROR		= 0x00;
+	
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
@@ -34,32 +40,42 @@ public class VoterStandalone {
 		this.privateKeyPath = privateKeyPath;
 	}
 	
-	public String clickVote(String selectedValue) {
+	public void clickVote(byte choice) throws IOException {
 		Encryptor encServer = new Encryptor(Utilities.hexStringToByteArray(VotingServerStandalone.publicKey));
 		Decryptor decClient = new Decryptor(readVoterPublicKeyFromFile(), readVoterPrivateKeyFromFile());
 		Voter voter = new Voter(decClient, encServer);
-		byte[] ballot = voter.makeBallot(Utilities.hexStringToByteArray(selectedValue)[0]);
-		
-		return sendBallotToServer(ballot);
+		String filename = System.getProperty("java.io.tmpdir") + "/" + Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo";
+		File f = new File (filename);
+		if (f.exists()) {
+			FileInputStream fis = new FileInputStream(f);
+			byte[] credential = new byte[fis.available()];
+			fis.read(credential);
+			voter.setCredential(credential);
+			byte[] ballot = voter.makeBallot(choice);
+			sendBallotToServer(ballot);
+		}
 	}
 
 	/**
 	 * Sends a message which has following format:
 	 * 		0x01 | ballot
 	 */
-	private String sendBallotToServer(byte[] ballot) {
+	private void sendBallotToServer(byte[] ballot) {
 		byte[] message = new byte[ballot.length + 1];
-		message[0] = 0x01;
+		message[0] = SUBMIT_BALLOT;
 		System.arraycopy(ballot, 0, message, 1, ballot.length);
 		try {
-			Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PORT);
+			Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PROXY_PORT);
 			Network.networkOut(message);
+			byte[] response = Network.networkIn();
+			if (response[0] == ERROR_WRONG_PHASE) {
+				throw new IllegalStateException("Server not in ballot collection phase!");
+			}
 		} catch (NetworkError e) {
-			return e.getLocalizedMessage();
+			throw new IllegalStateException("Server not available or connection problems!");
 		} finally {
-			Network.disconnect();
+			Network.resetConnection();
 		}
-		return null;
 	}
 
 
@@ -68,17 +84,26 @@ public class VoterStandalone {
 		System.out.println("using public key " + Utilities.byteArrayToHexString(pubKey));
 		byte[] message = new byte[pubKey.length + 1];
 		byte[] response = null;
-		message[0] = 0x02;
+		message[0] = REQUEST_CREDENTIAL;
 		System.arraycopy(pubKey, 0, message, 1, pubKey.length);
 		
 		try {
-			Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PORT);
+			if (!Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PROXY_PORT)) {
+				throw new IllegalStateException("Server not available or connection problems!");
+			}
 			Network.networkOut(message);
-			response = Network.networkIn();
+			byte[] in = Network.networkIn();
+			if (in != null) System.out.println("received: " + Utilities.byteArrayToHexString(in));
+			if (in != null && in[0] == ERROR_NO_ERROR) {				
+				response = new byte[in.length - 1];
+				for (int i = 0; i < response.length; i++) response[i] = in[i + 1];
+			} else if (in == null || in[0] == ERROR_WRONG_PHASE){
+				throw new IllegalStateException("Server not in registration phase!");
+			}
 		} catch (NetworkError e) {
-			throw e;
+			throw new IllegalStateException("Server not available or connection problems!");
 		} finally {
-			Network.disconnect();
+			Network.resetConnection();
 		}
 		
 		Encryptor encServer = new Encryptor(Utilities.hexStringToByteArray(VotingServerStandalone.publicKey));
@@ -137,6 +162,5 @@ public class VoterStandalone {
 			return null;
 		}
 	}
-
-
+	
 }

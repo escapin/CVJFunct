@@ -11,6 +11,7 @@ import de.uni.trier.infsec.environment.network.NetworkError;
 public class Network {
 	
 	public static final int DEFAULT_PORT = 4242;
+	public static final int DEFAULT_PROXY_PORT = 4949;
 	public static final String DEFAULT_SERVER = "127.0.0.1";
 	
 	private static Socket socket = null;
@@ -21,7 +22,6 @@ public class Network {
 			socket = new Socket(server, port);
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
 			return false;
 		}	
 	}
@@ -30,8 +30,8 @@ public class Network {
 		if (ss == null) {
 			try {
 				ss = new ServerSocket(port);
+				ss.setSoTimeout(2000);
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
 		try {
@@ -42,16 +42,6 @@ public class Network {
 		}
 	}
 	
-	public static void disconnect() {
-		try {
-			if (socket != null) socket.close();
-			socket = null;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	// NetworkOut is actually stateless - so connect, send a message and disconnect.
 	public static void networkOut(byte[] outEnc) throws NetworkError {
 		try {
 			if (socket == null) 
@@ -62,21 +52,19 @@ public class Network {
 			e.printStackTrace();
 		}
 	}
-
 	
-	// Actually networkIn calls blocking read on Socket. 
-	// If we want to run it on one machine, we have to care for threading...
 	public static byte[] networkIn() throws NetworkError {
 		if (socket == null) 
 			return null;
 		
 		byte[] buffer = null;
 		try {
+			socket.setSoTimeout(2000);
 			int length = socket.getInputStream().read();
+			if (length < 1) return null;
 			buffer = new byte[length];
 			socket.getInputStream().read(buffer);
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		return buffer;
 	}

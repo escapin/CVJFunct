@@ -50,15 +50,15 @@ public class MessageTools {
 	 */
 	private static byte[] project(byte[] message, int position) {
 		byte[] length = new byte[4];
-		for (int i = 0; i < 4; i ++) message[i] = length[i];
+		for (int i = 0; i < 4; i ++) length[i] = message[i];
 		int len = byteArrayToInt(length);
 		if (position == 0) {
 			byte[] m1 = new byte[len];
-			for (int i = 0; i < len; i ++) message[i + 4] = m1[i];
+			for (int i = 0; i < len; i ++) m1[i] = message[i + 4];
 			return m1;
 		} else if (position == 1) {
 			byte[] m2 = new byte[message.length - len - 4];
-			for (int i = 0; i < message.length - len - 4; i ++) message[i + 4 + len] = m2[i];
+			for (int i = 0; i < message.length - len - 4; i ++) m2[i] = message[i + 4 + len];
 			return m2;
 		}
 		return null;

@@ -22,7 +22,7 @@ public final class Decryptor {
     }
 
 	public byte[] decrypt(byte[] message) {
-		return Encryption.decrypt(privKey, message);
+		return Encryption.decrypt(message, privKey);
 	}
 	
 	// methods not present in the ideal functionality:
