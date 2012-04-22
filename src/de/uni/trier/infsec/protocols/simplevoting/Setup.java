@@ -2,8 +2,8 @@ package de.uni.trier.infsec.protocols.simplevoting;
 
 import de.uni.trier.infsec.environment.network.Network;
 import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
-import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
+import de.uni.trier.infsec.functionalities.pkenc.real.Decryptor;
+import de.uni.trier.infsec.functionalities.pkenc.real.Encryptor;
 import de.uni.trier.infsec.protocols.simplevoting.VotingServerCore;
 import de.uni.trier.infsec.protocols.simplevoting.Voter;
 import de.uni.trier.infsec.utils.MessageTools;
@@ -11,13 +11,16 @@ import de.uni.trier.infsec.utils.MessageTools;
 /*
  * A setup for the server and (multiple) clients, for the purpose of the verification. 
  * 
- * It creates one server and as many clients as the environments dictates.
+ * It creates one server and some (fixed) number of voters, two of which are honest (and
+ * the rest is controlled by the environment). The votes of the honest voters (given by the
+ * environment) are swapped depending on the value of the secret.
  */
 public class Setup {
 	
 	static private boolean secret = false;  // SECRET -- an arbitrary value put here
 	 
-	static private int NoV = 50;  // the number of voters
+	static private int NoV = 50;	// the number of voters
+	static private int NoHV = 2; 	// assume that two voters are honest, the rest is controlled by the adversary
 	
 	
 	public static void main(String[] args) throws NetworkError {
@@ -33,62 +36,64 @@ public class Setup {
 		for( int i=0; i<NoV; ++i ) {
 			voterDec[i] = new Decryptor();
 			voterEnc[i] = voterDec[i].getEncryptor();
-			Network.networkOut(voterEnc[i].getPublicKey()); // public keys of voters are published
+			Network.networkOut(voterEnc[i].getPublicKey()); // the public keys of voters are published
 		}
 
 		// create the server:
 		VotingServerCore server = new VotingServerCore(serverDec, voterEnc);
 		
-		// create the voters:
-		Voter[] voter = new Voter[NoV];
-		for( int i=0; i<NoV; ++i ) {
+		// create the honest voters
+		Voter[] voter = new Voter[NoHV];
+		for( int i=0; i<NoHV; ++i ) {
 			voter[i] = new Voter( voterDec[i],  serverEnc );
+		}
+		
+		// the honest voters register successfully (encrypted credentials are, however, leaked):
+		for( int i=0; i<NoHV; ++i ) {
+			byte[] credential = server.getCredential(voterEnc[i].getPublicKey());
+			Network.networkOut(credential);     // leak the credential
+			voter[i].setCredential(credential); // give it to the voter
 		}
 		
 		// the main loop, where the environments dictates what to do
 		byte[] msg = Network.networkIn();
 		while( msg != null ) { 
-			// the action taken depend on the value determined by the adversary (msg[0])
-			switch( msg[0] ) {
-			case 0: // server -- get a credential from the server:
+			// the action taken depends on the value determined by the adversary (msg[0])
+			switch( msg[0] ) 
+			{
+			case 0: // get a credential from the server:
 					byte[] credential = server.getCredential( Network.networkIn() );
 					Network.networkOut(credential);
 					break;
 
-			case 1: // server -- collect ballot:
+			case 1: // submit a ballot to the server:
 					server.collectBallot( Network.networkIn() );
 					break;
 				
-			case 2: // voter -- obtain a credential									
+			case 2: // use decryptor of a dishonest voter
 					int i = MessageTools.byteArrayToInt( Network.networkIn() ); // determine the voter
-					voter[i].setCredential( Network.networkIn() );
+					if (i>1) { // the adversary can only use decryptors of dishonest voters
+						byte[] message = Network.networkIn();  
+						byte[] decrypted = voterDec[i].decrypt(message);
+						Network.networkOut(decrypted);
+					}
 					break;
-					
-			case 3: // voter -- vote
-					int j = MessageTools.byteArrayToInt( Network.networkIn() ); // determine the voter
-					if( j>1 ) { // the adversary decides how those voters (voter[2],voter[3],...) vote
-						byte v = Network.networkIn()[0];
-						byte ballot[] = voter[j].makeBallot(v);
-						Network.networkOut(ballot);
+								
+			case 3: // honest voters -- vote
+					byte v0 = Network.networkIn()[0];  // The adversary picks votes for 
+					byte v1 = Network.networkIn()[0];  // the the two honest voters.
+					if (secret) {  // these votes get swapped depending on the value of the secret
+						byte tmp=v0; v0=v1; v1=tmp;
 					}
-					else { // special case: voter[0] and voter[1] swap votes depending on the value of the secret
-						byte v0 = Network.networkIn()[0];
-						byte v1 = Network.networkIn()[0];
-						if (secret) {
-							byte tmp=v0; v0=v1; v1=tmp;
-						}
-						byte[] ballot0 = voter[0].makeBallot(v0);
-						Network.networkOut(ballot0);
-						byte[] ballot1 = voter[1].makeBallot(v1);
-						Network.networkOut(ballot1);
-					}
+					Network.networkOut( voter[0].makeBallot(v0) );	// the voters output their ballots
+					Network.networkOut( voter[1].makeBallot(v1) ); 					
 					break;		
 			}
 
 			msg = Network.networkIn();
 		}
 		
-		// output the result:
+		// output the final result:
 		byte[] result = server.getResult();
 		Network.networkOut(result);
 	}
