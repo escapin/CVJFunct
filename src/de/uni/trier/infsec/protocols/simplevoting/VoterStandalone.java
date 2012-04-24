@@ -65,7 +65,7 @@ public class VoterStandalone {
 		message[0] = SUBMIT_BALLOT;
 		System.arraycopy(ballot, 0, message, 1, ballot.length);
 		try {
-			Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PORT);
+			Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PROXY_PORT);
 			Network.networkOut(message);
 			byte[] response = Network.networkIn();
 			if (response[0] == ERROR_WRONG_PHASE) {
@@ -88,7 +88,7 @@ public class VoterStandalone {
 		System.arraycopy(pubKey, 0, message, 1, pubKey.length);
 		
 		try {
-			if (!Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PORT)) {
+			if (!Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PROXY_PORT)) {
 				throw new IllegalStateException("Server not available or connection problems!");
 			}
 			Network.networkOut(message);

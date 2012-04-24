@@ -14,12 +14,15 @@ import javax.swing.SwingConstants;
 
 public class VotingServerDialog {
 
-	private JFrame frmEvotingServerAdministration;
-	JLabel lblStatus = null;
-
-	/**
-	 * Initialize the contents of the frame.
-	 */
+	private JFrame frmEvotingServerAdministration = null;
+	private JLabel lblStatus = null;
+	private VotingServerStandalone server = null;
+	
+	public VotingServerDialog(VotingServerStandalone server) {
+		this.server = server;
+		initialize();
+	}
+	
 	private void initialize() {
 		frmEvotingServerAdministration = new JFrame();
 		frmEvotingServerAdministration.setTitle("eVoting Server Administration");
@@ -70,8 +73,6 @@ public class VotingServerDialog {
 		frmEvotingServerAdministration.getContentPane().add(lblStatus);
 	}
 	
-	private VotingServerStandalone server = null;
-	
 	public void start() {
 		frmEvotingServerAdministration.setVisible(true);
 		try {
@@ -81,8 +82,4 @@ public class VotingServerDialog {
 		}
 	}
 
-	public VotingServerDialog(VotingServerStandalone server) {
-		this.server = server;
-		initialize();
-	}
 }

@@ -28,7 +28,6 @@ public class PrepareAndRunServer {
 			KeyPair kp = Encryption.generateKeyPair();
 			
 			String pubKey = Utilities.byteArrayToHexString(kp.publicKey);
-			String privKey = Utilities.byteArrayToHexString(kp.privateKey);
 			bw.write(pubKey + "\n");
 			
 			String name = String.format("voter%d", i);
@@ -42,15 +41,10 @@ public class PrepareAndRunServer {
 			f2pub.write(kp.publicKey);
 			f2pub.flush();
 			f2pub.close();
-			
-			System.out.println("pub");
-			System.out.println(pubKey);
-			System.out.println("priv");
-			System.out.println(privKey);
 		}
 		bw.flush();
 		bw.close();
-		
+		System.out.println("Preparation for server finished. Starting Server.");
 		VotingServerStandalone.main(new String[] {f.getAbsolutePath()});
 	}
 

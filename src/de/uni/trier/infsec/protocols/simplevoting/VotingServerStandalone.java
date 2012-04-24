@@ -7,6 +7,7 @@ import java.io.IOException;
 import de.uni.trier.infsec.functionalities.pkenc.real.Decryptor;
 import de.uni.trier.infsec.functionalities.pkenc.real.Encryptor;
 import de.uni.trier.infsec.lib.network.Network;
+import de.uni.trier.infsec.protocols.simplevoting.voterGUI.BulletinBoardDialog;
 import de.uni.trier.infsec.protocols.simplevoting.voterGUI.VotingServerDialog;
 import de.uni.trier.infsec.utils.Utilities;
 
@@ -33,18 +34,18 @@ public class VotingServerStandalone{
 			"B2CF22AB27C2080F77F6B86102410088539B65FB126BCA6EBD597E351E97BCA196500AEC1F1263E852E5AFECECF4E4FEFEF7ED55" +
 			"07557C561CED4319639A59B77FC55C74A11B76BD40F1FDC7AFE560";
 	
-	public static final byte REQUEST_CREDENTIAL = 0x01;
-	public static final byte SUBMIT_BALLOT		= 0x02;
-	public static final byte SUBMIT_RESULT		= 0x03;
-	public static final byte ERROR_WRONG_PHASE	= 0x04;
-	public static final byte PUBLISH_RESULT		= 0x05;
-	public static final byte ERROR_NO_ERROR		= 0x00;
+	/**
+	 * Constants used for the network protocol.
+	 */
+	public static final byte REQUEST_CREDENTIAL = 0x01; // Request code for credentials C --> S
+	public static final byte SUBMIT_BALLOT		= 0x02; // Request code for ballot submission C --> S
+	public static final byte ERROR_WRONG_PHASE	= 0x04; // Acknowledge for submission in wrong server state S --> C
+	public static final byte ERROR_NO_ERROR		= 0x00; // Acknowledge for submission in correct server state S --> C
+	public static final byte PUBLISH_RESULT		= 0x05; // Submission code for result publication S --> BulletinBoard
 	
 	public static final int PHASE_REGISTRATION 		= 1;
 	public static final int PHASE_COLLECT_BALLOT 	= 2;
 	public static final int PHASE_COUNT_AND_SUBMIT 	= 3;
-	
-	
 	
 	private VotingServerCore serverCore = null;
 	private String votersPublicKeysFile = null; 
@@ -58,18 +59,18 @@ public class VotingServerStandalone{
 	private void init() {
 		BufferedReader br;
 		try {
+			// Server expects a file containing all public keys of the clients as a hex string, each line is expected to be one public key.
 			br = new BufferedReader(new FileReader(votersPublicKeysFile));
 			int count = Integer.parseInt(br.readLine());
 			Encryptor[] encryptors = new Encryptor[count];
 			for (int i = 0; i < count; i++) {
 				String tmp = br.readLine();
-				byte[] publicKey = Utilities.hexStringToByteArray(tmp);
-				encryptors[i] = new Encryptor(publicKey);
-				
-				System.out.println(tmp);
+				byte[] publicKey = Utilities.hexStringToByteArray(tmp); // converts the strings to bytes
+				encryptors[i] = new Encryptor(publicKey); // and creates the server
 			}
 			byte[] pubKey = Utilities.hexStringToByteArray(publicKey);
 			byte[] privKey = Utilities.hexStringToByteArray(privateKey);
+			// After all public keys have been read, create tthe core server
 			serverCore = new VotingServerCore(new Decryptor(pubKey, privKey), encryptors);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -84,13 +85,13 @@ public class VotingServerStandalone{
 	public void startServer() throws IOException {
 		while (true) {
 			switch (phase) {
-				case PHASE_REGISTRATION:
+				case PHASE_REGISTRATION: // only credential requests allowed
 					acceptRegistration();
 					break;
-				case PHASE_COLLECT_BALLOT:
+				case PHASE_COLLECT_BALLOT: // only ballot submission allowed
 					acceptBallot();
 					break;
-				case PHASE_COUNT_AND_SUBMIT:
+				case PHASE_COUNT_AND_SUBMIT: // stops listening and publishes the result to the bulletin board
 					return;
 			}
 		}
@@ -112,11 +113,11 @@ public class VotingServerStandalone{
 				System.out.println("Received request via network: " + Utilities.byteArrayToHexString(input));
 				if (input[0] == SUBMIT_BALLOT) { // Ballot submitted
 					byte[] ballot = new byte[input.length - 1];
-					System.arraycopy(input, 1, ballot, 0, ballot.length);
-					serverCore.collectBallot(ballot);
+					System.arraycopy(input, 1, ballot, 0, ballot.length); // cut of the request code
+					serverCore.collectBallot(ballot); // ask server to decrypt and process the ballot
 					Network.networkOut(new byte[] {ERROR_NO_ERROR});
 					sendToBulletinBoard(input);
-				} else {
+				} else { // anything else submitted
 					Network.networkOut(new byte[] {ERROR_WRONG_PHASE});
 				}
 			} catch (Exception e) {
@@ -150,7 +151,6 @@ public class VotingServerStandalone{
 			}
 	}
 
-
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1) {
 			System.out.println("Parameter missing. Usage: VotingServerStandalone <path-to-voters-publickeys>");
@@ -163,14 +163,13 @@ public class VotingServerStandalone{
 
 	public void sendToBulletinBoard(byte[] data) {
 		try {
-			Network.connectToServer(Network.DEFAULT_SERVER, 5656);
+			Network.connectToServer(Network.DEFAULT_SERVER, BulletinBoardDialog.DEFAULT_BULLETIN_BOARD_PORT);
 			Network.networkOut(data);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {			
 			Network.resetConnection();
 		}
-		
 	}
 
 }

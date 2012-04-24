@@ -32,6 +32,8 @@ public class BulletinBoardDialog {
 	private JTextPane textPane;
 	private JFrame frmEvotingBulletinBoard;
 	private ArrayList<byte[]> data = new ArrayList<byte[]>();
+	public static final int DEFAULT_BULLETIN_BOARD_PORT = 5656;
+	
 
 	private void initialize() throws IOException {
 		frmEvotingBulletinBoard = new JFrame();
@@ -49,13 +51,13 @@ public class BulletinBoardDialog {
 		server.createContext("/", new MyHandler());
 		server.setExecutor(Executors.newCachedThreadPool());
 		server.start();
-		System.out.println("Bulletin Board HTTP Server is listening on port 8000");
+		System.out.println(String.format("Bulletin Board HTTP Server is listening to port %d. Webserver is running on port %d", DEFAULT_BULLETIN_BOARD_PORT, 8000));
 	}
 
 	private void work() {
 		while (true) {
 			try {
-				Network.waitForClient(5656);
+				Network.waitForClient(DEFAULT_BULLETIN_BOARD_PORT);
 				byte[] in = Network.networkIn();
 				textPane.setText(textPane.getText() + Utilities.byteArrayToHexString(in) + "\n");
 				data.add(in);

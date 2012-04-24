@@ -24,9 +24,9 @@ public class VotingClientDialog {
 	private JFrame frmEvotingClient;
 	private VoterStandalone handler = null;
 	private JList lstChoices = null;
-	private JLabel lblTheCredential = null;
 	private JButton btnRegister = null;
 	private JButton btnVoteNow = null;
+	private JLabel lblTheCredential = null;
 	private JLabel lblChoice = null;
 	private JLabel lblCurrentstatus  = null;
 	private JLabel lblPrivateKey = null;
