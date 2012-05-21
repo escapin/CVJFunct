@@ -14,38 +14,53 @@ import de.uni.trier.infsec.utils.Utilities;
 
 public class VoterStandalone {
 
-	public String publicKeyPath  = null;
+	public String publicKeyPath = null;
 	public String privateKeyPath = null;
-	
+
 	public static final byte REQUEST_CREDENTIAL = 0x01;
-	public static final byte SUBMIT_BALLOT		= 0x02;
-	public static final byte SUBMIT_RESULT		= 0x03;
-	public static final byte ERROR_WRONG_PHASE	= 0x04;
-	public static final byte ERROR_NO_ERROR		= 0x00;
-	
+	public static final byte SUBMIT_BALLOT = 0x02;
+	public static final byte SUBMIT_RESULT = 0x03;
+	public static final byte ERROR_WRONG_PHASE = 0x04;
+	public static final byte ERROR_NO_ERROR = 0x00;
+
+	private int serverPort = Network.DEFAULT_PORT;
+	private String serverAddress = Network.DEFAULT_SERVER;
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
 			System.out.println("Parameters missing. Usage: VoterStandalone <path-to-publickey> <path-to-privatekey>");
 			System.exit(0);
 		}
-		VoterStandalone handler = new VoterStandalone(args[0], args[1]);
+		VoterStandalone handler;
+		if (args.length >= 4) {
+			handler = new VoterStandalone(args[0], args[1], args[2], Integer.parseInt(args[3]));
+		} else {
+			handler = new VoterStandalone(args[0], args[1]);
+		}
 		VotingClientDialog window = new VotingClientDialog(handler);
 		window.showWindow();
 	}
-	
-	
+
 	public VoterStandalone(String publicKeyPath, String privateKeyPath) {
 		this.publicKeyPath = publicKeyPath;
 		this.privateKeyPath = privateKeyPath;
 	}
-	
+
+	public VoterStandalone(String publicKeyPath, String privateKeyPath, String serverAddress, int serverPort) {
+		this(publicKeyPath, privateKeyPath);
+		System.out.println(String.format("VotingClient started using parameters publicKeyPath: %s, privateKeyPath: %s, serverAddress: %s, serverPort: %d",
+				publicKeyPath, privateKeyPath, serverAddress, serverPort));
+		this.serverAddress = serverAddress;
+		this.serverPort = serverPort;
+	}
+
 	public void clickVote(byte choice) throws IOException {
 		Encryptor encServer = new Encryptor(Utilities.hexStringToByteArray(VotingServerStandalone.publicKey));
 		Decryptor decClient = new Decryptor(readVoterPublicKeyFromFile(), readVoterPrivateKeyFromFile());
 		Voter voter = new Voter(decClient, encServer);
-		String filename = System.getProperty("java.io.tmpdir") + "/" + Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo";
-		File f = new File (filename);
+		String filename = System.getProperty("java.io.tmpdir") + "/"
+				+ Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo";
+		File f = new File(filename);
 		if (f.exists()) {
 			FileInputStream fis = new FileInputStream(f);
 			byte[] credential = new byte[fis.available()];
@@ -57,15 +72,14 @@ public class VoterStandalone {
 	}
 
 	/**
-	 * Sends a message which has following format:
-	 * 		0x01 | ballot
+	 * Sends a message which has following format: 0x01 | ballot
 	 */
 	private void sendBallotToServer(byte[] ballot) {
 		byte[] message = new byte[ballot.length + 1];
 		message[0] = SUBMIT_BALLOT;
 		System.arraycopy(ballot, 0, message, 1, ballot.length);
 		try {
-			Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PROXY_PORT);
+			Network.connectToServer(serverAddress, serverPort);
 			Network.networkOut(message);
 			byte[] response = Network.networkIn();
 			if (response[0] == ERROR_WRONG_PHASE) {
@@ -78,7 +92,6 @@ public class VoterStandalone {
 		}
 	}
 
-
 	public String clickRegister() throws IOException, NetworkError {
 		byte[] pubKey = readVoterPublicKeyFromFile();
 		System.out.println("using public key " + Utilities.byteArrayToHexString(pubKey));
@@ -86,18 +99,20 @@ public class VoterStandalone {
 		byte[] response = null;
 		message[0] = REQUEST_CREDENTIAL;
 		System.arraycopy(pubKey, 0, message, 1, pubKey.length);
-		
+
 		try {
-			if (!Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PROXY_PORT)) {
+			if (!Network.connectToServer(serverAddress, serverPort)) {
 				throw new IllegalStateException("Server not available or connection problems!");
 			}
 			Network.networkOut(message);
 			byte[] in = Network.networkIn();
-			if (in != null) System.out.println("received: " + Utilities.byteArrayToHexString(in));
-			if (in != null && in[0] == ERROR_NO_ERROR) {				
+			if (in != null)
+				System.out.println("received: " + Utilities.byteArrayToHexString(in));
+			if (in != null && in[0] == ERROR_NO_ERROR) {
 				response = new byte[in.length - 1];
-				for (int i = 0; i < response.length; i++) response[i] = in[i + 1];
-			} else if (in == null || in[0] == ERROR_WRONG_PHASE){
+				for (int i = 0; i < response.length; i++)
+					response[i] = in[i + 1];
+			} else if (in == null || in[0] == ERROR_WRONG_PHASE) {
 				throw new IllegalStateException("Server not in registration phase!");
 			}
 		} catch (NetworkError e) {
@@ -105,13 +120,14 @@ public class VoterStandalone {
 		} finally {
 			Network.resetConnection();
 		}
-		
+
 		Encryptor encServer = new Encryptor(Utilities.hexStringToByteArray(VotingServerStandalone.publicKey));
 		Decryptor decClient = new Decryptor(readVoterPublicKeyFromFile(), readVoterPrivateKeyFromFile());
 		Voter voter = new Voter(decClient, encServer);
 		voter.setCredential(response);
-		
-		FileOutputStream fout = new FileOutputStream(System.getProperty("java.io.tmpdir") + "/" + Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo");
+
+		FileOutputStream fout = new FileOutputStream(System.getProperty("java.io.tmpdir") + "/"
+				+ Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo");
 		fout.write(response);
 		fout.close();
 
@@ -122,13 +138,14 @@ public class VoterStandalone {
 	 * Checks whether a exists that contains the credential.
 	 */
 	public boolean isRegistered() {
-		String filename = System.getProperty("java.io.tmpdir") + "/" + Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo";
-		if ((new File (filename)).exists()) {			
+		String filename = System.getProperty("java.io.tmpdir") + "/"
+				+ Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo";
+		if ((new File(filename)).exists()) {
 			return true;
 		}
 		return false;
 	}
-	
+
 	public byte[] readVoterPublicKeyFromFile() {
 		try {
 			FileInputStream fis = new FileInputStream(publicKeyPath);
@@ -150,7 +167,7 @@ public class VoterStandalone {
 			return null;
 		}
 	}
-	
+
 	public byte[] readCredentialFromFile() {
 		try {
 			String filename = "./" + Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode());
@@ -162,5 +179,5 @@ public class VoterStandalone {
 			return null;
 		}
 	}
-	
+
 }

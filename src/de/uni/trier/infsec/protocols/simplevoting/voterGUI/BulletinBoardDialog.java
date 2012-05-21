@@ -23,10 +23,15 @@ public class BulletinBoardDialog {
 
 	public static void main(String[] args) throws IOException {
 		BulletinBoardDialog window = new BulletinBoardDialog();
-		window.initialize();
-		window.work();
+		int listenPort = DEFAULT_BULLETIN_BOARD_PORT;
+		int httpPort = 8080;
+		if (args.length >= 2) {
+			listenPort = Integer.parseInt(args[0]);
+			httpPort   = Integer.parseInt(args[1]);
+		}
+		window.initialize(httpPort);
+		window.work(listenPort);
 		// window.show();
-		
 	}
 
 	private JTextPane textPane;
@@ -35,7 +40,7 @@ public class BulletinBoardDialog {
 	public static final int DEFAULT_BULLETIN_BOARD_PORT = 5656;
 	
 
-	private void initialize() throws IOException {
+	private void initialize(int httpPort) throws IOException {
 		frmEvotingBulletinBoard = new JFrame();
 		frmEvotingBulletinBoard.setTitle("eVoting Bulletin Board");
 		frmEvotingBulletinBoard.setBounds(100, 100, 759, 439);
@@ -45,7 +50,7 @@ public class BulletinBoardDialog {
 		textPane.setEditable(false);
 		frmEvotingBulletinBoard.getContentPane().add(textPane, BorderLayout.CENTER);
 
-		InetSocketAddress addr = new InetSocketAddress(8000);
+		InetSocketAddress addr = new InetSocketAddress(httpPort);
 		HttpServer server = HttpServer.create(addr, 0);
 
 		server.createContext("/", new MyHandler());
@@ -54,10 +59,10 @@ public class BulletinBoardDialog {
 		System.out.println(String.format("Bulletin Board HTTP Server is listening to port %d. Webserver is running on port %d", DEFAULT_BULLETIN_BOARD_PORT, 8000));
 	}
 
-	private void work() {
+	private void work(int port) {
 		while (true) {
 			try {
-				Network.waitForClient(DEFAULT_BULLETIN_BOARD_PORT);
+				Network.waitForClient(port);
 				byte[] in = Network.networkIn();
 				textPane.setText(textPane.getText() + Utilities.byteArrayToHexString(in) + "\n");
 				data.add(in);

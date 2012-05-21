@@ -11,9 +11,12 @@ import de.uni.trier.infsec.utils.Utilities;
 public class NetworkProxy {
 
 	public static final int DEFAULT_PROXY_PORT = 4949;
+	private int serverPort;
+	private String serverAddress;
 	
-	public NetworkProxy(int port) throws IOException {
-		this.serverSocket = new ServerSocket(port);
+	public NetworkProxy(int listenPort, String serverAddress, int serverPort) throws IOException {
+		this.serverSocket = new ServerSocket(listenPort);
+		this.serverPort = serverPort;
 	}
 
 	private class NetworkThread implements Runnable {
@@ -53,7 +56,7 @@ public class NetworkProxy {
 	public synchronized byte[] handleConnection(byte[] data) {
 		byte[] response = null;
 		try {
-			Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PORT);
+			Network.connectToServer(serverAddress, serverPort);
 			Network.networkOut(data);
 			response = Network.networkIn();
 		} catch (NetworkError e) {
@@ -69,6 +72,7 @@ public class NetworkProxy {
 			while (true) {
 				try {
 					Socket s = serverSocket.accept();
+					System.out.println("Received connection. Starting NetworkThread");
 					Thread t = new Thread(new NetworkThread(s));
 					t.start();
 				} catch (Exception e) {
@@ -86,7 +90,16 @@ public class NetworkProxy {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		NetworkProxy proxy = new NetworkProxy(DEFAULT_PROXY_PORT);
+		int listenPort = DEFAULT_PROXY_PORT;
+		int serverPort = Network.DEFAULT_PORT;
+		String serverAddress = Network.DEFAULT_SERVER;
+		if (args.length >= 3) {
+			listenPort = Integer.parseInt(args[0]);
+			serverAddress = args[1];
+			serverPort = Integer.parseInt(args[2]);
+		}
+		
+		NetworkProxy proxy = new NetworkProxy(listenPort, serverAddress, serverPort);
 		proxy.waitForClients();
 	}
 

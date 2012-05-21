@@ -23,7 +23,7 @@ public class VotingClientDialog {
 
 	private JFrame frmEvotingClient;
 	private VoterStandalone handler = null;
-	private JList lstChoices = null;
+	private JList<String> lstChoices = null;
 	private JButton btnRegister = null;
 	private JButton btnVoteNow = null;
 	private JLabel lblTheCredential = null;
@@ -123,7 +123,7 @@ public class VotingClientDialog {
 		frmEvotingClient.getContentPane().add(pnlChoices);
 		pnlChoices.setLayout(null);
 		
-		lstChoices = new JList(VotingServerStandalone.votes);
+		lstChoices = new JList<String>(VotingServerStandalone.votes);
 		lstChoices.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				choice = Utilities.hexStringToByteArray(lstChoices.getSelectedValue().toString())[0];
