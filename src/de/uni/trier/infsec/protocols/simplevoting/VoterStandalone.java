@@ -58,7 +58,7 @@ public class VoterStandalone {
 		Encryptor encServer = new Encryptor(Utilities.hexStringToByteArray(VotingServerStandalone.publicKey));
 		Decryptor decClient = new Decryptor(readVoterPublicKeyFromFile(), readVoterPrivateKeyFromFile());
 		Voter voter = new Voter(decClient, encServer);
-		String filename = System.getProperty("java.io.tmpdir") + "/"
+		String filename = System.getProperty("java.io.tmpdir") + File.separator + "evoting" + File.separator
 				+ Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo";
 		File f = new File(filename);
 		if (f.exists()) {
@@ -126,7 +126,8 @@ public class VoterStandalone {
 		Voter voter = new Voter(decClient, encServer);
 		voter.setCredential(response);
 
-		FileOutputStream fout = new FileOutputStream(System.getProperty("java.io.tmpdir") + "/"
+		new File(System.getProperty("java.io.tmpdir") + File.separator + "evoting").mkdirs();
+		FileOutputStream fout = new FileOutputStream(System.getProperty("java.io.tmpdir") + File.separator + "evoting" + File.separator
 				+ Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo");
 		fout.write(response);
 		fout.close();
@@ -138,7 +139,7 @@ public class VoterStandalone {
 	 * Checks whether a exists that contains the credential.
 	 */
 	public boolean isRegistered() {
-		String filename = System.getProperty("java.io.tmpdir") + "/"
+		String filename = System.getProperty("java.io.tmpdir") + File.separator + "evoting" + File.separator
 				+ Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo";
 		if ((new File(filename)).exists()) {
 			return true;

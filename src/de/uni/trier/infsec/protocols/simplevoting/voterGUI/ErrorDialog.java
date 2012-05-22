@@ -16,6 +16,7 @@ public class ErrorDialog extends JDialog {
 	private static final long serialVersionUID = -8453284667893128562L;
 	private final JPanel contentPanel = new JPanel();
 
+	// TODO Refactor
 	public ErrorDialog(String message) {
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setTitle("eVoting Error");

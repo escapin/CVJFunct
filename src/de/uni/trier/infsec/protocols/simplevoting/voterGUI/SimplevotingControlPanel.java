@@ -1,17 +1,19 @@
 package de.uni.trier.infsec.protocols.simplevoting.voterGUI;
 
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -23,14 +25,15 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
+import de.uni.trier.infsec.protocols.simplevoting.HTTPBulletinBoard;
 import de.uni.trier.infsec.protocols.simplevoting.NetworkProxy;
 import de.uni.trier.infsec.protocols.simplevoting.VoterStandalone;
 import de.uni.trier.infsec.protocols.simplevoting.VotingServerStandalone;
 
 public class SimplevotingControlPanel extends JFrame implements KeyListener, ActionListener {
 
+	private static final long serialVersionUID = -5414028508877061099L;
 	private JPanel contentPane;
 	private JTextField txtPath;
 	public String selectedFolder = ".";
@@ -68,7 +71,6 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 	private String proxyServerAddress;
 	private String serverBBAddress;
 	private JTextField txtServerListenPort;
-	private Process clientProcess;
 
 	public static final String CMD_BROWSE = "BROWSE";
 	public static final String CMD_START_SERVER = "START_SERVER";
@@ -101,8 +103,20 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 	 * Create the frame.
 	 */
 	public SimplevotingControlPanel() {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				if (serverProcess != null)
+					serverProcess.destroy();
+				if (bulletinBoardProcess != null)
+					bulletinBoardProcess.destroy();
+				if (proxyProcess != null)
+					proxyProcess.destroy();
+			}
+		});
+		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 700, 495);
+		setBounds(100, 100, 474, 552);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -113,118 +127,118 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 
 		txtPath = new JTextField();
 		txtPath.setEditable(false);
-		txtPath.setBounds(10, 23, 157, 20);
+		txtPath.setBounds(10, 23, 340, 20);
 		contentPane.add(txtPath);
 		txtPath.setColumns(10);
 
 		txtProxyListenPort = new JTextField();
 		txtProxyListenPort.setText("4242");
-		txtProxyListenPort.setBounds(136, 231, 46, 20);
+		txtProxyListenPort.setBounds(254, 210, 46, 20);
 		contentPane.add(txtProxyListenPort);
 		txtProxyListenPort.setColumns(10);
 
 		txtBBHttpPort = new JTextField();
 		txtBBHttpPort.setText("8888");
-		txtBBHttpPort.setBounds(208, 343, 46, 20);
+		txtBBHttpPort.setBounds(254, 359, 46, 20);
 		contentPane.add(txtBBHttpPort);
 		txtBBHttpPort.setColumns(10);
 
 		txtClientServerAddress = new JTextField();
 		txtClientServerAddress.setText("127.0.0.1");
-		txtClientServerAddress.setBounds(528, 421, 86, 20);
+		txtClientServerAddress.setBounds(254, 452, 86, 20);
 		contentPane.add(txtClientServerAddress);
 		txtClientServerAddress.setColumns(10);
 
 		txtClientServerPort = new JTextField();
 		txtClientServerPort.setText("4242");
-		txtClientServerPort.setBounds(626, 421, 46, 20);
+		txtClientServerPort.setBounds(254, 426, 46, 20);
 		contentPane.add(txtClientServerPort);
 		txtClientServerPort.setColumns(10);
 
 		txtServerBBAddress = new JTextField();
 		txtServerBBAddress.setText("127.0.0.1");
-		txtServerBBAddress.setBounds(146, 124, 86, 20);
+		txtServerBBAddress.setBounds(254, 163, 86, 20);
 		contentPane.add(txtServerBBAddress);
 		txtServerBBAddress.setColumns(10);
 
 		txtServerBBPort = new JTextField();
 		txtServerBBPort.setText("4554");
-		txtServerBBPort.setBounds(338, 124, 86, 20);
+		txtServerBBPort.setBounds(254, 105, 46, 20);
 		contentPane.add(txtServerBBPort);
 		txtServerBBPort.setColumns(10);
 
 		txtProxyServerPort = new JTextField();
 		txtProxyServerPort.setText("4043");
-		txtProxyServerPort.setBounds(336, 232, 86, 20);
+		txtProxyServerPort.setBounds(254, 241, 46, 20);
 		contentPane.add(txtProxyServerPort);
 		txtProxyServerPort.setColumns(10);
 
 		txtProxyServerAddress = new JTextField();
 		txtProxyServerAddress.setText("127.0.0.1");
-		txtProxyServerAddress.setBounds(334, 265, 86, 20);
+		txtProxyServerAddress.setBounds(254, 268, 86, 20);
 		contentPane.add(txtProxyServerAddress);
 		txtProxyServerAddress.setColumns(10);
 
 		txtBBListenPort = new JTextField();
 		txtBBListenPort.setText("4554");
-		txtBBListenPort.setBounds(205, 368, 86, 20);
+		txtBBListenPort.setBounds(254, 384, 46, 20);
 		contentPane.add(txtBBListenPort);
 		txtBBListenPort.setColumns(10);
 
 		JButton btnStopServer = new JButton("Stop");
 		btnStopServer.addActionListener(this);
-		btnStopServer.setBounds(235, 88, 89, 23);
+		btnStopServer.setBounds(10, 162, 89, 23);
 		btnStopServer.setActionCommand(CMD_STOP_SERVER);
 		contentPane.add(btnStopServer);
 
 		JButton btnStartProxy = new JButton("Start");
 		btnStartProxy.addActionListener(this);
-		btnStartProxy.setBounds(136, 195, 89, 23);
+		btnStartProxy.setBounds(10, 240, 89, 23);
 		btnStartProxy.setActionCommand(CMD_START_PROXY);
 		contentPane.add(btnStartProxy);
 
 		JButton btnStopProxy = new JButton("Stop");
 		btnStopProxy.addActionListener(this);
-		btnStopProxy.setBounds(235, 195, 89, 23);
+		btnStopProxy.setBounds(10, 267, 89, 23);
 		btnStopProxy.setActionCommand(CMD_STOP_PROXY);
 		contentPane.add(btnStopProxy);
 
 		JButton btnStartBulletinBoard = new JButton("Start");
 		btnStartBulletinBoard.addActionListener(this);
-		btnStartBulletinBoard.setBounds(136, 307, 89, 23);
+		btnStartBulletinBoard.setBounds(10, 358, 89, 23);
 		btnStartBulletinBoard.setActionCommand(CMD_START_BULLETIN);
 		contentPane.add(btnStartBulletinBoard);
 
 		JButton btnStopBulletinBoard = new JButton("Stop");
 		btnStopBulletinBoard.addActionListener(this);
-		btnStopBulletinBoard.setBounds(235, 307, 89, 23);
+		btnStopBulletinBoard.setBounds(10, 383, 89, 23);
 		btnStopBulletinBoard.setActionCommand(CMD_STOP_BULLETIN);
 		contentPane.add(btnStopBulletinBoard);
 
 		JButton btnStartClient = new JButton("Start");
 		btnStartClient.addActionListener(this);
 		btnStartClient.setActionCommand(CMD_START_CLIENT);
-		btnStartClient.setBounds(427, 420, 89, 23);
+		btnStartClient.setBounds(10, 451, 89, 23);
 		contentPane.add(btnStartClient);
 
 		JButton btnBrowse = new JButton("Browse");
 		btnBrowse.addActionListener(this);
 		btnBrowse.setActionCommand(CMD_BROWSE);
-		btnBrowse.setBounds(235, 22, 89, 23);
+		btnBrowse.setBounds(360, 22, 89, 23);
 		contentPane.add(btnBrowse);
 
 		JButton btnGenerateKeyfiles = new JButton("Generate Keyfiles");
 		btnGenerateKeyfiles.addActionListener(this);
-		btnGenerateKeyfiles.setBounds(10, 54, 314, 23);
+		btnGenerateKeyfiles.setBounds(271, 54, 178, 23);
 		btnGenerateKeyfiles.setActionCommand(CMD_GENERATE);
 		contentPane.add(btnGenerateKeyfiles);
 
-		JButton btnRefresh = new JButton("refresh");
+		JButton btnRefresh = new JButton("Refresh");
 		btnRefresh.addActionListener(this);
-		btnRefresh.setBounds(481, 34, 72, 23);
+		btnRefresh.setBounds(377, 451, 72, 23);
 		btnRefresh.setActionCommand(CMD_REFRESH);
 		contentPane.add(btnRefresh);
-		btnStartServer.setBounds(136, 88, 89, 23);
+		btnStartServer.setBounds(10, 133, 89, 23);
 		btnStartServer.setActionCommand(CMD_START_SERVER);
 		contentPane.add(btnStartServer);
 
@@ -239,75 +253,95 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 		txtBBListenPort.addKeyListener(this);
 
 		JLabel lblVotingServer = new JLabel("Voting Server");
+		lblVotingServer.setFont(new Font("Tahoma", Font.BOLD, 12));
 		lblVotingServer.setBounds(10, 92, 116, 14);
 		contentPane.add(lblVotingServer);
 
 		JLabel lblVotingProxy = new JLabel("Voting Proxy");
+		lblVotingProxy.setFont(new Font("Tahoma", Font.BOLD, 12));
 		lblVotingProxy.setBounds(10, 199, 86, 14);
 		contentPane.add(lblVotingProxy);
 
 		JLabel lblBulletinBoard = new JLabel("Bulletin Board");
-		lblBulletinBoard.setBounds(10, 311, 116, 14);
+		lblBulletinBoard.setFont(new Font("Tahoma", Font.BOLD, 12));
+		lblBulletinBoard.setBounds(10, 307, 116, 14);
 		contentPane.add(lblBulletinBoard);
 
 		lblServerStatus = new JLabel("offline");
-		lblServerStatus.setBounds(353, 92, 46, 14);
+		lblServerStatus.setBounds(10, 111, 46, 14);
 		contentPane.add(lblServerStatus);
 
 		lblProxyStatus = new JLabel("offline");
-		lblProxyStatus.setBounds(353, 199, 46, 14);
+		lblProxyStatus.setBounds(10, 216, 46, 14);
 		contentPane.add(lblProxyStatus);
 
 		lblBulletinStatus = new JLabel("offline");
-		lblBulletinStatus.setBounds(353, 311, 46, 14);
+		lblBulletinStatus.setBounds(10, 332, 46, 14);
 		contentPane.add(lblBulletinStatus);
 
 		cntFiles = new JSpinner();
 		cntFiles.setModel(new SpinnerNumberModel(new Integer(20), new Integer(0), null, new Integer(1)));
-		cntFiles.setBounds(177, 23, 48, 20);
+		cntFiles.setBounds(208, 57, 46, 20);
 		contentPane.add(cntFiles);
 
 		JLabel lblBulletinboardAddress = new JLabel("BulletinBoard Address");
-		lblBulletinboardAddress.setBounds(10, 128, 138, 14);
+		lblBulletinboardAddress.setBounds(136, 166, 116, 14);
 		contentPane.add(lblBulletinboardAddress);
 
 		JLabel lblPort = new JLabel("BulletinBoard Port");
-		lblPort.setBounds(245, 124, 105, 14);
+		lblPort.setBounds(136, 108, 116, 14);
 		contentPane.add(lblPort);
 
 		JLabel lblExternalPort = new JLabel("External port");
-		lblExternalPort.setBounds(12, 235, 89, 14);
+		lblExternalPort.setBounds(136, 213, 118, 14);
 		contentPane.add(lblExternalPort);
 
 		JLabel lblVotingserverPort = new JLabel("VotingServer Port");
-		lblVotingserverPort.setBounds(213, 235, 111, 14);
+		lblVotingserverPort.setBounds(136, 244, 118, 14);
 		contentPane.add(lblVotingserverPort);
 
 		JLabel lblVotingserverAddress = new JLabel("VotingServer Address");
-		lblVotingserverAddress.setBounds(208, 262, 157, 14);
+		lblVotingserverAddress.setBounds(136, 271, 118, 14);
 		contentPane.add(lblVotingserverAddress);
 
 		JLabel lblHttpPort = new JLabel("HTTP Port");
-		lblHttpPort.setBounds(127, 347, 69, 14);
+		lblHttpPort.setBounds(136, 362, 103, 14);
 		contentPane.add(lblHttpPort);
 
 		JLabel lblListenPort = new JLabel("Listen port");
-		lblListenPort.setBounds(127, 371, 69, 14);
+		lblListenPort.setBounds(136, 387, 103, 14);
 		contentPane.add(lblListenPort);
 
 		comboBox = new JComboBox<String>();
-		comboBox.setBounds(12, 421, 412, 23);
+		comboBox.setBounds(10, 483, 439, 23);
 		contentPane.add(comboBox);
 
 		txtServerListenPort = new JTextField();
 		txtServerListenPort.setText("4043");
-		txtServerListenPort.setBounds(338, 157, 86, 20);
+		txtServerListenPort.setBounds(254, 134, 46, 20);
 		contentPane.add(txtServerListenPort);
 		txtServerListenPort.setColumns(10);
 
 		JLabel lblListenPort_1 = new JLabel("Listen Port");
-		lblListenPort_1.setBounds(235, 161, 89, 14);
+		lblListenPort_1.setBounds(136, 137, 116, 14);
 		contentPane.add(lblListenPort_1);
+
+		JLabel lblPleaseChooseNumber = new JLabel("Choose number of Clients to prepare");
+		lblPleaseChooseNumber.setBounds(10, 58, 188, 14);
+		contentPane.add(lblPleaseChooseNumber);
+
+		JLabel lblServerPort = new JLabel("Server Port");
+		lblServerPort.setBounds(136, 429, 97, 14);
+		contentPane.add(lblServerPort);
+
+		JLabel lblServerAddress = new JLabel("Server Address");
+		lblServerAddress.setBounds(136, 455, 97, 14);
+		contentPane.add(lblServerAddress);
+
+		JLabel lblNewLabel = new JLabel("Voting Client");
+		lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 12));
+		lblNewLabel.setBounds(10, 429, 97, 14);
+		contentPane.add(lblNewLabel);
 	}
 
 	private void refreshVoterList() {
@@ -367,7 +401,7 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 			refresh();
 		} else if (event.getActionCommand().equalsIgnoreCase(CMD_START_BULLETIN)) {
 			System.out.println(String.format("Starting BulletinBoard on port %d and HTTPPort %d", bbListenPort, bbHttpPort));
-			bulletinBoardProcess = execJavaCommand(BulletinBoardDialog.class.getName(), Integer.toString(bbListenPort), Integer.toString(bbHttpPort));
+			bulletinBoardProcess = execJavaCommand(HTTPBulletinBoard.class.getName(), Integer.toString(bbListenPort), Integer.toString(bbHttpPort));
 		} else if (event.getActionCommand().equalsIgnoreCase(CMD_START_PROXY)) {
 			System.out.println(String.format("Starting Proxy on port %d with ServerAddress %s and ServerPort %d", proxyListenPort, proxyServerAddress,
 					proxyServerPort));
@@ -380,8 +414,8 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 		} else if (event.getActionCommand().equalsIgnoreCase(CMD_START_CLIENT)) {
 			System.out.println(String.format("Starting Client on ServerAddress %s, ServerPort %d,  Files %s and %s", clientServerAddress, clientServerPort,
 					comboBox.getSelectedItem().toString().replaceAll("\\.pri", "\\.pub"), comboBox.getSelectedItem().toString()));
-			clientProcess = execJavaCommand(VoterStandalone.class.getName(), comboBox.getSelectedItem().toString().replaceAll("\\.pri", "\\.pub"), comboBox
-					.getSelectedItem().toString(), clientServerAddress, Integer.toString(clientServerPort));
+			execJavaCommand(VoterStandalone.class.getName(), comboBox.getSelectedItem().toString().replaceAll("\\.pri", "\\.pub"), comboBox.getSelectedItem()
+					.toString(), clientServerAddress, Integer.toString(clientServerPort));
 		} else if (event.getActionCommand().equalsIgnoreCase(CMD_STOP_BULLETIN)) {
 			if (bulletinBoardProcess != null)
 				bulletinBoardProcess.destroy();
@@ -426,25 +460,21 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 		try {
 			lblServerStatus.setText("offline");
 			if (serverProcess != null)
-				serverProcess.exitValue(); // throws exception in case not
-											// yet terminated
+				serverProcess.exitValue(); // throws exception in case not yet terminated
 		} catch (Exception ex) {
 			lblServerStatus.setText("online");
 		}
 		try {
 			lblProxyStatus.setText("offline");
 			if (proxyProcess != null)
-				proxyProcess.exitValue(); // throws exception in case not
-											// yet terminated
+				proxyProcess.exitValue(); // throws exception in case not yet terminated
 		} catch (Exception ex) {
 			lblProxyStatus.setText("online");
 		}
 		try {
 			lblBulletinStatus.setText("offline");
 			if (bulletinBoardProcess != null)
-				bulletinBoardProcess.exitValue(); // throws exception in
-													// case not yet
-													// terminated
+				bulletinBoardProcess.exitValue(); // throws exception in case not yet terminated
 		} catch (Exception ex) {
 			lblBulletinStatus.setText("online");
 		}

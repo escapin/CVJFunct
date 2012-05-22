@@ -33,11 +33,15 @@ public class VotingServerDialog {
 		JButton btnStartCountingPhase = new JButton("Count and publish");
 		btnStartCountingPhase.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				server.setPhase(VotingServerStandalone.PHASE_COUNT_AND_SUBMIT);
-				lblStatus.setText("Votes counted and published");
-				server.countAndPublish();
+				try {					
+					server.setPhase(VotingServerStandalone.PHASE_COUNT_AND_SUBMIT);
+					lblStatus.setText("Votes counted and published");
+					server.countAndPublish();
+				} catch (IllegalStateException se) {
+					new ErrorDialog(se.getMessage());
+				}
 			}
-		});
+		}); 
 		btnStartCountingPhase.setBounds(12, 146, 317, 25);
 		frmEvotingServerAdministration.getContentPane().add(btnStartCountingPhase);
 		
@@ -49,8 +53,12 @@ public class VotingServerDialog {
 		JButton btnStartCollectionPhase = new JButton("Start Ballot collection");
 		btnStartCollectionPhase.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				server.setPhase(VotingServerStandalone.PHASE_COLLECT_BALLOT);
-				lblStatus.setText("Collecting ballots");
+				try {
+					server.setPhase(VotingServerStandalone.PHASE_COLLECT_BALLOT);
+					lblStatus.setText("Collecting ballots");
+				} catch (IllegalStateException se) {
+					new ErrorDialog(se.getMessage());
+				}
 			}
 		});
 		btnStartCollectionPhase.setBounds(12, 109, 317, 25);
@@ -59,8 +67,12 @@ public class VotingServerDialog {
 		JButton btnStartRegistrationPhase = new JButton("Start Registration phase");
 		btnStartRegistrationPhase.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				server.setPhase(VotingServerStandalone.PHASE_REGISTRATION);
-				lblStatus.setText("Waiting for registrations");
+				try {
+					server.setPhase(VotingServerStandalone.PHASE_REGISTRATION);
+					lblStatus.setText("Waiting for registrations");
+				} catch (IllegalStateException se) {
+					new ErrorDialog(se.getMessage());					
+				}
 			}
 		});
 		btnStartRegistrationPhase.setBounds(12, 72, 317, 25);

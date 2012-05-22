@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
 import de.uni.trier.infsec.environment.crypto.KeyPair;
@@ -40,6 +41,7 @@ public class PrepareAndRunServer {
 	}
 
 	public static void prepareFiles(String path, int count) throws IOException {
+		cleanupFiles(path);
 		File dir = new File(path);
 		if (!dir.exists())
 			dir.mkdirs();
@@ -69,6 +71,21 @@ public class PrepareAndRunServer {
 		}
 		bw.flush();
 		bw.close();
+	}
+
+	private static void cleanupFiles(String path) {
+		File[] files = new File(path).listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File arg0, String name) {
+				return (name.endsWith("pri") || name.endsWith("pub") || name.equals("evo")); 
+			}
+		});
+		for (File f : files) {
+			f.delete();
+		}
+		File tmpdir = new File(System.getProperty("java.io.tmpdir") + File.separator + "evoting");
+		for (File f : tmpdir.listFiles()) f.delete();
+		tmpdir.delete();
 	}
 
 }
