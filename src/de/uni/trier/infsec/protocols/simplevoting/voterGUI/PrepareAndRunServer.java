@@ -84,8 +84,10 @@ public class PrepareAndRunServer {
 			f.delete();
 		}
 		File tmpdir = new File(System.getProperty("java.io.tmpdir") + File.separator + "evoting");
-		for (File f : tmpdir.listFiles()) f.delete();
-		tmpdir.delete();
+		try {			
+			for (File f : tmpdir.listFiles()) f.delete();
+			tmpdir.delete();
+		} catch (Exception e) {}
 	}
 
 }

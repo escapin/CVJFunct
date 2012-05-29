@@ -34,7 +34,7 @@ public class VotingServerCore {
 		this.votersEnc = votersEnc;
 		this.serverDecr = serverDecr;
 		
-		voterCredentials = new byte[nonceLength][votersEnc.length];
+		voterCredentials = new byte[votersEnc.length][nonceLength];
 		ballotBox = new byte[votersEnc.length][KEY_LENGTH];
 		resultVotes = votes;
 		resultCount = new int[5];
