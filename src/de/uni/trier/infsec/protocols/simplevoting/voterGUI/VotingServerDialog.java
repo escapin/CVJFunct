@@ -11,6 +11,7 @@ import de.uni.trier.infsec.protocols.simplevoting.VotingServerStandalone;
 import javax.swing.JLabel;
 import java.awt.Font;
 import javax.swing.SwingConstants;
+import java.awt.Color;
 
 public class VotingServerDialog {
 
@@ -25,29 +26,15 @@ public class VotingServerDialog {
 	
 	private void initialize() {
 		frmEvotingServerAdministration = new JFrame();
+		frmEvotingServerAdministration.getContentPane().setBackground(Color.WHITE);
 		frmEvotingServerAdministration.setTitle("eVoting Server Administration");
-		frmEvotingServerAdministration.setBounds(100, 100, 346, 219);
+		frmEvotingServerAdministration.setBounds(100, 100, 368, 232);
 		frmEvotingServerAdministration.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmEvotingServerAdministration.getContentPane().setLayout(null);
 		
-		JButton btnStartCountingPhase = new JButton("Count and publish");
-		btnStartCountingPhase.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				try {					
-					server.setPhase(VotingServerStandalone.PHASE_COUNT_AND_SUBMIT);
-					lblStatus.setText("Votes counted and published");
-					server.countAndPublish();
-				} catch (IllegalStateException se) {
-					new ErrorDialog(se.getMessage());
-				}
-			}
-		}); 
-		btnStartCountingPhase.setBounds(12, 146, 317, 25);
-		frmEvotingServerAdministration.getContentPane().add(btnStartCountingPhase);
-		
 		JLabel lblNewLabel = new JLabel("Current Status");
 		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		lblNewLabel.setBounds(12, 12, 317, 15);
+		lblNewLabel.setBounds(12, 12, 330, 15);
 		frmEvotingServerAdministration.getContentPane().add(lblNewLabel);
 		
 		JButton btnStartCollectionPhase = new JButton("Start Ballot collection");
@@ -61,7 +48,28 @@ public class VotingServerDialog {
 				}
 			}
 		});
-		btnStartCollectionPhase.setBounds(12, 109, 317, 25);
+		
+		JButton btnStartCountingPhase = new JButton("Count and publish");
+		btnStartCountingPhase.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {					
+					server.setPhase(VotingServerStandalone.PHASE_COUNT_AND_SUBMIT);
+					lblStatus.setText("Votes counted and published");
+					server.countAndPublish();
+				} catch (IllegalStateException se) {
+					new ErrorDialog(se.getMessage());
+				}
+			}
+		}); 
+		
+		lblStatus = new JLabel("offline");
+		lblStatus.setHorizontalAlignment(SwingConstants.CENTER);
+		lblStatus.setFont(new Font("Dialog", Font.BOLD, 16));
+		lblStatus.setBounds(12, 51, 330, 15);
+		frmEvotingServerAdministration.getContentPane().add(lblStatus);
+		btnStartCountingPhase.setBounds(12, 158, 330, 25);
+		frmEvotingServerAdministration.getContentPane().add(btnStartCountingPhase);
+		btnStartCollectionPhase.setBounds(12, 122, 330, 25);
 		frmEvotingServerAdministration.getContentPane().add(btnStartCollectionPhase);
 		
 		JButton btnStartRegistrationPhase = new JButton("Start Registration phase");
@@ -75,14 +83,8 @@ public class VotingServerDialog {
 				}
 			}
 		});
-		btnStartRegistrationPhase.setBounds(12, 72, 317, 25);
+		btnStartRegistrationPhase.setBounds(12, 86, 330, 25);
 		frmEvotingServerAdministration.getContentPane().add(btnStartRegistrationPhase);
-		
-		lblStatus = new JLabel("offline");
-		lblStatus.setHorizontalAlignment(SwingConstants.CENTER);
-		lblStatus.setFont(new Font("Dialog", Font.BOLD, 16));
-		lblStatus.setBounds(12, 39, 317, 15);
-		frmEvotingServerAdministration.getContentPane().add(lblStatus);
 	}
 	
 	public void start() {

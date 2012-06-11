@@ -30,6 +30,7 @@ import de.uni.trier.infsec.protocols.simplevoting.HTTPBulletinBoard;
 import de.uni.trier.infsec.protocols.simplevoting.NetworkProxy;
 import de.uni.trier.infsec.protocols.simplevoting.VoterStandalone;
 import de.uni.trier.infsec.protocols.simplevoting.VotingServerStandalone;
+import java.awt.Color;
 
 public class SimplevotingControlPanel extends JFrame implements KeyListener, ActionListener {
 
@@ -118,6 +119,7 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 474, 552);
 		contentPane = new JPanel();
+		contentPane.setBackground(Color.WHITE);
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
