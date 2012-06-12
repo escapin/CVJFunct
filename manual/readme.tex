@@ -30,9 +30,9 @@
 The eVoting Software requires at least Java 1.7 to run, it was tested to work with Windows and Linux (Oracle JRE or JDK). All connection capabilities have been tested with IPv4 connect information.
 
 \section{SimplevotingControlPanel}
-The SimpleVotingControlPanel is a graphical interface for configuring and running all the different components of this software. To start it, navigate to eVoting.jar and use this command (without linebreaks):
+The SimpleVotingControlPanel is a graphical interface for configuring and running all the different components of this software. To start it, navigate to bin\ directory and use this command (without linebreaks):
 \begin{lstlisting}
-java -jar eVoting.jar 
+java -cp .;..\lib\bcprov-jdk16-146.jar 
 de.uni.trier.infsec.protocols.simplevoting.voterGUI.SimplevotingControlPanel
 \end{lstlisting}
 You should see the following window:\\
@@ -73,26 +73,26 @@ When using ControlPanel to start components of the software, each one is started
 You can also start each component without the control panel using these commands:\\
 \textbf{VotingServer}
 \begin{lstlisting}
-java -jar eVoting.jar 
+java -cp .;..\lib\bcprov-jdk16-146.jar 
 de.uni.trier.infsec.protocols.simplevoting.VotingServerStandalone 
 <path-to-clients.evo> <listen-port> <bulletin-board-address> <bulletin-board-port>
 \end{lstlisting}
 \textbf{VotingClient}
 \begin{lstlisting}
-java -jar eVoting.jar 
+java -cp .;..\lib\bcprov-jdk16-146.jar 
 de.uni.trier.infsec.protocols.simplevoting.VoterStandalone
 <path-to-publickey> <path-to-privatekey> <voting-proxy-address> <voting-proxy-port>
 \end{lstlisting}
 \textbf{HTTP BulletinBoard}
 \begin{lstlisting}
-java -jar eVoting.jar 
+java -cp .;..\lib\bcprov-jdk16-146.jar 
 de.uni.trier.infsec.protocols.simplevoting.HTTPBulletinBoard 
 <listen-port> <HTTP-server-port>
 \end{lstlisting}
 If no parameters are specified, the default ports 4554 for listen port and 8888 for webserver port are used.\\
 \textbf{Network Proxy}
 \begin{lstlisting}
-java -jar eVoting.jar 
+java -cp .;..\lib\bcprov-jdk16-146.jar 
 de.uni.trier.infsec.protocols.simplevoting.NetworkProxy
 <listen-port> <voting-server-address> <voting-server-port>
 \end{lstlisting}

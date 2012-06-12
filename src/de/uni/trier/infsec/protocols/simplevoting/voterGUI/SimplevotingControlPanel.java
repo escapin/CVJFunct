@@ -328,7 +328,7 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 		lblListenPort_1.setBounds(136, 137, 116, 14);
 		contentPane.add(lblListenPort_1);
 
-		JLabel lblPleaseChooseNumber = new JLabel("Choose number of Clients to prepare");
+		JLabel lblPleaseChooseNumber = new JLabel("Number of Clients to prepare");
 		lblPleaseChooseNumber.setBounds(10, 58, 188, 14);
 		contentPane.add(lblPleaseChooseNumber);
 
