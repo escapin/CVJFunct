@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<project name="CryptoJavaGeneric" default="build" basedir=".">
+  <target name="build">
+    <mkdir dir="bin"/>
+    <javac srcdir="src" destdir="bin">
+      <classpath>
+        <pathelement location="lib/bcprov-jdk16-146.jar"/>
+        <pathelement location="lib/junit-4.8.2.jar"/>
+      </classpath>
+    </javac>
+  </target>
+</project>
