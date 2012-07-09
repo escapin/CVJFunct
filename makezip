@@ -1,2 +1,2 @@
 rm eVotingRS3.zip
-zip eVotingRS3.zip -r src lib manual README.txt
+zip eVotingRS3.zip -r src lib manual README.txt build.xml
