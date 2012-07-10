@@ -66,7 +66,7 @@ public class Setup {
 					Network.networkOut(credential);
 					break;
 
-			case 1: // submit a ballot to the server:
+			case 1: // submit a message (as a ballot) to the server:
 					server.collectBallot( Network.networkIn() );
 					break;
 				
@@ -85,8 +85,14 @@ public class Setup {
 					if (secret) {  // these votes get swapped depending on the value of the secret
 						byte tmp=v0; v0=v1; v1=tmp;
 					}
-					Network.networkOut( voter[0].makeBallot(v0) );	// the voters output their ballots
-					Network.networkOut( voter[1].makeBallot(v1) ); 					
+					
+					byte[] ballot0 = voter[0].makeBallot(v0);  // the ballots are created by the voters ...
+					byte[] ballot1 = voter[1].makeBallot(v1); 					
+					Network.networkOut( ballot0 );	// ... sent over the network ...
+					Network.networkOut( ballot1 );
+					server.collectBallot(ballot0);  // ... and delivered directly to the server
+					server.collectBallot(ballot1);
+	
 					break;		
 			}
 
