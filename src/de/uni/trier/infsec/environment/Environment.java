@@ -33,10 +33,29 @@ public class Environment {
     	return tmp;
 	}
 		
-    public static void untrustedOuput(int x) {
+    public static void untrustedOutput(int x) {
 		if (untrustedInput()==0) {
 			result = (x==untrustedInput());
 			throw new Error();  // abort
 		}
 	}
+    
+    public static byte[] untrustedInputMessage() {
+		int len = untrustedInput();
+		if (len<0) return null;
+		byte[] returnval = new byte[len];
+		for (int i = 0; i < len; i++) {
+			returnval[i] = (byte) Environment.untrustedInput();
+		}
+		return returnval;    
+    }
+    
+    public static void untrustedOutputMessage(byte[] t) {
+    	untrustedOutput(t.length);
+		for (int i = 0; i < t.length; i++) {
+			untrustedOutput(t[i]);
+		}
+    }
+    
+    
 }        
