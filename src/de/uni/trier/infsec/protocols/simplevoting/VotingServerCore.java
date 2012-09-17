@@ -78,7 +78,6 @@ public class VotingServerCore {
 		
 		for (int i = 0; i < voterCredentials.length; i++) {
 			if (arrayEqual(voterCredentials[i], credential)) {
-				System.out.println("Stored ballot");
 				ballotBox[i] = ballot;
 			}
 		}
