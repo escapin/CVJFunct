@@ -56,7 +56,7 @@ public class VotingServerCore {
 			// We found the voter in the list, so now check if credentials exist
 			if (voterCredentials[i] != null && !arrayEmpty(voterCredentials[i])) {
 				byte[] credentialEnc = voterEnc.encrypt(voterCredentials[i]);
-				return credentialEnc; // Credential exists
+				return credentialEnc;
 			} else {
 				byte[] credential = freshCredential();
 				voterCredentials[i] = credential;
@@ -69,7 +69,8 @@ public class VotingServerCore {
 
 	/**
 	 * Takes a message 'ballot' checks its well-formedness and (if it is a valid ballot
-	 * of a voter who has not voted yet) collects it. If multiple votes per credential are casted, last vote counts.
+	 * of a voter who has not voted yet) collects it. If multiple votes per credential
+	 * are cast, the last one counts.
 	 */
 	public void collectBallot( byte[] ballot ) {
 		byte[] ballotDec 	= serverDecr.decrypt(ballot); 		// Decrypt the ballot using servers private key
