@@ -19,48 +19,45 @@ public class VotingServerCore {
 	private static final byte[] votes = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05};
 	private static int currNonce = 1;
 	
-	private Encryptor[] votersEnc;	// a collection of eligibe voters' public keys
-	private byte[][] voterCredentials; // List of all credentials. Credentials for voters have same index as voter in votersPK
-	private byte[][] ballotBox; // Takes all ballots. Ballots that have been casted have same index as voter in votersPK
+	private byte[][] voterIDs;		// a collection of eligible voters' identifiers
+	private Encryptor[] voterEnc;	// a collection of eligible voters' public keys; keys for voters have same index as in voterIDs
+	private byte[][] voterCredentials; // List of all credentials. Credentials for voters have same index as voter in voterIDs
+	private byte[][] ballotBox; // Takes all ballots. Ballots that have been casted have same index as voter in votersIDs
 	private byte[] resultVotes; // Takes all the possible choices
 	private int[]   resultCount; // Takes the count for every choice
 	Decryptor serverDecr; 
 	
 	/**
-	 * The server is initialized with his decryptor and the list of (public keys of) 
-	 * eligible voters.
+	 * The server is initialized with his decryptor, the list of voters IDs and the corresponding list of
+	 * voters' encryptors (public keys)
 	 */
-	public VotingServerCore( Decryptor serverDecr, Encryptor[] votersEnc ) {
-		this.votersEnc = votersEnc;
+	public VotingServerCore( Decryptor serverDecr, byte[][] voterIDs, Encryptor[] voterEnc ) {
+		this.voterIDs = voterIDs;
+		this.voterEnc = voterEnc;
 		this.serverDecr = serverDecr;
 		
-		voterCredentials = new byte[votersEnc.length][nonceLength];
-		ballotBox = new byte[votersEnc.length][KEY_LENGTH];
+		voterCredentials = new byte[voterEnc.length][nonceLength];
+		ballotBox = new byte[voterEnc.length][KEY_LENGTH];
 		resultVotes = votes;
 		resultCount = new int[5];
 	}
 		
 	/**
-	 * Registration: the server generates a credential for a given voter ('voter' is 
-	 * the public key of a voter), if it is not generated yet.
+	 * Registration: the server generates a credential for a given voter, if it is not generated yet.
 	 * The method returns an encrypted credential 
 	 */
-	public byte[] getCredential( byte[] voter_pk ) {
+	public byte[] getCredential( byte[] voter_id ) {
 		
-		for (int i = 0; i < votersEnc.length; i++) {
-			Encryptor voterEnc = votersEnc[i];
-			byte[] voterPK = voterEnc.getPublicKey();
-			
-			if (!arrayEqual(voter_pk, voterPK)) continue;
-			
-			// We found the voter in the list, so now check if credentials exist
+		for (int i = 0; i < voterIDs.length; i++) {
+			if (!arrayEqual(voter_id, voterIDs[i])) continue;
+			// the voter found, so (generate and) issue a credential
 			if (voterCredentials[i] != null && !arrayEmpty(voterCredentials[i])) {
-				byte[] credentialEnc = voterEnc.encrypt(voterCredentials[i]);
+				byte[] credentialEnc = voterEnc[i].encrypt(voterCredentials[i]);
 				return credentialEnc;
 			} else {
 				byte[] credential = freshCredential();
 				voterCredentials[i] = credential;
-				byte[] credentialEnc = voterEnc.encrypt(credential);
+				byte[] credentialEnc = voterEnc[i].encrypt(credential);
 				return credentialEnc;
 			}
 		}

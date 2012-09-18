@@ -9,11 +9,13 @@ import de.uni.trier.infsec.utils.MessageTools;
  * the server's encryptor (the servers public key).  
  */
 public class Voter {
+	public byte[]		 id			 = null;
 	protected Decryptor  voterDec    = null;
 	protected Encryptor  serverEnc   = null;
 	protected byte[] 	 credential = null;
 
-	public Voter(Decryptor voterDec, Encryptor serverEnc) {
+	public Voter(byte[] id, Decryptor voterDec, Encryptor serverEnc) {
+		this.id = id;
 		this.voterDec = voterDec;
 		this.serverEnc = serverEnc;
 	}

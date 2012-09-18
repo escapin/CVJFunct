@@ -30,22 +30,24 @@ public class Setup {
 		Encryptor serverEnc = serverDec.getEncryptor();
 		Network.networkOut(serverEnc.getPublicKey()); // the public key of the server is published
 		
-		// create voters' keys:
+		// create voters' identifiers and keys:
+		byte[][]    voterIDs = new byte[NoV][];
 		Decryptor[] voterDec = new Decryptor[NoV];
 		Encryptor[] voterEnc = new Encryptor[NoV];
 		for( int i=0; i<NoV; ++i ) {
+			voterIDs[i] = MessageTools.intToByteArray(i);
 			voterDec[i] = new Decryptor();
 			voterEnc[i] = voterDec[i].getEncryptor();
 			Network.networkOut(voterEnc[i].getPublicKey()); // the public keys of voters are published
 		}
 
 		// create the server:
-		VotingServerCore server = new VotingServerCore(serverDec, voterEnc);
+		VotingServerCore server = new VotingServerCore(serverDec, voterIDs, voterEnc);
 		
 		// create the honest voters
 		Voter[] voter = new Voter[NoHV];
 		for( int i=0; i<NoHV; ++i ) {
-			voter[i] = new Voter( voterDec[i],  serverEnc );
+			voter[i] = new Voter( voterIDs[i], voterDec[i], serverEnc );
 		}
 		
 		// the honest voters register successfully (encrypted credentials are, however, leaked):
