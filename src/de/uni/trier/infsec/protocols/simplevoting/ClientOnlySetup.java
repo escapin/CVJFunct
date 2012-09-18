@@ -28,7 +28,7 @@ public class ClientOnlySetup {
 		byte vote1 = Network.networkIn()[0]; // the adversary gives two values (bytes)
 		byte vote2 = Network.networkIn()[0];
 		byte vote = secret ? vote1 : vote2;    // and one of them is picked as the vote (depending on the value of the secret bit)
-		
+
 		// let the adversary determine the credential (even in this case the voter choice should remain secret)
 		byte[] credential = Network.networkIn();
 		
