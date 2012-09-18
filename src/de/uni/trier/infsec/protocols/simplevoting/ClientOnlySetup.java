@@ -2,8 +2,8 @@ package de.uni.trier.infsec.protocols.simplevoting;
 
 import de.uni.trier.infsec.environment.network.Network;
 import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pkenc.real.Decryptor;
-import de.uni.trier.infsec.functionalities.pkenc.real.Encryptor;
+import de.uni.trier.infsec.functionalities.pkenc.ideal.Decryptor;
+import de.uni.trier.infsec.functionalities.pkenc.ideal.Encryptor;
 
 
 // Creates one client and make her vote.
