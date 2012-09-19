@@ -411,13 +411,17 @@ public class SimplevotingControlPanel extends JFrame implements KeyListener, Act
 					Integer.toString(proxyServerPort));
 		} else if (event.getActionCommand().equalsIgnoreCase(CMD_START_SERVER)) {
 			System.out.println(String.format("Starting Server on port %d with BBAddress %s and BBPort %d", serverListenPort, serverBBAddress, serverBBPort));
-			serverProcess = execJavaCommand(VotingServerStandalone.class.getName(), selectedFolder + File.separator + "clients.evo",
-					Integer.toString(serverListenPort), serverBBAddress, Integer.toString(serverBBPort));
+			serverProcess = execJavaCommand(VotingServerStandalone.class.getName(), selectedFolder + File.separator + "clientPK.evo", selectedFolder + 
+					File.separator + "clientID.evo", Integer.toString(serverListenPort), serverBBAddress, Integer.toString(serverBBPort));
 		} else if (event.getActionCommand().equalsIgnoreCase(CMD_START_CLIENT)) {
 			System.out.println(String.format("Starting Client on ServerAddress %s, ServerPort %d,  Files %s and %s", clientServerAddress, clientServerPort,
 					comboBox.getSelectedItem().toString().replaceAll("\\.pri", "\\.pub"), comboBox.getSelectedItem().toString()));
+			
+			String voterID = comboBox.getSelectedItem().toString().replaceAll("\\.pri", "");
+			voterID = voterID.substring(voterID.lastIndexOf(File.separator) + 1, voterID.length());
+			
 			execJavaCommand(VoterStandalone.class.getName(), comboBox.getSelectedItem().toString().replaceAll("\\.pri", "\\.pub"), comboBox.getSelectedItem()
-					.toString(), clientServerAddress, Integer.toString(clientServerPort));
+					.toString(), voterID, clientServerAddress, Integer.toString(clientServerPort));
 		} else if (event.getActionCommand().equalsIgnoreCase(CMD_STOP_BULLETIN)) {
 			if (bulletinBoardProcess != null)
 				bulletinBoardProcess.destroy();

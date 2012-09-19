@@ -48,19 +48,22 @@ public class VotingServerStandalone {
 
 	private VotingServerCore serverCore = null;
 	private String votersPublicKeysFile = null;
+	private String votersIdsFile = null;
 
 	private int listenPort = Network.DEFAULT_PORT;
 	private String bulletinBoardAddress = Network.DEFAULT_SERVER;
 	private int bulletinBoardPort = HTTPBulletinBoard.DEFAULT_BULLETIN_BOARD_PORT;
 
-	public VotingServerStandalone(String path) {
-		this.votersPublicKeysFile = path;
+
+	public VotingServerStandalone(String pathPK, String pathID) {
+		this.votersPublicKeysFile = pathPK;
+		this.votersIdsFile = pathID;
 		init();
 	}
 
-	public VotingServerStandalone(String path, int listenPort, String bulletinBoardAddress, int bulletinBoardPort) {
-		this(path);
-		System.out.println(String.format("Voting server started with parameters: path: %s, listenPort: %d, BBAddress: %s, BBPort: %d", path, listenPort,
+	public VotingServerStandalone(String pathPK, String pathID, int listenPort, String bulletinBoardAddress, int bulletinBoardPort) {
+		this(pathPK, pathID);
+		System.out.println(String.format("Voting server started with parameters: path: %s, listenPort: %d, BBAddress: %s, BBPort: %d", pathPK, listenPort,
 				bulletinBoardAddress, bulletinBoardPort));
 		this.listenPort = listenPort;
 		this.bulletinBoardAddress = bulletinBoardAddress;
@@ -72,6 +75,8 @@ public class VotingServerStandalone {
 		try {
 			// Server expects a file containing all public keys of the clients
 			// as a hex string, each line is expected to be one public key.
+			// It also expects a file containing the IDs of the voters as Strings, one per line and
+			// in the same order as the public keys.
 			br = new BufferedReader(new FileReader(votersPublicKeysFile));
 			int count = Integer.parseInt(br.readLine());
 			Encryptor[] encryptors = new Encryptor[count];
@@ -81,10 +86,25 @@ public class VotingServerStandalone {
 				byte[] publicKey = Utilities.hexStringToByteArray(tmp); // converts the strings to bytes
 				encryptors[i] = new Encryptor(publicKey); // and creates the server
 			}
+			br.close();
+			
+			br = new BufferedReader(new FileReader(votersIdsFile));
+			count = Integer.parseInt(br.readLine());
+			byte[][] voterIds = new byte[count][];
+			for (int i = 0; i < count; i++) {
+				String tmp = br.readLine();
+				System.out.println(String.format("Processing id %s", tmp));
+				byte[] id = Utilities.hexStringToByteArray(tmp);
+				voterIds[i] = id;
+			}
+			br.close();
+			
+			if (voterIds.length != encryptors.length) throw new IllegalArgumentException("The length of voterID and publicKey File differ");			
 			byte[] pubKey = Utilities.hexStringToByteArray(publicKey);
 			byte[] privKey = Utilities.hexStringToByteArray(privateKey);
+			
 			// After all public keys have been read, create the core server
-			serverCore = new VotingServerCore(new Decryptor(pubKey, privKey), encryptors);
+			serverCore = new VotingServerCore(new Decryptor(pubKey, privKey), voterIds, encryptors);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -154,9 +174,9 @@ public class VotingServerStandalone {
 			byte[] input = Network.networkIn();
 			System.out.println("Received request via network: " + Utilities.byteArrayToHexString(input));
 			if (input[0] == REQUEST_CREDENTIAL) { // Registration
-				byte[] publicKey = new byte[input.length - 1];
-				System.arraycopy(input, 1, publicKey, 0, publicKey.length);
-				byte[] credential = serverCore.getCredential(publicKey);
+				byte[] voterID = new byte[input.length - 1];
+				System.arraycopy(input, 1, voterID, 0, voterID.length);
+				byte[] credential = serverCore.getCredential(voterID);
 				byte[] out = new byte[credential.length + 1];
 				out[0] = ERROR_NO_ERROR;
 				for (int i = 0; i < credential.length; i++)
@@ -173,15 +193,17 @@ public class VotingServerStandalone {
 	}
 
 	public static void main(String[] args) throws IOException {
-		if (args.length <= 0) {
-			System.out.println("Parameter missing. Usage: VotingServerStandalone <path-to-keyfiles>");
+		if (args.length < 2) {
+			System.out.println("Parameter missing. Usage: VotingServerStandalone <path-to-pk-file> <path-to-id-file>");
 			return;
 		}
 		VotingServerStandalone server;
 		if (args.length >= 4) {
-			server = new VotingServerStandalone(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]));
+			// String pathPK, String pathID, int listenPort, String bulletinBoardAddress, int bulletinBoardPort
+			server = new VotingServerStandalone(args[0], args[1], Integer.parseInt(args[2]), args[3], Integer.parseInt(args[4]));
 		} else {
-			server = new VotingServerStandalone(args[0]);
+			// String pathPK, String pathID
+			server = new VotingServerStandalone(args[0], args[1]);
 		}
 		VotingServerDialog window = new VotingServerDialog(server);
 		window.start();

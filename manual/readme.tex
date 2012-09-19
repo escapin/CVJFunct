@@ -12,7 +12,6 @@
 \usepackage{graphicx}
 
 \title{Simple E-Voting System -- User Guide}
-\author{Andreas Koch}
 
 \lstset{
 	basicstyle=\tt\small,
@@ -56,7 +55,8 @@ In order to run eVoting server or clients you need to generate keyfiles first. I
 \begin{enumerate}
 	\item Voters private keys (file suffix ".pri"), named voterXX.pri, whereat XX is a subsequent number starting from zero.
 	\item Voters public keys (file suffix ".pub"), named voterXX.pub, whereat XX is a subsequent number starting from zero. Note: Corresponding public/private keys have same number.
-	\item Servers key list (contains all voters public keys) named clients.evo
+	\item Servers key list (contains all voters public keys) named clientPK.evo
+	\item Servers ID list (contains all voters id) named clientID.evo
 \end{enumerate}
 Please note: The servers public and private key are currently included in the source code.
 
@@ -83,13 +83,13 @@ You can also start each component without the control panel using these commands
 \begin{lstlisting}
 java -cp .;..\lib\bcprov-jdk16-146.jar 
 de.uni.trier.infsec.protocols.simplevoting.VotingServerStandalone 
-<path-to-clients.evo> <listen-port> <bulletin-board-address> <bulletin-board-port>
+<path-clientPK.evo> <path-clientID.evo> <listen-port> <bulletin-board-address> <bulletin-board-port>
 \end{lstlisting}
 \textbf{VotingClient}
 \begin{lstlisting}
 java -cp .;..\lib\bcprov-jdk16-146.jar 
 de.uni.trier.infsec.protocols.simplevoting.VoterStandalone
-<path-to-publickey> <path-to-privatekey> <voting-proxy-address> <voting-proxy-port>
+<path-to-publickey> <path-to-privatekey> <voterID [string]> <voting-proxy-address> <voting-proxy-port>
 \end{lstlisting}
 \textbf{HTTP BulletinBoard}
 \begin{lstlisting}
@@ -137,6 +137,9 @@ These files should have following format:
 	\item Servers public Key list format
 		\subitem First line: Public Key count
 		\subitem One line per Key, containing the public key in ASN.1 (X.509) encoding represented as hexadecimal string.
+	\item Servers voter ID list format
+		\subitem First line: Voter ID count (same size as public key list)
+		\subitem One line per ID. It is supposed to be hexadecimal representation of the string which is passed to VoterStandalone
 \end{itemize}
 
 

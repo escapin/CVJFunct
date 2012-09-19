@@ -18,7 +18,7 @@ public class PrepareAndRunClient {
 				voter += "voter" + i;
 				String cmd = "java";
 				ProcessBuilder p = new ProcessBuilder(cmd, "-cp", System.getProperties().getProperty("java.class.path", null),
-						"de.uni.trier.infsec.protocols.simplevoting.VoterStandalone", voter + ".pub", voter + ".pri");
+						"de.uni.trier.infsec.protocols.simplevoting.VoterStandalone", voter + ".pub", voter + ".pri", voter);
 				p.redirectErrorStream(true);
 				Process pr = p.start();
 				outputReader.add(new BufferedReader(new InputStreamReader(pr.getInputStream())));
@@ -26,7 +26,7 @@ public class PrepareAndRunClient {
 		} else {
 			String voter = PrepareAndRunServer.TEMP_PATH;
 			voter += "voter" + args[0];
-			VoterStandalone.main(new String[] { voter + ".pub", voter + ".pri" });
+			VoterStandalone.main(new String[] { voter + ".pub", voter + ".pri", voter });
 		}
 		
 		while (true) {

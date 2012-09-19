@@ -16,6 +16,7 @@ public class VoterStandalone {
 
 	public String publicKeyPath = null;
 	public String privateKeyPath = null;
+	private byte[] voterID = null;
 
 	public static final byte REQUEST_CREDENTIAL = 0x01;
 	public static final byte SUBMIT_BALLOT = 0x02;
@@ -26,28 +27,32 @@ public class VoterStandalone {
 	private int serverPort = Network.DEFAULT_PORT;
 	private String serverAddress = Network.DEFAULT_SERVER;
 
+	/*
+	 * With this version, voterID is supposed to be a string
+	 */
 	public static void main(String[] args) {
-		if (args.length < 2) {
-			System.out.println("Parameters missing. Usage: VoterStandalone <path-to-publickey> <path-to-privatekey>");
+		if (args.length < 3) {
+			System.out.println("Parameters missing. Usage: VoterStandalone <path-to-publickey> <path-to-privatekey> <voterID>");
 			System.exit(0);
 		}
 		VoterStandalone handler;
-		if (args.length >= 4) {
-			handler = new VoterStandalone(args[0], args[1], args[2], Integer.parseInt(args[3]));
+		if (args.length >= 5) {
+			handler = new VoterStandalone(args[0], args[1], args[2], args[3], Integer.parseInt(args[4])); // public key, private key, voter ID, Votingserver address, Votingserver Port 
 		} else {
-			handler = new VoterStandalone(args[0], args[1]);
+			handler = new VoterStandalone(args[0], args[1], args[2]); // public key, private key, voter ID
 		}
 		VotingClientDialog window = new VotingClientDialog(handler);
 		window.showWindow();
 	}
 
-	public VoterStandalone(String publicKeyPath, String privateKeyPath) {
+	public VoterStandalone(String publicKeyPath, String privateKeyPath, String voterID) {
 		this.publicKeyPath = publicKeyPath;
 		this.privateKeyPath = privateKeyPath;
+		this.voterID = voterID.getBytes();
 	}
 
-	public VoterStandalone(String publicKeyPath, String privateKeyPath, String serverAddress, int serverPort) {
-		this(publicKeyPath, privateKeyPath);
+	public VoterStandalone(String publicKeyPath, String privateKeyPath, String voterID, String serverAddress, int serverPort) {
+		this(publicKeyPath, privateKeyPath, voterID);
 		System.out.println(String.format("VotingClient started using parameters publicKeyPath: %s, privateKeyPath: %s, serverAddress: %s, serverPort: %d",
 				publicKeyPath, privateKeyPath, serverAddress, serverPort));
 		this.serverAddress = serverAddress;
@@ -57,7 +62,7 @@ public class VoterStandalone {
 	public void clickVote(byte choice) throws IOException {
 		Encryptor encServer = new Encryptor(Utilities.hexStringToByteArray(VotingServerStandalone.publicKey));
 		Decryptor decClient = new Decryptor(readVoterPublicKeyFromFile(), readVoterPrivateKeyFromFile());
-		Voter voter = new Voter(decClient, encServer);
+		Voter voter = new Voter(voterID, decClient, encServer);
 		String filename = System.getProperty("java.io.tmpdir") + File.separator + "evoting" + File.separator
 				+ Integer.toString(Utilities.byteArrayToHexString(readVoterPublicKeyFromFile()).hashCode()) + ".evo";
 		File f = new File(filename);
@@ -93,12 +98,11 @@ public class VoterStandalone {
 	}
 
 	public String clickRegister() throws IOException, NetworkError {
-		byte[] pubKey = readVoterPublicKeyFromFile();
-		System.out.println("using public key " + Utilities.byteArrayToHexString(pubKey));
-		byte[] message = new byte[pubKey.length + 1];
+		System.out.println("using voter id " + Utilities.byteArrayToHexString(voterID));
+		byte[] message = new byte[voterID.length + 1];
 		byte[] response = null;
 		message[0] = REQUEST_CREDENTIAL;
-		System.arraycopy(pubKey, 0, message, 1, pubKey.length);
+		System.arraycopy(voterID, 0, message, 1, voterID.length);
 
 		try {
 			if (!Network.connectToServer(serverAddress, serverPort)) {
@@ -123,7 +127,7 @@ public class VoterStandalone {
 
 		Encryptor encServer = new Encryptor(Utilities.hexStringToByteArray(VotingServerStandalone.publicKey));
 		Decryptor decClient = new Decryptor(readVoterPublicKeyFromFile(), readVoterPrivateKeyFromFile());
-		Voter voter = new Voter(decClient, encServer);
+		Voter voter = new Voter(voterID, decClient, encServer);
 		voter.setCredential(response);
 
 		new File(System.getProperty("java.io.tmpdir") + File.separator + "evoting").mkdirs();

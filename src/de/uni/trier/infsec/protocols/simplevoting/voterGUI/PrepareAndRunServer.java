@@ -47,19 +47,24 @@ public class PrepareAndRunServer {
 			dir.mkdirs();
 
 		if (!path.endsWith(File.separator)) path = path + File.separator;
-		File f = new File(path + "clients.evo");
-		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-		bw.write(Integer.toString(count) + "\n");
+		File fPk = new File(path + "clientPK.evo");
+		BufferedWriter bwPk = new BufferedWriter(new FileWriter(fPk));
+		File fId = new File(path + "clientID.evo");
+		BufferedWriter bwId = new BufferedWriter(new FileWriter(fId));
+		
+		bwPk.write(Integer.toString(count) + "\n");
+		bwId.write(Integer.toString(count) + "\n");
 
 		for (int i = 0; i < count; i++) {
 			KeyPair kp = Encryption.generateKeyPair();
 
 			String pubKey = Utilities.byteArrayToHexString(kp.publicKey);
-			bw.write(pubKey + "\n");
+			bwPk.write(pubKey + "\n");
 
 			String name = String.format("voter%d", i);
 			FileOutputStream f2pub = new FileOutputStream(path + name + ".pub");
 			FileOutputStream f2priv = new FileOutputStream(path + name + ".pri");
+			bwId.write(Utilities.byteArrayToHexString(name.getBytes()) + "\n");
 
 			f2priv.write(kp.privateKey);
 			f2priv.flush();
@@ -69,8 +74,11 @@ public class PrepareAndRunServer {
 			f2pub.flush();
 			f2pub.close();
 		}
-		bw.flush();
-		bw.close();
+		bwPk.flush();
+		bwPk.close();
+		
+		bwId.flush();
+		bwId.close();
 	}
 
 	private static void cleanupFiles(String path) {
