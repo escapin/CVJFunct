@@ -1,0 +1,34 @@
+package de.uni.trier.infsec.parser.test;
+
+
+public class TestClassCondition04 {
+
+	
+	public static TestClass02 getTestClass02(String in) {
+		return null;
+	}
+	
+	public static class TestClass02 {
+		int anint01;
+		public int anint02;
+		private int anint03;
+		protected int anint04;
+		int anint05;
+		public int anint06;
+		private int anint07;
+		protected int anint08;
+		int anint09;
+		
+		byte[] abyte01;
+		public byte[] abyte02;
+		private byte[] abyte03;
+		protected byte[] abyte04;
+		byte[] abyte05;
+		public byte[] abyte06;
+		private byte[] abyte07;
+		protected byte[] abyte08;
+		byte[] abyte09;
+
+	}
+	
+}

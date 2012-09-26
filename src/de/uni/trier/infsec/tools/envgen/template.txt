@@ -1,0 +1,53 @@
+class Node {
+	int value;
+	Node next;
+	Node(int v, Node n) { value = v; next = n; }
+}
+
+public class Env {
+	private static boolean result;
+	private static Node list = null;
+	private static boolean listInitialized = false;
+
+	private static Node initialValue() {
+		// return Encode(u);
+		return new Node(1,new Node(7,null));
+	}
+
+	public static int untrustedInput() {
+		if (!listInitialized) {
+			list = initialValue();
+			listInitialized = true;
+		}
+		if (list==null) return 0;
+		int tmp = list.value;
+		list = list.next;
+		return tmp;
+	}
+	
+	public static void untrustedOutput(int x) {
+		if (untrustedInput()==0) {
+			result = (x==untrustedInput());
+			// abort;
+			return;
+		}
+	}
+	
+	public static byte[] untrustedInputMessage() {
+		int len = untrustedInput();
+		if (len<0) return null;
+		byte[] returnval = new byte[len];
+		for (int i = 0; i < len; i++)
+			returnval[i] = (byte) Env.untrustedInput();
+			return returnval;
+		}
+	
+	public static void untrustedOutputMessage(byte[] t) {
+		untrustedOutput(t.length);
+		for (int i = 0; i < t.length; i++)
+			untrustedOutput(t[i]);
+	}
+
+	// additional static methods depending on IE go here
+%%%%%%TEMPLATE%%%%%%
+}
