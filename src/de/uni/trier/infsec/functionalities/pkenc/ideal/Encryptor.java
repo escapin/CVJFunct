@@ -23,9 +23,11 @@ public final class Encryptor {
 	
 	public byte[] encrypt(byte[] message) {
 		byte[] messageCopy = copyOf(message);
-		byte[] randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), 
-													   copyOf(publKey)));
-		if( randomCipher == null ) return null;
+		byte[] randomCipher = null;
+		// keep asking the environment for the ciphertext, until a fresh one is given:
+		while( randomCipher==null || log.contains(randomCipher) ) {
+			randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publKey)));
+		}
 		log.add(messageCopy, randomCipher);
 		return copyOf(randomCipher);
 	}
