@@ -111,7 +111,7 @@ public class SystemInterface {
 				if (tmp.length() > 0) tmp.append(", ");
 				tmp.append(p.toString());
 			}
-			out.append(String.format("(%s){", tmp.toString()));
+			out.append(String.format("(%s)", tmp.toString()));
 			
 			// and in case of exceptions append the throws block
 			tmp = new StringBuffer();
@@ -120,7 +120,7 @@ public class SystemInterface {
 				tmp.append(e.toString());
 			}
 			out.append(tmp.length() > 0 ? String.format(" throws %s", tmp.toString()) : "");
-			
+			out.append(" {");
 			// Last but not least append the body
 			out.append(String.format("\n%s\n\t}\n", body));
 			

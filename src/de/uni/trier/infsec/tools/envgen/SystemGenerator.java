@@ -42,6 +42,9 @@ public class SystemGenerator {
 						stringBuilder.append(String.format("\t\tEnv.untrustedOutputMessage(%s);\n", p.name));
 					}
 				}
+				for (Exception e : m.exceptions) {
+					stringBuilder.append(String.format("\t\tif (Env.untrustedInput()==0) throw Env.createObject_%s();\n", e.name));					
+				}
 				
 				switch (m.type) {
 				case "void":
@@ -58,9 +61,6 @@ public class SystemGenerator {
 					break;
 				}
 				
-				for (Exception e : m.exceptions) {
-					stringBuilder.append(String.format("\t\tif (Env.untrustedInput()==0) throw Env.createObject_%s();\n", e.name));					
-				}
 				m.body = stringBuilder.toString();
 			}
 			
@@ -114,9 +114,16 @@ public class SystemGenerator {
 		if (ci.extendList.isEmpty()) return; // nothing to do
 		
 		for (String sCi : ci.extendList) {
-			addExtendedFields(classMap.get(sCi));
+			// This is just in case the class is from the package. If not, we cannot follow more extends
+			if (classMap.containsKey(sCi)) {				
+				addExtendedFields(classMap.get(sCi));
+			}
 		}
 		for (String sCi : ci.extendList) {
+
+			// Override is only threatened in case the class is from the package. If not: ignore it
+			if (!classMap.containsKey(sCi)) continue;
+
 			ClassInterface cci = classMap.get(sCi);
 			for (Field fcci : cci.fields) {
 				boolean contains = false;
