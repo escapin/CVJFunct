@@ -79,7 +79,7 @@ public class Main {
 		System.out.println(system);
 		System.out.println("################## END: Generated System for Interface ######################\n");
 		
-		File fout = new File(fileOut + "Env.java");
+		File fout = new File(fileOut + File.separator + "Env.java");
 		BufferedWriter bw = new BufferedWriter(new FileWriter(fout));
 		bw.write(system);
 		bw.close();
