@@ -14,7 +14,7 @@ import java.io.FileWriter;
 import de.uni.trier.infsec.tools.envgen.InterfaceGenerator.InterfaceGenerationVisitor;
 
 
-public class Main {
+public class EnvGen {
 
 	private final FileFilter fileFilter = new FileFilter() {		
 		@Override
@@ -48,7 +48,7 @@ public class Main {
 			return;
 		}
 		String types = args.length > 2 ? args[2] : null;
-		new Main().doWork(args[0], args[1], types);
+		new EnvGen().doWork(args[0], args[1], types);
 	}
 	
 	
