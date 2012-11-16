@@ -33,104 +33,96 @@ public class InterfaceGenerator {
 		CompilationUnit compilation = JavaParser.parse(new ByteArrayInputStream(code.getBytes("UTF-8")));
 
 		InterfaceGenerationVisitor visitor = new InterfaceGenerationVisitor();
-		ArrayList<ClassInterface> theList = (ArrayList<ClassInterface>) visitor.visit(compilation, si); 
+		ArrayList<ClassInterface> theList = (ArrayList<ClassInterface>) visitor.visit(compilation, si);
 		return theList;
 	}
-	
-	
+
 	@SuppressWarnings("rawtypes")
 	public static class InterfaceGenerationVisitor extends GenericVisitorAdapter {
 		SystemInterface out = new SystemInterface();
 		String currentPackage = "";
 		String currentClass = null;
 		HashMap<String, String> classPackageMapping = new HashMap<>();
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public Object visit(CompilationUnit n, Object arg) {
-			if (arg != null && arg instanceof SystemInterface) out = (SystemInterface) arg;
-			
+			if (arg != null && arg instanceof SystemInterface)
+				out = (SystemInterface) arg;
+
 			currentPackage = n.getPackage().getName().toString();
-			if (n.getImports() != null) {				
+			if (n.getImports() != null) {
 				for (ImportDeclaration i : n.getImports()) {
-					if (!i.getName().toString().contains("*")) {						
+					if (!i.getName().toString().contains("*")) {
 						String s = i.getName().toString();
 						classPackageMapping.put(s.substring(s.lastIndexOf(".") + 1, s.length()), s);
 					}
 				}
 			}
 			super.visit(n, null);
-			
 			return out;
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public Object visit(ClassOrInterfaceDeclaration n, Object arg) {
-			ClassInterface current = new ClassInterface();			
-			if (currentClass != null) {
-				current.packageName = currentPackage + "." + currentClass;
-				// classPackageMapping.put(n.getName(), currentPackage + "." + currentClass);
-				currentClass += "." + n.getName();
-			} else {				
-				current.packageName = currentPackage;
-				currentClass = n.getName();
-			}
+			ClassInterface current = new ClassInterface();
+			current.packageName = currentPackage;
+			currentClass = n.getName();
 			current.name = n.getName();
 			current.isInterface = Modifier.isInterface(n.getModifiers());
 			current.visibility = getModifiersAsString(n.getModifiers());
-			current.imports = classPackageMapping;
-			// TODO n.getExtends(); ??
-			
-			if (n.getExtends() != null) {				
+			current.importMap = classPackageMapping;
+
+			if (n.getExtends() != null) {
 				for (ClassOrInterfaceType e : n.getExtends()) {
 					current.extendList.add(e.getName());
 				}
 			}
-			
+
 			super.visit(n, current);
-			
 			out.classes.add(current);
-			
+
 			currentClass = currentClass.replace("." + n.getName(), "");
 			currentPackage = currentPackage.replace("." + n.getName(), "");
-			if (currentClass.equals("")) currentClass = null;
-			
+			if (currentClass.equals(""))
+				currentClass = null;
+
 			return null;
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public Object visit(MethodDeclaration n, Object arg) {
 			ClassInterface current = (ClassInterface) arg;
 			Method theMethod = new Method(n.getType().toString(), n.getName());
 			theMethod.isStatic = Modifier.isStatic(n.getModifiers());
-			
+			theMethod.visibility = getModifiersAsString(n.getModifiers());
+
 			super.visit(n, current);
 
 			if (n.getParameters() != null) {
-				for(Parameter p : n.getParameters()) {
-					theMethod.parameters.add(
-							new de.uni.trier.infsec.tools.envgen.SystemInterface.Parameter(p.getType().toString(), p.getId().getName()));
+				for (Parameter p : n.getParameters()) {
+					theMethod.parameters.add(new de.uni.trier.infsec.tools.envgen.SystemInterface.Parameter(p.getType().toString(), p.getId().getName()));
 				}
 			}
-			
+
 			if (n.getThrows() != null) {
 				for (NameExpr ne : n.getThrows()) {
 					theMethod.exceptions.add(new Exception(ne.toString()));
 				}
 			}
 			current.methods.add(theMethod);
-			
+
 			return current;
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public Object visit(FieldDeclaration n, Object arg) {
 			ClassInterface current = (ClassInterface) arg;
-			
-			for (VariableDeclarator vd : n.getVariables()) {				
+
+			for (VariableDeclarator vd : n.getVariables()) {
 				Field f = new Field(n.getType().toString(), vd.getId().getName());
 				f.isStatic = Modifier.isStatic(n.getModifiers());
 				f.visibility = getModifiersAsString(n.getModifiers());
@@ -139,35 +131,33 @@ public class InterfaceGenerator {
 			super.visit(n, current);
 			return current;
 		}
-		
 
 		@SuppressWarnings("unchecked")
 		@Override
 		public Object visit(ConstructorDeclaration n, Object arg) {
 			ClassInterface current = (ClassInterface) arg;
 			Constructor theConstructor = new Constructor(n.getName());
-			
+
 			super.visit(n, current);
 
 			if (n.getParameters() != null) {
-				for(Parameter p : n.getParameters()) {
-					theConstructor.parameters.add(
-							new de.uni.trier.infsec.tools.envgen.SystemInterface.Parameter(p.getType().toString(), p.getId().getName()));
+				for (Parameter p : n.getParameters()) {
+					theConstructor.parameters.add(new de.uni.trier.infsec.tools.envgen.SystemInterface.Parameter(p.getType().toString(), p.getId().getName()));
 				}
 			}
-			
+
 			if (n.getThrows() != null) {
 				for (NameExpr ne : n.getThrows()) {
 					theConstructor.exceptions.add(new Exception(ne.toString()));
 				}
 			}
 			current.constructors.add(theConstructor);
-			
+
 			return current;
 		}
-		
+
 	}
-	
+
 	public static String getModifiersAsString(int modifier) {
 		String out = "";
 		if (Modifier.isPublic(modifier)) {
@@ -179,27 +169,27 @@ public class InterfaceGenerator {
 		if (Modifier.isFinal(modifier)) {
 			out += "final";
 		}
-		if (Modifier.isNative(modifier)){
+		if (Modifier.isNative(modifier)) {
 			out += "native";
 		}
-		if (Modifier.isPrivate(modifier)){
+		if (Modifier.isPrivate(modifier)) {
 			out += "private";
 		}
-		if (Modifier.isProtected(modifier)){
+		if (Modifier.isProtected(modifier)) {
 			out += "protected";
 		}
-		if (Modifier.isStrict(modifier)){
+		if (Modifier.isStrict(modifier)) {
 			out += "strict";
 		}
-		if (Modifier.isSynchronized(modifier)){
+		if (Modifier.isSynchronized(modifier)) {
 			out += "synchronized";
 		}
-		if (Modifier.isTransient(modifier)){
+		if (Modifier.isTransient(modifier)) {
 			out += "transient";
 		}
-		if (Modifier.isVolatile(modifier)){
+		if (Modifier.isVolatile(modifier)) {
 			out += "volatile";
 		}
 		return out;
-	} 
+	}
 }
