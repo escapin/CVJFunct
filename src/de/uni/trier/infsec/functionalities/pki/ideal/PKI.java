@@ -5,6 +5,7 @@ import static de.uni.trier.infsec.utils.MessageTools.equal;
 import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.functionalities.pki.real.PKI.Encryptor;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
@@ -13,6 +14,32 @@ import de.uni.trier.infsec.utils.MessageTools;
 public class PKI {
 	
 /// The public interface ///
+
+	static public class Encryptor {
+		private byte[] ID;	
+		private byte[] publicKey;
+		private MessagePairList log;
+
+		private Encryptor(byte[] id, byte[] publicKey, MessagePairList log) {
+			this.ID = id;
+			this.publicKey = publicKey;
+			this.log = log;
+		}
+		public byte[] encrypt(byte[] message) {
+			byte[] messageCopy = copyOf(message);
+			byte[] randomCipher = null;
+			// keep asking the environment for the ciphertext, until a fresh one is given:
+			while( randomCipher==null || log.contains(randomCipher) ) {
+				randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publicKey)));
+			}
+			log.add(messageCopy, randomCipher);
+			return copyOf(randomCipher);
+		}
+		public byte[] getPublicKey() {
+			return publicKey;
+		}
+	}
+	
 	
 	static public class Decryptor {
 		private byte[] ID;
@@ -28,19 +55,7 @@ public class PKI {
 			this.publicKey = publKey;
 			this.privateKey = privKey;
 			this.log = null;
-		}
-		
-		private byte[] encrypt(byte[] message) {
-			byte[] messageCopy = copyOf(message);
-			byte[] randomCipher = null;
-			// keep asking the environment for the ciphertext, until a fresh one is given:
-			while( randomCipher==null || log.contains(randomCipher) ) {
-				randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publicKey)));
-			}
-			log.add(messageCopy, randomCipher);
-			return copyOf(randomCipher);
-		}
-		
+		}		
 		public byte[] decrypt(byte[] message) {
 			byte[] messageCopy = copyOf(message); 
 			if (!log.contains(messageCopy)) {
@@ -49,46 +64,40 @@ public class PKI {
 				return copyOf( log.lookup(messageCopy) );
 			}			
 		}
+		public Encryptor getEncryptor() {
+			return new Encryptor(ID, publicKey, log);
+		}	
 	}
 
 	public static Decryptor register(byte[] id) {
 		id = copyOf(id);
 		if( handlers.fetch(id) != null ) return null; // a party with this id has already registered
-		Decryptor pki = new Decryptor(id);
-		handlers = new DecrList(pki, handlers);
-		return pki;
+		Decryptor decryptor = new Decryptor(id);
+		Encryptor encryptor = decryptor.getEncryptor();
+		handlers = new EncrList(encryptor, handlers);
+		return decryptor;
 	}
 	
-	public static byte[] encryptFor(byte[] id, byte[] message) {
-		// fetch the handler to the PKIIdeal object with given id
-		Decryptor handle = handlers.fetch(id);
-		if( handle==null ) return null;
-		// encrypt 'message' using this handle
-		return copyOf(handle.encrypt(message));
+	public static Encryptor getEncryptor(byte[] id) {
+		return handlers.fetch(id);
 	}
 	
-	public static byte[] getPublicKey(byte[] id) {
-		Decryptor handle = handlers.fetch(id);
-		return copyOf(handle.publicKey);
-	}
-	
-
 	
 /// Implementation ///
 	
-	private static class DecrList {	
-		Decryptor handle;
-		DecrList next;
+	private static class EncrList {	
+		Encryptor encryptor;
+		EncrList next;
 	
-		DecrList(Decryptor handle, DecrList next) {
-			this.handle = handle;
+		EncrList(Encryptor encryptor, EncrList next) {
+			this.encryptor= encryptor;
 			this.next = next;
 		}
 		
-		Decryptor fetch(byte[] ID) {
-			for( DecrList node = this;  node!=null;  node = node.next ) {
-				if( equal(ID, node.handle.ID) )
-					return node.handle;
+		Encryptor fetch(byte[] ID) {
+			for( EncrList node = this;  node!=null;  node = node.next ) {
+				if( equal(ID, node.encryptor.ID) )
+					return node.encryptor;
 			}
 			return null;
 		}
@@ -127,6 +136,6 @@ public class PKI {
 	    }    
 	}
 	
-	private static DecrList handlers = null;	
+	private static EncrList handlers = null;	
 
 }
