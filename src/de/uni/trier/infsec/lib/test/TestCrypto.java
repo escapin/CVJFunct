@@ -3,11 +3,12 @@ package de.uni.trier.infsec.lib.test;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-import de.uni.trier.infsec.lib.crypto.Encryption;
 
 import org.junit.Test;
 
 import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.lib.crypto.DigitalSignature;
+import de.uni.trier.infsec.lib.crypto.Encryption;
 
 public class TestCrypto extends TestCase {
 
@@ -25,6 +26,19 @@ public class TestCrypto extends TestCase {
 		byte[] dec = Encryption.decrypt(enc, privKey);
 		
 		assertTrue(Arrays.equals(TEST_DATA, dec));
+	}
+	
+	@Test
+	public void testSignature() {
+		KeyPair kp = Encryption.generateKeyPair();
+		byte[] pubKey = kp.publicKey;
+		byte[] privKey = kp.privateKey;
+		
+		byte[] signature = DigitalSignature.sign(TEST_DATA, privKey);
+		
+		assertTrue(DigitalSignature.verify(TEST_DATA, signature, pubKey));
+		signature[0] ++;
+		assertFalse(DigitalSignature.verify(TEST_DATA, signature, pubKey));
 	}
 	
 }
