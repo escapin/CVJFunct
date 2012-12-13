@@ -4,10 +4,10 @@ import de.uni.trier.infsec.environment.Environment;
 
 public class CryptoLib {
 
-	public static byte[] pke_encrypt(byte[] in, byte[] publKey) {
+	public static byte[] pke_encrypt(byte[] message, byte[] publKey) {
 		// input
 		Environment.untrustedOutput(0x66); // Function code for pke_encrypt
-		Environment.untrustedOutputMessage(in);
+		Environment.untrustedOutputMessage(message);
 		Environment.untrustedOutputMessage(publKey);
 		// output
 		return Environment.untrustedInputMessage();
@@ -35,5 +35,40 @@ public class CryptoLib {
 		}
 		return resval;
 	}
+
+	public static byte[] sign(byte[] message, byte[] signingKey) {
+		// input
+		Environment.untrustedOutput(0x66); // Function code for pke_encrypt
+		Environment.untrustedOutputMessage(message);
+		Environment.untrustedOutputMessage(signingKey);
+		// output
+		return Environment.untrustedInputMessage();
+	}
+
+	public static byte[] virifySignature(byte[] signature, byte[] message, byte[] verificationKey) {
+		// input
+		Environment.untrustedOutput(0x66); // Function code for pke_encrypt
+		Environment.untrustedOutputMessage(message);
+		Environment.untrustedOutputMessage(signature);
+		Environment.untrustedOutputMessage(verificationKey);
+		// output
+		return Environment.untrustedInputMessage();
+	}
+		
+	public static KeyPair generateSignatureKeyPair() {
+		// input
+		Environment.untrustedOutput(0x88); // Function code for generateKeyPair
+		
+		// ouptut
+		KeyPair resval = null;
+		if( Environment.untrustedInput()==0 ) {
+			resval = new KeyPair();
+			resval.privateKey = Environment.untrustedInputMessage();
+			resval.publicKey = Environment.untrustedInputMessage();
+		}
+		return resval;
+	}
+	
+	
 	
 }

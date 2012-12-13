@@ -1,156 +1,186 @@
 package de.uni.trier.infsec.functionalities.samt.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-import static de.uni.trier.infsec.utils.MessageTools.equal;
-import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
-import de.uni.trier.infsec.environment.crypto.CryptoLib;
-import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.utils.MessageTools;
+import de.uni.trier.infsec.environment.Environment;
 
 /**
  * Ideal functionality for SAMT (Secure Authenticated Message Transmission).
+ * 
+ * Every party who wants to use this functionality should register itself:
+ * 
+ * 		Agent a = SAMT.register(ID_OF_A);
+ *  
+ * To send messages to a party with identifier ID_OF_B:
+ * 
+ * 		Channel channel_to_b = a.channelTo(ID_OF_B);
+ * 		channel_to_b.send( message1 );
+ * 		channel_to_b.send( message1 );
+ * 
+ * (It is also possible to create a channel to b by calling a.channelToAgent(b).)
+ * 
+ * To read messages sent to the agent a:
+ * 
+ * 		MessageInfo msg_inf = a.getMessage();
+ * 		// msg_info.message contains the received message
+ * 		// msg_info.sender_id contains the id of the sender
  */
 public class SAMT {
 	
-/// The public interface ///
-	
-	/** An object encapsulating the public key of some party.
-	 *  
-	 *  This key can be accessed directly of indirectly via method encrypt.
-	 *  Method 'encrypt' realizes the "ideal" encryption, where a string of 
-	 *  zeros is encrypted instead of the original message and the pair 
-	 *  (plaintext, ciphertest) is stored in a log which can be then used
-	 *  for decryption.    
-	 */
-	static public class Encryptor {
-		private byte[] ID;	
-		private byte[] publicKey;
-		private EncryptionLog log;
+	//// The public interface ////
 
-		private Encryptor(byte[] id, byte[] publicKey, EncryptionLog log) {
-			this.ID = id;
-			this.publicKey = publicKey;
-			this.log = log;
-		}
-		
-		public byte[] encrypt(byte[] message) {
-			byte[] randomCipher = null;
-			// keep asking the environment for the ciphertext, until a fresh one is given:
-			while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
-				randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publicKey)));
-			}
-			log.add(copyOf(message), randomCipher);
-			return copyOf(randomCipher);
-		}
-		public byte[] getPublicKey() {
-			return copyOf(publicKey);
+	/** 
+	 * Pair message, sender_id. 
+	 * 
+	 * Objects of this class are returned when an agent try to read a message from its queue. 
+	 */
+	static public class MessageInfo {
+		public byte[] message;
+		public int sender_id;
+		public MessageInfo(byte[] message, int sender) {
+			this.sender_id = sender;  this.message = message;
 		}
 	}
-	
-	/** An object encapsulating the private and public keys of some party. */
-	static public class Decryptor {
-		private byte[] ID;
-		private byte[] publicKey;
-		private byte[] privateKey;
-		private EncryptionLog log;
 
-		private Decryptor(byte[] id) {
-			KeyPair keypair = CryptoLib.generateKeyPair();
-			this.privateKey = copyOf(keypair.privateKey);
-			this.publicKey = copyOf(keypair.publicKey);
+	/**
+	 * Object representing an agent with all the restricted (private) data that are 
+	 * necessary to securely send and receive authenticated message. 
+	 * 
+	 * Such an object allows one to 
+	 *  - get messages from the queue or this agent (method getMessage),
+	 *    where the environment decides which message is to be delivered,
+	 *  - create a channel to another agent (channelTo and channelToAgent); such 
+	 *    a channel can be used to securely send authenticated messages to the 
+	 *    chosen agent.
+	 */
+	static public class Agent 
+	{
+		private int ID;
+		private MessageQueue queue;  // messages sent to this agent
+		
+		private Agent(int id) {
 			this.ID = id;
-			this.log = new EncryptionLog();
+			this.queue = new MessageQueue();
+		}
+		
+		public MessageInfo getMessage() {
+			// The environment decides which message is to be delivered.
+			// Note that the same message may be delivered several times or not delivered at all.
+			int index = Environment.untrustedInput();
+			return queue.get(index);
+		}
+		
+		// the primary method to create a channel from this agent to the agent represented by 
+		// recipient_id
+		public Channel channelTo(int recipient_id) {
+			Agent recipient = handlers.fetch(recipient_id);
+			return recipient!=null ? new Channel(this,recipient) : null; 
+		}
+	
+		// additional method that cannot be used in a distributed setting, but may be useful  
+		// for verification purposes
+		public Channel channelToAgent(Agent recipient) {
+			return new Channel(this, recipient);
+		}
+	}
+
+	/**
+	 * Objects representing secure and authenticated channel from sender to recipient. 
+	 * 
+	 * Such objects allow one to securely send a message to the recipient, where the 
+	 * sender is authenticated to the recipient.
+	 */
+	static public class Channel 
+	{
+		private Agent sender;
+		private Agent recipient;
+		
+		private Channel(Agent from, Agent to) {
+			this.sender = from;
+			this.recipient = to;
 		}		
 		
-		/** "Decrypts" a message by, first trying to find in in the log (and returning
-		 *   the related plaintext) and, only if this fails, by using real decryption. */
-		public byte[] decrypt(byte[] message) {
-			byte[] messageCopy = copyOf(message); 
-			if (!log.containsCiphertext(messageCopy)) {
-				return copyOf( CryptoLib.pke_decrypt(copyOf(privateKey), messageCopy) );
-			} else {
-				return copyOf( log.lookup(messageCopy) );
-			}			
-		}
-		
-		/** Returns a new encryptor object sharing the same public key, ID, and log. */
-		public Encryptor getEncryptor() {
-			return new Encryptor(ID, publicKey, log);
-		}	
-	}
-
-	public static Decryptor register(byte[] id) {
-		id = copyOf(id);
-		if( handlers.fetch(id) != null ) return null; // a party with this id has already registered
-		Decryptor decryptor = new Decryptor(id);
-		Encryptor encryptor = decryptor.getEncryptor();
-		handlers.add(encryptor);
-		return decryptor;
-	}
-	
-	public static Encryptor getEncryptor(byte[] id) {
-		return handlers.fetch(id);
-	}
-	
-	
-/// Implementation ///
-		
-	private static class MessagePairList {
-		byte[] ciphertext;
-		byte[] plaintext;
-		MessagePairList next;
-		public MessagePairList(byte[] ciphertext, byte[] plaintext, MessagePairList next) {
-			this.ciphertext = ciphertext;
-			this.plaintext = plaintext;
-			this.next = next;
+		public void send(byte[] message) {
+			// leak the length of the sent message
+			Environment.untrustedOutput(message.length); 
+			// add the message along with the identity of the sender to the queue of the recipient
+			recipient.queue.add(copyOf(message), sender.ID);
 		}
 	}
 	
-	private static class EncryptionLog {
-		private MessagePairList first = null;
-		
-		public void add(byte[] plaintext, byte[] ciphertext) {
-			first = new MessagePairList(ciphertext, plaintext, first);
-		}
-
-	    byte[] lookup(byte[] ciphertext) {	    	
-	    	for( MessagePairList node = first;  node != null;  node = node.next ) {
-	            if( MessageTools.equal(node.ciphertext, ciphertext) )
-	                return node.plaintext;	    		
-	    	}
-	        return null;
-	    }
-	    
-	    boolean containsCiphertext(byte[] ciphertext) {
-	    	return lookup(ciphertext) != null;
-	    }    
+	/**
+	 * Registering an agent with the given id. If this id has been already used (registered), 
+	 * registration fails (the method returns null).
+	 */
+	public static Agent register(int id) {
+		// check if the id is free
+		if( handlers.fetch(id) != null ) return null; 
+		// create a new agent, add it to the list of registered agents, and return it
+		Agent agent = new Agent(id);
+		handlers.add(agent);
+		return agent;
 	}
-
 		
-	private static class EncrList {
-		Encryptor encryptor;
-		EncrList  next;
-		EncrList(Encryptor encryptor, EncrList next) {
-			this.encryptor= encryptor;
-			this.next = next;
-		}
-	}
 	
-	private static class Handlers {	
-		private EncrList first = null;
+	//// Implementation ////
 		
-		public void add(Encryptor encr) {
-			first = new EncrList(encr, first);
-		}
-		
-		Encryptor fetch(byte[] ID) {
-			for( EncrList node = first;  node != null;  node = node.next ) {
-				if( equal(ID, node.encryptor.ID) )
-					return node.encryptor;
+	//
+	// MessageQueue -- a queue of messages (along with the id of the sender).
+	// Such a queue is kept by an agent and represents the messages that has been 
+	// sent to this agent.
+	//
+	private static class MessageQueue 
+	{
+		private static class Node {
+			byte[] message;
+			int sender_id;		
+			Node next;
+			Node(byte[] message, int sender_id, Node next) {
+				this.message = message;
+				this.sender_id = sender_id;
+				this.next = next;
 			}
+		}		
+		private Node first = null;
+		
+		void add(byte[] message, int sender_id) {
+			first = new Node(message, sender_id, first);
+		}
+	
+		MessageInfo get(int index) {
+			Node node = first;
+			for( int i=0;  i<index && node!=null;  ++i )
+				node = node.next;
+			return  node!=null ? new MessageInfo(copyOf(node.message), node.sender_id) : null;
+		}
+	}
+
+	//
+	// Handlers -- a collection of registered agents.
+	//
+	private static class Handlers 
+	{	
+		private static class Node {
+			Agent agent;
+			Node  next;
+			Node(Agent agent, Node next) {
+				this.agent = agent;
+				this.next = next;
+			}
+		}			
+		private Node first = null;
+		
+		public void add(Agent agent) {
+			first = new Node(agent, first);
+		}
+		
+		Agent fetch(int id) {
+			for( Node node = first;  node != null;  node = node.next )
+				if( id == node.agent.ID )
+					return node.agent;
 			return null;
 		}
 	}
 
+	// one static list of handlers:
 	private static Handlers handlers = new Handlers();	
 }

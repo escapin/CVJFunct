@@ -51,10 +51,14 @@ public class SAMT {
 	static public class Decryptor {
 		private byte[] publicKey;
 		private byte[] privateKey;
+		private byte[] signingKey;
+		private byte[] verificationKey;
 		
-		private Decryptor(byte[] publicKey, byte[] privateKey) {
+		private Decryptor(byte[] publicKey, byte[] privateKey, byte[] verificationKey, byte[] signingKey) {
 			this.publicKey = publicKey;
 			this.privateKey = privateKey;
+			this.verificationKey = verificationKey;
+			this.signingKey = signingKey;
 		}
 		
 		/** Decrypts 'message' with the encapsulated private key. */
@@ -74,11 +78,16 @@ public class SAMT {
 	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
 	 */
 	public static Decryptor register(byte[] id) {
-		KeyPair keypair = CryptoLib.generateKeyPair();
-		byte[] privateKey = copyOf(keypair.privateKey);
-		byte[] publicKey = copyOf(keypair.publicKey);  
-		if( !pki_register(copyOf(id), copyOf(publicKey)) ) return null; // registration has not succeeded (id already used)
-		return new Decryptor(publicKey, privateKey);
+		KeyPair pke_keypair = CryptoLib.generateKeyPair();
+		KeyPair sig_keypair = CryptoLib.generateSignatureKeyPair(); 
+		byte[] privateKey = copyOf(pke_keypair.privateKey);
+		byte[] publicKey = copyOf(pke_keypair.publicKey);
+		byte[] signingKey = copyOf(sig_keypair.privateKey);
+		byte[] verificationKey = copyOf(sig_keypair.publicKey);  
+
+		if( !pki_register(copyOf(id), copyOf(publicKey), copyOf(verificationKey)) ) return null; // registration has not succeeded (id already used)
+		
+		return new Decryptor(publicKey, privateKey, verificationKey);
 	}
 	
 	public static Encryptor getEncryptor(byte[] id) {
@@ -99,7 +108,7 @@ public class SAMT {
 	
 /// Implementation ///
 	
-	private static boolean pki_register(byte[] id, byte[] pubKey)
+	private static boolean pki_register(byte[] id, byte[] pubKey, byte[] verifKey)
 		{return false;}  // TODO
 	
 	private static byte[] pke_getPublicKey(byte[] id)
