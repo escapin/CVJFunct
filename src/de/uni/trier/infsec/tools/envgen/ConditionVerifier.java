@@ -46,14 +46,6 @@ public class ConditionVerifier {
 		primitiveTypes.put("void", null);
 		primitiveTypes.put("byte", null);
 
-//		acceptedTypes.put("java.io.IOException", null);
-
-		// primitiveTypes.put("char", null);
-		// primitiveTypes.put("long", null);
-		// primitiveTypes.put("float", null);
-		// primitiveTypes.put("double", null);
-		// primitiveTypes.put("short", null);
-
 		for (String s : primitiveTypes.keySet())
 			System.out.println(String.format("%s is primitive type", s));
 		for (String s : acceptedTypes.keySet())
@@ -67,28 +59,35 @@ public class ConditionVerifier {
 		// byte[]. These methods may return values of primitive types, of type byte[], or objects of predefined classes
 		// and classes defined in IE. These methods can throw exceptions of predefined classes and of classes defined in IE.
 
-		// TODO: Current problem is to find out the fully qualified name of parameter and field classes! (import abc.def.* etc)
+		// TODO: open problem is to find out the fully qualified name of parameter and field classes! (import abc.def.* etc)
 
 		for (ClassInterface ci : si.classes) {
+			
+			for (String type : ci.extendList) {
+				if (!acceptedType(type)) {
+					System.err.println(MessageFormat.format("{0} extends unsupported type {1}", ci.name, type));
+					return false;
+				}
+			}
 			for (Method m : ci.methods) {
 				if (!m.isStatic) {
-					System.err.println(MessageFormat.format("There is a non-static method: {0}", m.toString()));
+					System.err.println(MessageFormat.format("There is a non-static method: {0} in class {1}", m.toString(), ci.name));
 					return false;
 				}
 				for (Parameter p : m.parameters) {
-					String type = ci.imports.get(p.type) != null ? ci.imports.get(p.type) : p.type;
+					String type = ci.importMap.get(p.type) != null ? ci.importMap.get(p.type) : p.type;
 					if (!acceptedType(type)) {
 						System.err.println(MessageFormat.format("Parameter [{0}] from [{1}] has unsupported type", p.toString(), m.toString()));
 						return false;
 					}
 				}
-				String type = ci.imports.get(m.type) != null ? ci.imports.get(m.type) : m.type;
+				String type = ci.importMap.get(m.type) != null ? ci.importMap.get(m.type) : m.type;
 				if (!acceptedType(type)) {
 					System.err.println(MessageFormat.format("Return type of Method [{0}] is unsupported", m.toString()));
 					return false;
 				}
 				for (Exception e : m.exceptions) {
-					type = ci.imports.get(e.name) != null ? ci.imports.get(e.name) : e.name;
+					type = ci.importMap.get(e.name) != null ? ci.importMap.get(e.name) : e.name;
 					if (!acceptedType(type)) {
 						System.err.println(MessageFormat.format("Exception [{0}] from [{1}] has unsupported type", e.toString(), m.toString()));
 						return false;

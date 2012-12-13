@@ -7,6 +7,7 @@ import java.util.Iterator;
 public class SystemInterface {
 	
 	public ArrayList<ClassInterface> classes = new ArrayList<>();
+	public String mainPackage = null;
 
 	@Override
 	public String toString() {
@@ -26,17 +27,27 @@ public class SystemInterface {
 		public String visibility = "";
 		
 		public ArrayList<String> extendList = new ArrayList<String>();
+		public ArrayList<String> imports = new ArrayList<>();
 	
 		public ArrayList<Constructor> constructors = new ArrayList<>();
 		public ArrayList<Method> methods = new ArrayList<>();
 		public ArrayList<Field> fields = new ArrayList<>();
-		public HashMap<String, String> imports = null;
-		// Extends and implements!
+		
+		// This map is used to remember which class has been imported from which package. 
+		public HashMap<String, String> importMap = null;
 		
 		@Override
 		public String toString() {
-			StringBuffer out = new StringBuffer();
-
+			StringBuffer out = new StringBuffer("/* This class has been automatically generated */\n");
+			
+			if (packageName != null && !packageName.equals("")) {
+				out.append(String.format("package %s;\n\n", packageName));
+			}
+			
+			for (String importString : imports) {
+				out.append(String.format("import %s;\n", importString));
+			}
+			
 			// Generate class declaration
 			out.append(String.format("%s %s class %s", visibility, isStatic ? "static " : "", name));
 			

@@ -2,6 +2,12 @@ package de.uni.trier.infsec.functionalities.pki.real;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -10,75 +16,136 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 
+import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.lib.crypto.Encryption;
 
 
 /**
- * Interface for Java RMI Implementation
+ * Real functionality for PKI (Public Key Infrastructure).
+ * 
+ * The intended usage:
+ * 
+ * To encrypt messages for a party with identifier id_of_A: 
+ * 		Encryptor encryptor_of_A = PKI.getEncryptor(id_A);
+ * 		byte[] encrypted1 = encryptor_of_A.encrypt(message1);
+ * 		byte[] encrypted2 = encryptor_of_A.encrypt(message2);
+ * 
+ * To register with my_id:
+ * 		Decryptor my_decryptor = PKI.register(my_id);
+ * 		if( my_decryptor == null ) 
+ * 			//  somebody has already registered using my_id...
+ * 		else
+ * 			byte[] message = my_decryptor.decrypt(ciphertext)
+ * 	
+ *	The serialization methods (decryptorToBytes, decryptorFromBytes)
+ *	can be used to store/restore a decryptor.
  */
 interface PKIServer extends java.rmi.Remote {
 	boolean pki_register(byte[] id, byte[] pubKey) throws RemoteException;
 	byte[] pke_getPublicKey(byte[] id) throws RemoteException;
 }
 
-
 /**
  * Real functionality for PKI (Public Key Infrastructure).
  */
 public class PKI extends UnicastRemoteObject implements PKIServer {
 
-	// The public interface //
-	public static class Decryptor {
+/// The public interface ///
+	
+	/** An object encapsulating the public key of some party. 
+	 *  This key can be accessed directly of indirectly via method encrypt.  
+	 */
+	static public class Encryptor implements Serializable {
+		private byte[] publicKey;	
+		
+		private Encryptor(byte[] publicKey) {
+			this.publicKey = publicKey;
+		}
+		
+		public byte[] encrypt(byte[] message) {
+			return copyOf(CryptoLib.pke_encrypt(copyOf(message), copyOf(publicKey)));		
+		}
+		
+		public byte[] getPublicKey() {
+			return copyOf(publicKey);
+		}
+	}
+	
+	/** An object encapsulating the private and public keys of some party. */
+	static public class Decryptor implements Serializable {
+		private byte[] publicKey;
 		private byte[] privateKey;
 		
-		private Decryptor(byte[] privateKey) {
+		private Decryptor(byte[] publicKey, byte[] privateKey) {
+			this.publicKey = publicKey;
 			this.privateKey = privateKey;
 		}
 		
+		/** Decrypts 'message' with the encapsulated private key. */
 		public byte[] decrypt(byte[] message) {
-			// decrypt 'ciphertext' using our private key
-			return copyOf(Encryption.decrypt(copyOf(message), copyOf(privateKey)));
+			return copyOf(CryptoLib.pke_decrypt(copyOf(message), copyOf(privateKey)));
 		}	
+		
+		/** Returns a new encryptor object with the same public key. */
+		public Encryptor getEncryptor() {
+			return new Encryptor(copyOf(publicKey));
+		}
 	}
 	
-	// Singleton implementation
+		
+	/** Registers a user with the given id. 
+	 * 
+	 *   It fails (returns null) if this id has been already registered. Otherwise, it creates
+	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
+	 */
 	public static Decryptor register(byte[] id) {
-		KeyPair keypair = Encryption.generateKeyPair();
+		KeyPair keypair = CryptoLib.generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);  
-		if(!getInstance().pki_register(id, publicKey)) return null; // registration has not succeeded
-		return new Decryptor(privateKey);
+		if(!getInstance().pki_register(id, publicKey)) return null; // registration has not succeeded (id already used)
+		return new Decryptor(publicKey, privateKey);
 	}
 	
-	public static byte[] encryptFor(byte[] id, byte[] message) {
+	public static Encryptor getEncryptor(byte[] id) {
 		// fetch the public key of id
 		byte[] publKey = getInstance().pke_getPublicKey(id);
-		if( publKey == null ) return null;
-		// encrypt 'message' using this public key
-		return copyOf(Encryption.encrypt(copyOf(message), copyOf(publKey)));
+		if( publKey==null ) return null;
+		return new Encryptor(publKey);
 	}
 	
-	public static byte[] getPublicKey(byte[] id) {
-		return copyOf(getInstance().pke_getPublicKey(id));
+/// Extended interface (not in the ideal functionality): serialization/deserialization of decryptors ///
+	
+	public static byte[] decryptorToBytes(Decryptor decryptor) {
+		ByteArrayOutputStream bo = new ByteArrayOutputStream();
+		try {
+			ObjectOutputStream os = new ObjectOutputStream(bo);
+			os.writeObject(decryptor);
+			os.flush();
+			os.close();
+			return bo.toByteArray(); 
+		} catch (IOException e) {
+			System.err.println("An error occured while serializing the Decryptor: " + e.getMessage());
+		}
+		return null;
 	}
 	
-
-	// The extended public interface (not implemented in the ideal functionality) //
-	public void save(String filename) {
-		// ....
+	public Decryptor decryptorFromBytes(byte[] bytes) {
+		try {			
+			ByteArrayInputStream bi = new ByteArrayInputStream(bytes);
+			ObjectInputStream os = new ObjectInputStream(bi);
+			Decryptor decryptor = (Decryptor) os.readObject();
+			return decryptor;
+		} catch (Exception e) {
+			System.err.println("An error occured while serializing the Decryptor: " + e.getMessage());			
+		}
+		return null; 
 	}
 	
-	public static Decryptor load(String filename) {
-		byte[] privateKey = null; 
-		// .....
-		return new Decryptor(privateKey);
-	}
-
+/// Implementation ///
 	private static final long serialVersionUID = 7924325010095445454L;
 	private static PKI instance = null;
 	private static boolean useRemote = false; // Local or RMI Mode? Depending on System properties
-	public static PKI getInstance() {
+	private static PKI getInstance() {
 		if (instance == null) {
 			try {
 				instance = new PKI();	
@@ -93,9 +160,6 @@ public class PKI extends UnicastRemoteObject implements PKIServer {
 		super();
 	}
 	
-	// Implementation //
-	
-	// Backend implementation //
 	static {
 		// In case server property has been set, we register RMI server
 		if (Boolean.parseBoolean(System.getProperty("server"))) {

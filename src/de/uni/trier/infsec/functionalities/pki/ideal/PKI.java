@@ -14,119 +14,143 @@ public class PKI {
 	
 /// The public interface ///
 	
+	/** An object encapsulating the public key of some party.
+	 *  
+	 *  This key can be accessed directly of indirectly via method encrypt.
+	 *  Method 'encrypt' realizes the "ideal" encryption, where a string of 
+	 *  zeros is encrypted instead of the original message and the pair 
+	 *  (plaintext, ciphertest) is stored in a log which can be then used
+	 *  for decryption.    
+	 */
+	static public class Encryptor {
+		private byte[] ID;	
+		private byte[] publicKey;
+		private EncryptionLog log;
+
+		private Encryptor(byte[] id, byte[] publicKey, EncryptionLog log) {
+			this.ID = id;
+			this.publicKey = publicKey;
+			this.log = log;
+		}
+		
+		public byte[] encrypt(byte[] message) {
+			byte[] randomCipher = null;
+			// keep asking the environment for the ciphertext, until a fresh one is given:
+			while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
+				randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publicKey)));
+			}
+			log.add(copyOf(message), randomCipher);
+			return copyOf(randomCipher);
+		}
+		public byte[] getPublicKey() {
+			return copyOf(publicKey);
+		}
+	}
+	
+	/** An object encapsulating the private and public keys of some party. */
 	static public class Decryptor {
 		private byte[] ID;
 		private byte[] publicKey;
 		private byte[] privateKey;
-		private MessagePairList log;
+		private EncryptionLog log;
 
 		private Decryptor(byte[] id) {
 			KeyPair keypair = CryptoLib.generateKeyPair();
-			byte[] privKey = copyOf(keypair.privateKey);
-			byte[] publKey = copyOf(keypair.publicKey);
+			this.privateKey = copyOf(keypair.privateKey);
+			this.publicKey = copyOf(keypair.publicKey);
 			this.ID = id;
-			this.publicKey = publKey;
-			this.privateKey = privKey;
-			this.log = null;
-		}
+			this.log = new EncryptionLog();
+		}		
 		
-		private byte[] encrypt(byte[] message) {
-			byte[] messageCopy = copyOf(message);
-			byte[] randomCipher = null;
-			// keep asking the environment for the ciphertext, until a fresh one is given:
-			while( randomCipher==null || log.contains(randomCipher) ) {
-				randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publicKey)));
-			}
-			log.add(messageCopy, randomCipher);
-			return copyOf(randomCipher);
-		}
-		
+		/** "Decrypts" a message by, first trying to find in in the log (and returning
+		 *   the related plaintext) and, only if this fails, by using real decryption. */
 		public byte[] decrypt(byte[] message) {
 			byte[] messageCopy = copyOf(message); 
-			if (!log.contains(messageCopy)) {
+			if (!log.containsCiphertext(messageCopy)) {
 				return copyOf( CryptoLib.pke_decrypt(copyOf(privateKey), messageCopy) );
 			} else {
 				return copyOf( log.lookup(messageCopy) );
 			}			
 		}
+		
+		/** Returns a new encryptor object sharing the same public key, ID, and log. */
+		public Encryptor getEncryptor() {
+			return new Encryptor(ID, publicKey, log);
+		}	
 	}
 
 	public static Decryptor register(byte[] id) {
 		id = copyOf(id);
 		if( handlers.fetch(id) != null ) return null; // a party with this id has already registered
-		Decryptor pki = new Decryptor(id);
-		handlers = new DecrList(pki, handlers);
-		return pki;
+		Decryptor decryptor = new Decryptor(id);
+		Encryptor encryptor = decryptor.getEncryptor();
+		handlers.add(encryptor);
+		return decryptor;
 	}
 	
-	public static byte[] encryptFor(byte[] id, byte[] message) {
-		// fetch the handler to the PKIIdeal object with given id
-		Decryptor handle = handlers.fetch(id);
-		if( handle==null ) return null;
-		// encrypt 'message' using this handle
-		return copyOf(handle.encrypt(message));
+	public static Encryptor getEncryptor(byte[] id) {
+		return handlers.fetch(id);
 	}
 	
-	public static byte[] getPublicKey(byte[] id) {
-		Decryptor handle = handlers.fetch(id);
-		return copyOf(handle.publicKey);
-	}
-	
-
 	
 /// Implementation ///
-	
-	private static class DecrList {	
-		Decryptor handle;
-		DecrList next;
-	
-		DecrList(Decryptor handle, DecrList next) {
-			this.handle = handle;
-			this.next = next;
-		}
 		
-		Decryptor fetch(byte[] ID) {
-			for( DecrList node = this;  node!=null;  node = node.next ) {
-				if( equal(ID, node.handle.ID) )
-					return node.handle;
-			}
-			return null;
-		}
-	}
-	
-	private static class MessagePair {
+	private static class MessagePairList {
 		byte[] ciphertext;
 		byte[] plaintext;
-		MessagePair next;
-		public MessagePair(byte[] ciphertext, byte[] plaintext, MessagePair next) {
+		MessagePairList next;
+		public MessagePairList(byte[] ciphertext, byte[] plaintext, MessagePairList next) {
 			this.ciphertext = ciphertext;
 			this.plaintext = plaintext;
 			this.next = next;
 		}
 	}
 	
-	private static class MessagePairList {
-		private MessagePair first = null;
+	private static class EncryptionLog {
+		private MessagePairList first = null;
 		
-		public void add(byte[] pTxt, byte[] cTxt) {
-			first = new MessagePair(cTxt, pTxt, first);
+		public void add(byte[] plaintext, byte[] ciphertext) {
+			first = new MessagePairList(ciphertext, plaintext, first);
 		}
 
-	    byte[] lookup(byte[] ciphertext) {
-	        MessagePair tmp = first;
-	        while( tmp != null ) {
-	            if( MessageTools.equal(tmp.ciphertext, ciphertext) )
-	                return tmp.plaintext;
-	            tmp = tmp.next;
-	        }
+	    byte[] lookup(byte[] ciphertext) {	    	
+	    	for( MessagePairList node = first;  node != null;  node = node.next ) {
+	            if( MessageTools.equal(node.ciphertext, ciphertext) )
+	                return node.plaintext;	    		
+	    	}
 	        return null;
 	    }
 	    
-	    boolean contains(byte[] ciphertext) {
+	    boolean containsCiphertext(byte[] ciphertext) {
 	    	return lookup(ciphertext) != null;
 	    }    
 	}
-	
-	private static DecrList handlers = null;	
 
+		
+	private static class EncrList {
+		Encryptor encryptor;
+		EncrList  next;
+		EncrList(Encryptor encryptor, EncrList next) {
+			this.encryptor= encryptor;
+			this.next = next;
+		}
+	}
+	
+	private static class Handlers {	
+		private EncrList first = null;
+		
+		public void add(Encryptor encr) {
+			first = new EncrList(encr, first);
+		}
+		
+		Encryptor fetch(byte[] ID) {
+			for( EncrList node = first;  node != null;  node = node.next ) {
+				if( equal(ID, node.encryptor.ID) )
+					return node.encryptor;
+			}
+			return null;
+		}
+	}
+
+	private static Handlers handlers = new Handlers();	
 }

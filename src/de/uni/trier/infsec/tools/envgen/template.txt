@@ -1,3 +1,8 @@
+/* This class has been automatically generated */
+package %%%%%%PACKAGE%%%%%%;
+
+%%%%%%IMPORTS%%%%%%
+
 class Node {
 	int value;
 	Node next;
@@ -49,5 +54,5 @@ public class Env {
 	}
 
 	// additional static methods depending on IE go here
-%%%%%%TEMPLATE%%%%%%
+%%%%%%BODY%%%%%%
 }
