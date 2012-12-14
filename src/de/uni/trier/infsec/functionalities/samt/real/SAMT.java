@@ -6,111 +6,133 @@ import de.uni.trier.infsec.environment.crypto.KeyPair;
 
 /**
  * Real functionality for SAMT (Secure Authenticated Message Transmission).
- * 
- * The intended usage:
- * 
- * To encrypt messages for a party with identifier id_of_A: 
- * 		Encryptor encryptor_of_A = PKI.getEncryptor(id_A);
- * 		byte[] encrypted1 = encryptor_of_A.encrypt(message1);
- * 		byte[] encrypted2 = encryptor_of_A.encrypt(message2);
- * 
- * To register with my_id:
- * 		Decryptor my_decryptor = PKI.register(my_id);
- * 		if( my_decryptor == null ) 
- * 			//  somebody has already registered using my_id...
- * 		else
- * 			byte[] message = my_decryptor.decrypt(ciphertext)
- * 	
- *	The serialization methods (decryptorToBytes, decryptorFromBytes)
- *	can be used to store/restore a decryptor.
+ * See ...samt.ideal.SAMT for typical usage pattern.
  */
 public class SAMT {
 
-/// The public interface ///
-	
-	/** An object encapsulating the public key of some party. 
-	 *  This key can be accessed directly of indirectly via method encrypt.  
+	//// The public interface ////
+
+	/** 
+	 * Pair message, sender_id. 
+	 *
+	 * Objects of this class are returned when an agent try to read a message from its queue. 
 	 */
-	static public class Encryptor {
-		private byte[] publicKey;	
-		
-		private Encryptor(byte[] publicKey) {
-			this.publicKey = publicKey;
-		}
-		
-		public byte[] encrypt(byte[] message) {
-			return copyOf(CryptoLib.pke_encrypt(copyOf(message), copyOf(publicKey)));		
-		}
-		
-		public byte[] getPublicKey() {
-			return copyOf(publicKey);
+	static public class MessageInfo {
+		public byte[] message;
+		public int sender_id;
+		public MessageInfo(byte[] message, int sender) {
+			this.sender_id = sender;  this.message = message;
 		}
 	}
-	
-	/** An object encapsulating the private and public keys of some party. */
-	static public class Decryptor {
-		private byte[] publicKey;
-		private byte[] privateKey;
-		private byte[] signingKey;
-		private byte[] verificationKey;
-		
-		private Decryptor(byte[] publicKey, byte[] privateKey, byte[] verificationKey, byte[] signingKey) {
-			this.publicKey = publicKey;
-			this.privateKey = privateKey;
-			this.verificationKey = verificationKey;
-			this.signingKey = signingKey;
-		}
-		
-		/** Decrypts 'message' with the encapsulated private key. */
-		public byte[] decrypt(byte[] message) {
-			return copyOf(CryptoLib.pke_decrypt(copyOf(message), copyOf(privateKey)));
-		}	
-		
-		/** Returns a new encryptor object with the same public key. */
-		public Encryptor getEncryptor() {
-			return new Encryptor(publicKey);
-		}
-	}
-		
-	/** Registers a user with the given id. 
+
+	/**
+	 * Object representing an agent with all the restricted (private) data that are
+	 * necessary to securely send and receive authenticated message.
 	 * 
-	 *   It fails (returns null) if this id has been already registered. Otherwise, it creates
-	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
+	 * Such an object allows one to 
+	 *  - get messages from the queue or this agent (method getMessage),
+	 *    where the environment decides which message is to be delivered,
+	 *  - create a channel to another agent (channelTo and channelToAgent); such 
+	 *    a channel can be used to securely send authenticated messages to the 
+	 *    chosen agent.
 	 */
-	public static Decryptor register(byte[] id) {
-		KeyPair pke_keypair = CryptoLib.generateKeyPair();
-		KeyPair sig_keypair = CryptoLib.generateSignatureKeyPair(); 
-		byte[] privateKey = copyOf(pke_keypair.privateKey);
-		byte[] publicKey = copyOf(pke_keypair.publicKey);
+	static public class Agent 
+	{
+		private int ID;
+		byte[] publicKey;
+		byte[] privateKey;
+		byte[] verificationKey;
+		byte[] signingKey;
+
+		private Agent(int id, byte[] pubKey, byte[] privKey, byte[] verifKey, byte[] signKey) {
+			this.ID = id;
+			this.publicKey = pubKey;
+			this.privateKey = privKey;
+			this.verificationKey = verifKey;
+			this.signingKey = signKey;
+		}
+
+		public MessageInfo getMessage() {
+			// TODO
+			// (1) Somehow get a next message msg from the network.
+			// (2) Check that this message contains a known identifier of some party sender.
+			// (3) Fetch the verification key of the sender from PKI and using this key
+			// (4) verify that the message is signed by the sender (if not, ignore the message).
+			// (5) Decrypt the message using this.privateKey and
+			// (6) return the result of this decryption with the identifier of the sender
+			return null;
+		}
+
+		// the primary method to create a channel from this agent to the agent represented by 
+		// recipient_id
+		public Channel channelTo(int recipient_id, String network_address) {
+			byte[] recipient_public_key = pki_getPublicKey(recipient_id);
+			if (recipient_public_key == null) return null;  // there is no recipient registered with this id
+			return new Channel(this.ID, this.signingKey, recipient_public_key, network_address);
+		}
+
+		// additional method that cannot be used in a distributed setting, but may be useful  
+		// for verification purposes
+		public Channel channelToAgent(Agent recipient, String network_address) {
+			return new Channel(this.ID, this.signingKey, recipient.publicKey, network_address);
+		}
+	}
+
+	/**
+	 * Objects representing secure and authenticated channel from sender to recipient. 
+	 * 
+	 * Such objects allow one to securely send a message to the recipient, where the 
+	 * sender is authenticated to the recipient.
+	 */
+	static public class Channel 
+	{
+		private int    sender_id;
+		private byte[] sender_signing_key;
+		private byte[] recipient_encryption_key;
+
+		private Channel(int sender_id, byte[] sender_signing_key, 
+				        byte[] recipient_encryption_key, String network_address) {
+			this.sender_id = sender_id;
+			this.sender_signing_key = sender_signing_key;
+			this.recipient_encryption_key = recipient_encryption_key;
+			// TODO: establish the network connection (assuming that the recipient is at 
+			// the given network_address.
+		}		
+
+		public void send(byte[] message) {
+			// TODO
+			// (1) Encrypt the message with recipient_encryption_key.
+			// (2) Sign it with sender_signing_key.
+			// (3) Concatenate the sender_id, the signature, and the encrypted message and
+			// (4) send it to the recipient.
+		}
+	}
+
+	/**
+	 * Registering an agent with the given id. 
+	 * If this id has been already used (registered), registration fails (the method returns null).
+	 */	
+	public static Agent register(int id) {
+		KeyPair enc_keypair = CryptoLib.generateKeyPair();
+		byte[] privateKey = copyOf(enc_keypair.privateKey);
+		byte[] publicKey = copyOf(enc_keypair.publicKey);
+		KeyPair sig_keypair = CryptoLib.generateSignatureKeyPair();
+		byte[] verificationKey = copyOf(sig_keypair.publicKey);
 		byte[] signingKey = copyOf(sig_keypair.privateKey);
-		byte[] verificationKey = copyOf(sig_keypair.publicKey);  
-
-		if( !pki_register(copyOf(id), copyOf(publicKey), copyOf(verificationKey)) ) return null; // registration has not succeeded (id already used)
-		
-		return new Decryptor(publicKey, privateKey, verificationKey);
+		if( !pki_register(id, copyOf(publicKey), copyOf(verificationKey)) ) 
+			return null; // registration has not succeeded (id already used)
+		return new Agent(id, publicKey, privateKey, verificationKey, signingKey);
 	}
-	
-	public static Encryptor getEncryptor(byte[] id) {
-		// fetch the public key of id
-		byte[] publKey = pke_getPublicKey(id);
-		if( publKey==null ) return null;
-		return new Encryptor(publKey);
-	}
-		
 
-/// Extended interface (not in the ideal functionality): serialization/deserialization of decryptors ///
-	
-	public static byte[] decryptorToBytes(Decryptor decryptor)
-		{ return null; }  // TODO
-	
-	public Decryptor decryptorFromBytes(byte[] bytes)
-		{ return null; }  // TODO
-	
-/// Implementation ///
-	
-	private static boolean pki_register(byte[] id, byte[] pubKey, byte[] verifKey)
+
+	//// Implementation ////
+
+	private static boolean pki_register(int id, byte[] publicKey, byte[] verificationKey)
 		{return false;}  // TODO
-	
-	private static byte[] pke_getPublicKey(byte[] id)
+
+	private static byte[] pki_getPublicKey(int id)
+		{return null;}	 // TODO
+
+	private static byte[] pki_getVerificationKey(int id)
 		{return null;}	 // TODO
 }

@@ -6,15 +6,15 @@ import de.uni.trier.infsec.environment.Environment;
 /**
  * Ideal functionality for SAMT (Secure Authenticated Message Transmission).
  * 
- * Every party who wants to use this functionality should register itself:
+ * Every party who wants to use this functionality should first register itself:
  * 
  * 		Agent a = SAMT.register(ID_OF_A);
  *  
- * To send messages to a party with identifier ID_OF_B:
+ * Then, to send messages to a party with identifier ID_OF_B:
  * 
  * 		Channel channel_to_b = a.channelTo(ID_OF_B);
  * 		channel_to_b.send( message1 );
- * 		channel_to_b.send( message1 );
+ * 		channel_to_b.send( message2 );
  * 
  * (It is also possible to create a channel to b by calling a.channelToAgent(b).)
  * 
