@@ -20,30 +20,30 @@ import de.uni.trier.infsec.environment.Environment;
  * 
  * To read messages sent to the agent a:
  * 
- * 		MessageInfo msg_inf = a.getMessage();
- * 		// msg_info.message contains the received message
- * 		// msg_info.sender_id contains the id of the sender
+ * 		Authenticated msg = a.getMessage();
+ * 		// msg.message contains the received message
+ * 		// msg.sender_id contains the id of the sender
  */
 public class SAMT {
 	
 	//// The public interface ////
 
 	/** 
-	 * Pair message, sender_id. 
+	 * Pair (message, sender_id).
 	 * 
-	 * Objects of this class are returned when an agent try to read a message from its queue. 
+	 * Objects of this class are returned when an agent reads a message from its queue.
 	 */
-	static public class MessageInfo {
+	static public class AuthenticatedMessage {
 		public byte[] message;
 		public int sender_id;
-		public MessageInfo(byte[] message, int sender) {
+		public AuthenticatedMessage(byte[] message, int sender) {
 			this.sender_id = sender;  this.message = message;
 		}
 	}
 
 	/**
-	 * Object representing an agent with all the restricted (private) data that are 
-	 * necessary to securely send and receive authenticated message. 
+	 * Objects representing agents' restricted (private) data that can be used
+	 * to securely send and receive authenticated message.
 	 * 
 	 * Such an object allows one to 
 	 *  - get messages from the queue or this agent (method getMessage),
@@ -52,17 +52,17 @@ public class SAMT {
 	 *    a channel can be used to securely send authenticated messages to the 
 	 *    chosen agent.
 	 */
-	static public class Agent 
+	static public class AgentProxy
 	{
 		private int ID;
 		private MessageQueue queue;  // messages sent to this agent
 		
-		private Agent(int id) {
+		private AgentProxy(int id) {
 			this.ID = id;
 			this.queue = new MessageQueue();
 		}
 		
-		public MessageInfo getMessage() {
+		public AuthenticatedMessage getMessage() {
 			// The environment decides which message is to be delivered.
 			// Note that the same message may be delivered several times or not delivered at all.
 			int index = Environment.untrustedInput();
@@ -72,13 +72,13 @@ public class SAMT {
 		// the primary method to create a channel from this agent to the agent represented by 
 		// recipient_id
 		public Channel channelTo(int recipient_id) {
-			Agent recipient = handlers.fetch(recipient_id);
+			AgentProxy recipient = handlers.fetch(recipient_id);
 			return recipient!=null ? new Channel(this,recipient) : null; 
 		}
 	
 		// additional method that cannot be used in a distributed setting, but may be useful  
 		// for verification purposes
-		public Channel channelToAgent(Agent recipient) {
+		public Channel channelToAgent(AgentProxy recipient) {
 			return new Channel(this, recipient);
 		}
 	}
@@ -91,10 +91,10 @@ public class SAMT {
 	 */
 	static public class Channel 
 	{
-		private Agent sender;
-		private Agent recipient;
+		private AgentProxy sender;
+		private AgentProxy recipient;
 		
-		private Channel(Agent from, Agent to) {
+		private Channel(AgentProxy from, AgentProxy to) {
 			this.sender = from;
 			this.recipient = to;
 		}		
@@ -111,11 +111,11 @@ public class SAMT {
 	 * Registering an agent with the given id. If this id has been already used (registered), 
 	 * registration fails (the method returns null).
 	 */
-	public static Agent register(int id) {
+	public static AgentProxy register(int id) {
 		// check if the id is free
 		if( handlers.fetch(id) != null ) return null; 
 		// create a new agent, add it to the list of registered agents, and return it
-		Agent agent = new Agent(id);
+		AgentProxy agent = new AgentProxy(id);
 		handlers.add(agent);
 		return agent;
 	}
@@ -146,11 +146,11 @@ public class SAMT {
 			first = new Node(message, sender_id, first);
 		}
 	
-		MessageInfo get(int index) {
+		AuthenticatedMessage get(int index) {
 			Node node = first;
 			for( int i=0;  i<index && node!=null;  ++i )
 				node = node.next;
-			return  node!=null ? new MessageInfo(copyOf(node.message), node.sender_id) : null;
+			return  node!=null ? new AuthenticatedMessage(copyOf(node.message), node.sender_id) : null;
 		}
 	}
 
@@ -160,20 +160,20 @@ public class SAMT {
 	private static class Handlers 
 	{	
 		private static class Node {
-			Agent agent;
+			AgentProxy agent;
 			Node  next;
-			Node(Agent agent, Node next) {
+			Node(AgentProxy agent, Node next) {
 				this.agent = agent;
 				this.next = next;
 			}
 		}			
 		private Node first = null;
 		
-		public void add(Agent agent) {
+		public void add(AgentProxy agent) {
 			first = new Node(agent, first);
 		}
 		
-		Agent fetch(int id) {
+		AgentProxy fetch(int id) {
 			for( Node node = first;  node != null;  node = node.next )
 				if( id == node.agent.ID )
 					return node.agent;
