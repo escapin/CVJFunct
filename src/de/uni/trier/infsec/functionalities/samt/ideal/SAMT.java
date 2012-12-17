@@ -8,7 +8,7 @@ import de.uni.trier.infsec.environment.Environment;
  * 
  * Every party who wants to use this functionality should first register itself:
  * 
- * 		Agent a = SAMT.register(ID_OF_A);
+ * 		AgentProxy a = SAMT.register(ID_OF_A);
  *  
  * Then, to send messages to a party with identifier ID_OF_B:
  * 

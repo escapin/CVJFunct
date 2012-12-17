@@ -17,10 +17,10 @@ public class SAMT {
 	 *
 	 * Objects of this class are returned when an agent try to read a message from its queue. 
 	 */
-	static public class MessageInfo {
+	static public class AuthenticatedMessage {
 		public byte[] message;
 		public int sender_id;
-		public MessageInfo(byte[] message, int sender) {
+		public AuthenticatedMessage(byte[] message, int sender) {
 			this.sender_id = sender;  this.message = message;
 		}
 	}
@@ -36,7 +36,7 @@ public class SAMT {
 	 *    a channel can be used to securely send authenticated messages to the 
 	 *    chosen agent.
 	 */
-	static public class Agent 
+	static public class AgentProxy 
 	{
 		private int ID;
 		byte[] publicKey;
@@ -44,7 +44,7 @@ public class SAMT {
 		byte[] verificationKey;
 		byte[] signingKey;
 
-		private Agent(int id, byte[] pubKey, byte[] privKey, byte[] verifKey, byte[] signKey) {
+		private AgentProxy(int id, byte[] pubKey, byte[] privKey, byte[] verifKey, byte[] signKey) {
 			this.ID = id;
 			this.publicKey = pubKey;
 			this.privateKey = privKey;
@@ -52,7 +52,7 @@ public class SAMT {
 			this.signingKey = signKey;
 		}
 
-		public MessageInfo getMessage() {
+		public AuthenticatedMessage getMessage() {
 			// TODO
 			// (1) Somehow get a next message msg from the network.
 			// (2) Check that this message contains a known identifier of some party sender.
@@ -73,7 +73,7 @@ public class SAMT {
 
 		// additional method that cannot be used in a distributed setting, but may be useful  
 		// for verification purposes
-		public Channel channelToAgent(Agent recipient, String network_address) {
+		public Channel channelToAgent(AgentProxy recipient, String network_address) {
 			return new Channel(this.ID, this.signingKey, recipient.publicKey, network_address);
 		}
 	}
@@ -112,7 +112,7 @@ public class SAMT {
 	 * Registering an agent with the given id. 
 	 * If this id has been already used (registered), registration fails (the method returns null).
 	 */	
-	public static Agent register(int id) {
+	public static AgentProxy register(int id) {
 		KeyPair enc_keypair = CryptoLib.generateKeyPair();
 		byte[] privateKey = copyOf(enc_keypair.privateKey);
 		byte[] publicKey = copyOf(enc_keypair.publicKey);
@@ -121,7 +121,7 @@ public class SAMT {
 		byte[] signingKey = copyOf(sig_keypair.privateKey);
 		if( !pki_register(id, copyOf(publicKey), copyOf(verificationKey)) ) 
 			return null; // registration has not succeeded (id already used)
-		return new Agent(id, publicKey, privateKey, verificationKey, signingKey);
+		return new AgentProxy(id, publicKey, privateKey, verificationKey, signingKey);
 	}
 
 
