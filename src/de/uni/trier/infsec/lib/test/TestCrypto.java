@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import de.uni.trier.infsec.environment.crypto.KeyPair;
 import de.uni.trier.infsec.lib.crypto.DigitalSignature;
-import de.uni.trier.infsec.lib.crypto.Encryption;
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
 public class TestCrypto extends TestCase {
 
@@ -18,27 +18,27 @@ public class TestCrypto extends TestCase {
 	@Test
 	public void testCrypto() {
 		
-		KeyPair kp = Encryption.generateKeyPair();
+		KeyPair kp = CryptoLib.pke_generateKeyPair();
 		byte[] pubKey = kp.publicKey;
 		byte[] privKey = kp.privateKey;
 		
-		byte[] enc = Encryption.encrypt(TEST_DATA, pubKey);
-		byte[] dec = Encryption.decrypt(enc, privKey);
+		byte[] enc = CryptoLib.pke_encrypt(TEST_DATA, pubKey);
+		byte[] dec = CryptoLib.pke_decrypt(enc, privKey);
 		
 		assertTrue(Arrays.equals(TEST_DATA, dec));
 	}
 	
 	@Test
 	public void testSignature() {
-		KeyPair kp = Encryption.generateKeyPair();
+		KeyPair kp = CryptoLib.pke_generateKeyPair();
 		byte[] pubKey = kp.publicKey;
 		byte[] privKey = kp.privateKey;
 		
-		byte[] signature = DigitalSignature.sign(TEST_DATA, privKey);
+		byte[] signature = DigitalSignature.ds_sign(TEST_DATA, privKey);
 		
-		assertTrue(DigitalSignature.verify(TEST_DATA, signature, pubKey));
+		assertTrue(DigitalSignature.ds_verify(TEST_DATA, signature, pubKey));
 		signature[0] ++;
-		assertFalse(DigitalSignature.verify(TEST_DATA, signature, pubKey));
+		assertFalse(DigitalSignature.ds_verify(TEST_DATA, signature, pubKey));
 	}
 	
 }

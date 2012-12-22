@@ -1,7 +1,7 @@
 package de.uni.trier.infsec.functionalities.pkenc.real;
 
 import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.lib.crypto.Encryption;
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
 /**
  * Real functionality for public-key encryption: Decryptor
@@ -12,7 +12,7 @@ public final class Decryptor {
 	private byte[] privKey = null; 
 
 	public Decryptor() {
-		KeyPair keypair = Encryption.generateKeyPair();
+		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		publKey = keypair.publicKey;  
 		privKey = keypair.privateKey; 
 	}
@@ -22,7 +22,7 @@ public final class Decryptor {
     }
 
 	public byte[] decrypt(byte[] message) {
-		return Encryption.decrypt(message, privKey);
+		return CryptoLib.pke_decrypt(message, privKey);
 	}
 	
 	// methods not present in the ideal functionality:

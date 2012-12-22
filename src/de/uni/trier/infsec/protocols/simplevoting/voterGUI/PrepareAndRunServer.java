@@ -8,7 +8,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 
 import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.lib.crypto.Encryption;
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.protocols.simplevoting.VotingServerStandalone;
 import de.uni.trier.infsec.utils.Utilities;
 
@@ -56,7 +56,7 @@ public class PrepareAndRunServer {
 		bwId.write(Integer.toString(count) + "\n");
 
 		for (int i = 0; i < count; i++) {
-			KeyPair kp = Encryption.generateKeyPair();
+			KeyPair kp = CryptoLib.pke_generateKeyPair();
 
 			String pubKey = Utilities.byteArrayToHexString(kp.publicKey);
 			bwPk.write(pubKey + "\n");

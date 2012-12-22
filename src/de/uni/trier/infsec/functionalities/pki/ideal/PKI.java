@@ -55,7 +55,7 @@ public class PKI {
 		private EncryptionLog log;
 
 		private Decryptor(byte[] id) {
-			KeyPair keypair = CryptoLib.generateKeyPair();
+			KeyPair keypair = CryptoLib.pke_generateKeyPair();
 			this.privateKey = copyOf(keypair.privateKey);
 			this.publicKey = copyOf(keypair.publicKey);
 			this.ID = id;

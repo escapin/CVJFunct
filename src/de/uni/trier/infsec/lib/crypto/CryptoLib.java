@@ -18,7 +18,11 @@ import javax.crypto.Cipher;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import com.sun.org.apache.xml.internal.security.utils.HelperNodeList;
+
 import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.utils.MessageTools;
+import de.uni.trier.infsec.utils.Utilities;
 
 public class CryptoLib {
 
@@ -29,7 +33,9 @@ public class CryptoLib {
 	}
 	
 	public static void main(String[] args) {
-		
+		 KeyPair kp = CryptoLib.ds_generateKeyPair();
+		 System.out.println(Utilities.byteArrayToHexString(kp.publicKey));
+		 System.out.println(Utilities.byteArrayToHexString(kp.privateKey));
 	}
 
 	public static byte[] pke_encrypt(byte[] message, byte[] publicKey) {
@@ -90,12 +96,12 @@ public class CryptoLib {
 	// TODO: How to sign? Server signs Keys, Users verify? "byte level" or "Verifier.verify(Signature, Encryptor)"
 	
 	
-	public static byte[] ds_sign(byte[] data, byte[] privKey) {
+	public static byte[] ds_sign(byte[] data, byte[] signingKey) {
 	    Signature signer;
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
 			//for private keys use PKCS8EncodedKeySpec;
-			PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(privKey);
+			PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(signingKey);
 			PrivateKey pk = kf.generatePrivate(ks);
 			
 			signer = Signature.getInstance("SHA256WithRSA", "BC");
@@ -108,12 +114,12 @@ public class CryptoLib {
 		}
 	}
 	
-	public static boolean ds_verify(byte[] data, byte[] signature, byte[] pubKey) {
+	public static boolean ds_verify(byte[] data, byte[] signature, byte[] verificationKey) {
 	    Signature signer;
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
 			//for private keys use PKCS8EncodedKeySpec; for public keys use X509EncodedKeySpec
-			X509EncodedKeySpec ks = new X509EncodedKeySpec(pubKey);
+			X509EncodedKeySpec ks = new X509EncodedKeySpec(verificationKey);
 			PublicKey pk = kf.generatePublic(ks);
 			
 			signer = Signature.getInstance("SHA256WithRSA", "BC");

@@ -28,8 +28,7 @@ public class MessageTools {
 	}	
 	
 	public static byte[] concatenate(byte[] m1, byte[] m2) {
-		// Concatenated Message --> byte[0] = Type, byte[1-4] = BigInteger,
-		// Length of Message 1
+		// Concatenated Message --> byte[0-3] = Integer, Length of Message 1
 		byte[] out = new byte[m1.length + m2.length + 4];
 
 		// 4 bytes for length
