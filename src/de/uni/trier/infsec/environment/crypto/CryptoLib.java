@@ -41,9 +41,23 @@ public class CryptoLib {
 		return Environment.untrustedInput() != 0; // TODO: Do we prefer byte[] as output?
 	}
 
-	public static KeyPair generateKeyPair() {
+	public static KeyPair pke_generateKeyPair() {
 		// input
-		Environment.untrustedOutput(0x88); // Function code for generateKeyPair
+		Environment.untrustedOutput(0x88); // Function code for pke_generateKeyPair
+		
+		// ouptut
+		KeyPair resval = null;
+		if( Environment.untrustedInput()==0 ) {
+			resval = new KeyPair();
+			resval.privateKey = Environment.untrustedInputMessage();
+			resval.publicKey = Environment.untrustedInputMessage();
+		}
+		return resval;
+	}
+
+	public static KeyPair ds_generateKeyPair() {
+		// input
+		Environment.untrustedOutput(0x89); // Function code for ds_generateKeyPair
 		
 		// ouptut
 		KeyPair resval = null;
