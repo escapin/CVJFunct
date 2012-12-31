@@ -8,10 +8,11 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 
-import de.uni.trier.infsec.environment.crypto.KeyPair; 
-import de.uni.trier.infsec.lib.crypto.CryptoLib; // TODO change to environment
+import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.utils.Utilities;
+// TODO change to environment
 
 /**
  * Real functionality for PKI (Public Key Infrastructure).
@@ -32,6 +33,10 @@ import de.uni.trier.infsec.utils.Utilities;
  * 	
  *	The serialization methods (decryptorToBytes, decryptorFromBytes)
  *	can be used to store/restore a decryptor.
+ *
+ *  In order to use remote PKI, simply start an instance of PKIServer and set Java Property -Dremotemode=true
+ *  which will enable remote procedure calls to be used automatically. Server Authentication is done by signing and validating each message using an
+ *  built-in keypair (see PKIServer).
  */
 public class PKI {
 	
@@ -41,7 +46,7 @@ public class PKI {
 	 *  This key can be accessed directly of indirectly via method encrypt.  
 	 */
 	static public class Encryptor {
-		private byte[] publicKey;	
+		private byte[] publicKey;
 		
 		private Encryptor(byte[] publicKey) {
 			this.publicKey = publicKey;
@@ -83,7 +88,7 @@ public class PKI {
 	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
 	 */
 	public static Decryptor register(byte[] id) {
-		if (localMode) {
+		if (!Boolean.parseBoolean(System.getProperty("remotemode"))) {
 			KeyPair keypair = CryptoLib.pke_generateKeyPair();
 			byte[] privateKey = copyOf(keypair.privateKey);
 			byte[] publicKey = copyOf(keypair.publicKey);  
@@ -92,7 +97,8 @@ public class PKI {
 		} else {
 			PKIServerInterface server;
 			try {
-				server = (PKIServer) Naming.lookup("//" + PKIServer.HOSTNAME + ":" + PKIServer.PORT + "/server");
+				server = (PKIServerInterface) Naming.lookup("//" + PKIServer.HOSTNAME + ":" + PKIServer.PORT + "/server");
+				server.test();
 				byte[] bytes = server.register(id);
 				byte[] data = MessageTools.first(bytes);
 				byte[] signature = MessageTools.second(bytes);
@@ -102,7 +108,7 @@ public class PKI {
 				} else {
 					return null;
 				}
-			} catch (MalformedURLException | RemoteException | NotBoundException e) {
+			} catch (Exception e) {
 				System.out.println("There was an error with Remoting: " + e.getMessage());
 			}
 			return null;
@@ -110,7 +116,7 @@ public class PKI {
 	}
 	
 	public static Encryptor getEncryptor(byte[] id) {
-		if (localMode) {			
+		if (!Boolean.parseBoolean(System.getProperty("remotemode"))) {			
 			// fetch the public key of id
 			byte[] publKey = pke_getPublicKey(id);
 			if( publKey==null ) return null;
@@ -158,11 +164,6 @@ public class PKI {
 	
 	private static HashMap<String, byte[]> pkLst = new HashMap<>();
 	
-	private static boolean localMode = true;
-	static {
-		if (!Boolean.parseBoolean(System.getProperty("localmode"))) localMode = false;
-	}
-
 	private static boolean pki_register(byte[] id, byte[] pubKey) {
 		// Key of the HashMap is not the id itself but its String (Hex) representation, because we´d need "array-Equal" for byte arrays.
 		if (pkLst.containsKey(Utilities.byteArrayToHexString(id))) {

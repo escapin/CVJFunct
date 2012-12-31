@@ -18,12 +18,12 @@ import javax.crypto.Cipher;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import com.sun.org.apache.xml.internal.security.utils.HelperNodeList;
-
 import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.utils.Utilities;
 
+/**
+ *	Real implementation of same interface as environment.crypto.CryptoLib
+ */
 public class CryptoLib {
 
 	private static final int pkKeySize = 1024;
@@ -88,14 +88,6 @@ public class CryptoLib {
 		return null;
 	}
 
-	
-	// TODO: Also add functionalities Signer and Verifier ?
-	// TODO: In which repository? Master AND/OR PKI?
-	// TODO: ideal/PKI: Make ideal testable?! --> Enough to exchange cryptolib?
-	// TODO: real/PKI: Do we want a switch for "RPC-server/RPC-client/LOCAL"?  
-	// TODO: How to sign? Server signs Keys, Users verify? "byte level" or "Verifier.verify(Signature, Encryptor)"
-	
-	
 	public static byte[] ds_sign(byte[] data, byte[] signingKey) {
 	    Signature signer;
 		try {

@@ -22,6 +22,21 @@ public class CryptoLib {
 		return Environment.untrustedInputMessage();
 	}
 	
+	public static KeyPair pke_generateKeyPair() {
+		// input
+		Environment.untrustedOutput(0x88); // Function code for pke_generateKeyPair
+		
+		// ouptut
+		KeyPair resval = null;
+		if( Environment.untrustedInput()==0 ) {
+			resval = new KeyPair();
+			resval.privateKey = Environment.untrustedInputMessage();
+			resval.publicKey = Environment.untrustedInputMessage();
+		}
+		return resval;
+	}
+	
+	
 	public static byte[] ds_sign(byte[] message, byte[] privKey) {
 		// input
 		Environment.untrustedOutput(0x11); // Function code for digital signature generation ds_sign
@@ -39,20 +54,6 @@ public class CryptoLib {
 		Environment.untrustedOutputMessage(pubKey);		
 		// output
 		return Environment.untrustedInput() != 0; // TODO: Do we prefer byte[] as output?
-	}
-
-	public static KeyPair pke_generateKeyPair() {
-		// input
-		Environment.untrustedOutput(0x88); // Function code for pke_generateKeyPair
-		
-		// ouptut
-		KeyPair resval = null;
-		if( Environment.untrustedInput()==0 ) {
-			resval = new KeyPair();
-			resval.privateKey = Environment.untrustedInputMessage();
-			resval.publicKey = Environment.untrustedInputMessage();
-		}
-		return resval;
 	}
 
 	public static KeyPair ds_generateKeyPair() {

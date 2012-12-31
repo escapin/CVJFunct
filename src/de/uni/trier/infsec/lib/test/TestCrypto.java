@@ -7,7 +7,6 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.lib.crypto.DigitalSignature;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
 public class TestCrypto extends TestCase {
@@ -34,11 +33,11 @@ public class TestCrypto extends TestCase {
 		byte[] pubKey = kp.publicKey;
 		byte[] privKey = kp.privateKey;
 		
-		byte[] signature = DigitalSignature.ds_sign(TEST_DATA, privKey);
+		byte[] signature = CryptoLib.ds_sign(TEST_DATA, privKey);
 		
-		assertTrue(DigitalSignature.ds_verify(TEST_DATA, signature, pubKey));
+		assertTrue(CryptoLib.ds_verify(TEST_DATA, signature, pubKey));
 		signature[0] ++;
-		assertFalse(DigitalSignature.ds_verify(TEST_DATA, signature, pubKey));
+		assertFalse(CryptoLib.ds_verify(TEST_DATA, signature, pubKey));
 	}
 	
 }

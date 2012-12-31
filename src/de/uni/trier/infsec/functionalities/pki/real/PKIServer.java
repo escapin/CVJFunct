@@ -12,7 +12,18 @@ import de.uni.trier.infsec.utils.Utilities;
 interface PKIServerInterface extends java.rmi.Remote {
 	public byte[] register(byte[] id) throws RemoteException;
 	public byte[] getPublicKey(byte[] id) throws RemoteException;
+	public void test() throws RemoteException;
 }
+
+
+/**
+ *	PKIServer enables Remote Procedure Calls for PKI. In order to run it, simply start this server and set property on Client-side:
+ *	-Dremotemode=true
+ *	Every server response is a pair <m, signature(m)> which will be validated before processing.
+ *	In order to use encrypted communication for PKIServer, refer to this manual to enable SSL/TLS:
+ *  https://blogs.oracle.com/lmalventosa/entry/using_the_ssl_tls_based
+ *  For now, we use unencrypted communication only.
+ */
 
 public class PKIServer extends UnicastRemoteObject implements PKIServerInterface {
 	private static final long serialVersionUID = 4696749351792779919L; // Needed for RMI
@@ -46,15 +57,20 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 		PKIServerInterface instance = new PKIServer();
 		
 		// In case server property has been set, we register RMI server
-		if (Boolean.parseBoolean(System.getProperty("server"))) {
-			// Register RMI Server here, Default port 8661
-			try {
-				LocateRegistry.createRegistry(2020);
-				Naming.rebind("//" + HOSTNAME + ":" + PORT + "/server", instance);				
-				System.out.println("Server registered successfully.");
-			} catch (Exception e) {
-				System.out.println("Error while registering RMI registry: " + e.getMessage());
-			}
+		// Register RMI Server here, Default port 8661
+		try {
+			LocateRegistry.createRegistry(2020);
+			String binding = "//" + HOSTNAME + ":" + PORT + "/server";
+			Naming.rebind(binding, instance);
+			
+			System.out.println("Server registered successfully. Listening on " + binding);
+		} catch (Exception e) {
+			System.out.println("Error while registering RMI registry: " + e.getMessage());
 		}
+	}
+
+	@Override
+	public void test() throws RemoteException {
+		System.out.println();
 	}
 }
