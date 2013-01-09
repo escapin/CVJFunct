@@ -20,7 +20,7 @@ import de.uni.trier.infsec.environment.Environment;
  * 
  * To read messages sent to the agent a:
  * 
- * 		Authenticated msg = a.getMessage();
+ * 		AuthenticatedMessage msg = a.getMessage();
  * 		// msg.message contains the received message
  * 		// msg.sender_id contains the id of the sender
  */
@@ -65,6 +65,7 @@ public class SAMT {
 		public AuthenticatedMessage getMessage() {
 			// The environment decides which message is to be delivered.
 			// Note that the same message may be delivered several times or not delivered at all.
+			Environment.untrustedOutput(this.ID);
 			int index = Environment.untrustedInput();
 			return queue.get(index);
 		}
@@ -72,15 +73,15 @@ public class SAMT {
 		// the primary method to create a channel from this agent to the agent represented by 
 		// recipient_id
 		public Channel channelTo(int recipient_id) {
-			AgentProxy recipient = handlers.fetch(recipient_id);
+			AgentProxy recipient = registeredAgents.fetch(recipient_id);
 			return recipient!=null ? new Channel(this,recipient) : null; 
 		}
 	
 		// additional method that cannot be used in a distributed setting, but may be useful  
 		// for verification purposes
-		public Channel channelToAgent(AgentProxy recipient) {
-			return new Channel(this, recipient);
-		}
+		// public Channel channelToAgent(AgentProxy recipient) {
+		//	return new Channel(this, recipient);
+		//}
 	}
 
 	/**
@@ -100,8 +101,10 @@ public class SAMT {
 		}		
 		
 		public void send(byte[] message) {
-			// leak the length of the sent message
-			Environment.untrustedOutput(message.length); 
+			// leak the length of the sent message and the identities of the involved parties
+			Environment.untrustedOutput(sender.ID);
+			Environment.untrustedOutput(recipient.ID);
+			Environment.untrustedOutput(message.length);
 			// add the message along with the identity of the sender to the queue of the recipient
 			recipient.queue.add(copyOf(message), sender.ID);
 		}
@@ -113,10 +116,10 @@ public class SAMT {
 	 */
 	public static AgentProxy register(int id) {
 		// check if the id is free
-		if( handlers.fetch(id) != null ) return null; 
+		if( registeredAgents.fetch(id) != null ) return null;
 		// create a new agent, add it to the list of registered agents, and return it
 		AgentProxy agent = new AgentProxy(id);
-		handlers.add(agent);
+		registeredAgents.add(agent);
 		return agent;
 	}
 		
@@ -147,6 +150,7 @@ public class SAMT {
 		}
 	
 		AuthenticatedMessage get(int index) {
+			if (index<0) return null;
 			Node node = first;
 			for( int i=0;  i<index && node!=null;  ++i )
 				node = node.next;
@@ -157,7 +161,7 @@ public class SAMT {
 	//
 	// Handlers -- a collection of registered agents.
 	//
-	private static class Handlers 
+	private static class AgentsQueue
 	{	
 		private static class Node {
 			AgentProxy agent;
@@ -182,5 +186,5 @@ public class SAMT {
 	}
 
 	// one static list of handlers:
-	private static Handlers handlers = new Handlers();	
+	private static AgentsQueue registeredAgents = new AgentsQueue();
 }
