@@ -7,8 +7,8 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import de.uni.trier.infsec.functionalities.pki.real.PKI;
-import de.uni.trier.infsec.functionalities.pki.real.PKI.Decryptor;
+import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.real.PKIEnc.Decryptor;
 import de.uni.trier.infsec.utils.Utilities;
 
 public class TestPKI extends TestCase {
@@ -27,7 +27,7 @@ public class TestPKI extends TestCase {
 			pr = p.start();
 			
 			System.setProperty("remotemode", Boolean.toString(true));
-			Decryptor d1 = PKI.register(TEST_ID1);
+			Decryptor d1 = PKIEnc.register(TEST_ID1);
 			
 			System.out.println("plaintxt: " + Utilities.byteArrayToHexString(TEST_DATA));
 			byte[] ctxt1 = d1.getEncryptor().encrypt(TEST_DATA);
@@ -45,7 +45,7 @@ public class TestPKI extends TestCase {
 	@Test
 	public void testRealPKILocal() throws Exception {
 			System.setProperty("remotemode", Boolean.toString(false));
-			Decryptor d1 = PKI.register(TEST_ID1);
+			Decryptor d1 = PKIEnc.register(TEST_ID1);
 			
 			System.out.println("plaintxt: " + Utilities.byteArrayToHexString(TEST_DATA));
 			byte[] ctxt1 = d1.getEncryptor().encrypt(TEST_DATA);

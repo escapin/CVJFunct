@@ -26,7 +26,7 @@ public class CryptoLib {
 		// input
 		Environment.untrustedOutput(0x88); // Function code for pke_generateKeyPair
 		
-		// ouptut
+		// output
 		KeyPair resval = null;
 		if( Environment.untrustedInput()==0 ) {
 			resval = new KeyPair();
@@ -37,7 +37,7 @@ public class CryptoLib {
 	}
 	
 	
-	public static byte[] ds_sign(byte[] message, byte[] privKey) {
+	public static byte[] sign(byte[] message, byte[] privKey) {
 		// input
 		Environment.untrustedOutput(0x11); // Function code for digital signature generation ds_sign
 		Environment.untrustedOutputMessage(message);
@@ -46,17 +46,17 @@ public class CryptoLib {
 		return Environment.untrustedInputMessage();
 	}
 	
-	public static boolean ds_verify(byte[] message, byte[] signature, byte[] pubKey) {
+	public static boolean verify(byte[] message, byte[] signature, byte[] pubKey) {
 		// input
 		Environment.untrustedOutput(0x22); // Function code for digital signature verification ds_verify
 		Environment.untrustedOutputMessage(message);
 		Environment.untrustedOutputMessage(signature);
 		Environment.untrustedOutputMessage(pubKey);		
 		// output
-		return Environment.untrustedInput() != 0; // TODO: Do we prefer byte[] as output?
+		return Environment.untrustedInput() != 0;
 	}
 
-	public static KeyPair ds_generateKeyPair() {
+	public static KeyPair generateSignatureKeyPair() {
 		// input
 		Environment.untrustedOutput(0x89); // Function code for ds_generateKeyPair
 		

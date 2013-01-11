@@ -18,7 +18,6 @@ import javax.crypto.Cipher;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import de.uni.trier.infsec.environment.crypto.KeyPair;
 import de.uni.trier.infsec.utils.Utilities;
 
 /**
@@ -33,7 +32,7 @@ public class CryptoLib {
 	}
 	
 	public static void main(String[] args) {
-		 KeyPair kp = CryptoLib.ds_generateKeyPair();
+		 KeyPair kp = CryptoLib.generateSignatureKeyPair();
 		 System.out.println(Utilities.byteArrayToHexString(kp.publicKey));
 		 System.out.println(Utilities.byteArrayToHexString(kp.privateKey));
 	}
@@ -88,7 +87,7 @@ public class CryptoLib {
 		return null;
 	}
 
-	public static byte[] ds_sign(byte[] data, byte[] signingKey) {
+	public static byte[] sign(byte[] data, byte[] signingKey) {
 	    Signature signer;
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
@@ -106,7 +105,7 @@ public class CryptoLib {
 		}
 	}
 	
-	public static boolean ds_verify(byte[] data, byte[] signature, byte[] verificationKey) {
+	public static boolean verify(byte[] data, byte[] signature, byte[] verificationKey) {
 	    Signature signer;
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
@@ -124,7 +123,7 @@ public class CryptoLib {
 		}
 	}
 	
-	public static KeyPair ds_generateKeyPair() {
+	public static KeyPair generateSignatureKeyPair() {
 		KeyPair out = new KeyPair();
 		KeyPairGenerator keyPairGen;
 		try {

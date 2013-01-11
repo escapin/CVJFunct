@@ -8,37 +8,25 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 
-import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.utils.Utilities;
-// TODO change to environment
 
 /**
  * Real functionality for PKI (Public Key Infrastructure).
  * 
- * The intended usage:
- * 
- * To encrypt messages for a party with identifier id_of_A: 
- * 		Encryptor encryptor_of_A = PKI.getEncryptor(id_A);
- * 		byte[] encrypted1 = encryptor_of_A.encrypt(message1);
- * 		byte[] encrypted2 = encryptor_of_A.encrypt(message2);
- * 
- * To register with my_id:
- * 		Decryptor my_decryptor = PKI.register(my_id);
- * 		if( my_decryptor == null ) 
- * 			//  somebody has already registered using my_id...
- * 		else
- * 			byte[] message = my_decryptor.decrypt(ciphertext)
+ * For intended usage, see ...functionalities.pki.ideal
  * 	
- *	The serialization methods (decryptorToBytes, decryptorFromBytes)
- *	can be used to store/restore a decryptor.
+ * The serialization methods (decryptorToBytes, decryptorFromBytes)
+ * can be used to store/restore a decryptor.
  *
- *  In order to use remote PKI, simply start an instance of PKIServer and set Java Property -Dremotemode=true
- *  which will enable remote procedure calls to be used automatically. Server Authentication is done by signing and validating each message using an
- *  built-in keypair (see PKIServer).
+ * In order to use remote PKI, simply start an instance of PKIServer 
+ * and set Java Property -Dremotemode=true which will enable remote procedure 
+ * calls to be used automatically. Server Authentication is done by signing and 
+ * validating each message using an built-in keypair (see PKIServer).
  */
-public class PKI {
+public class PKIEnc {
 	
 /// The public interface ///
 	
@@ -103,7 +91,7 @@ public class PKI {
 				byte[] data = MessageTools.first(bytes);
 				byte[] signature = MessageTools.second(bytes);
 				
-				if (CryptoLib.ds_verify(data, signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {					
+				if (CryptoLib.verify(data, signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {					
 					return decryptorFromBytes(data);
 				} else {
 					return null;
@@ -127,7 +115,7 @@ public class PKI {
 				byte[] bytes = server.getPublicKey(id);
 				byte[] data = MessageTools.first(bytes);
 				byte[] signature = MessageTools.second(bytes);
-				if (CryptoLib.ds_verify(data, signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {					
+				if (CryptoLib.verify(data, signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {					
 					Encryptor encryptor = new Encryptor(data);
 					return encryptor;
 				} else {

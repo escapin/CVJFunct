@@ -6,7 +6,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
 public class TestCrypto extends TestCase {
@@ -15,7 +15,7 @@ public class TestCrypto extends TestCase {
 	public static byte[] TEST_DATA = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 	
 	@Test
-	public void testCrypto() {
+	public void testPKEnc() {
 		
 		KeyPair kp = CryptoLib.pke_generateKeyPair();
 		byte[] pubKey = kp.publicKey;
@@ -33,11 +33,11 @@ public class TestCrypto extends TestCase {
 		byte[] pubKey = kp.publicKey;
 		byte[] privKey = kp.privateKey;
 		
-		byte[] signature = CryptoLib.ds_sign(TEST_DATA, privKey);
+		byte[] signature = CryptoLib.sign(TEST_DATA, privKey);
 		
-		assertTrue(CryptoLib.ds_verify(TEST_DATA, signature, pubKey));
+		assertTrue(CryptoLib.verify(TEST_DATA, signature, pubKey));
 		signature[0] ++;
-		assertFalse(CryptoLib.ds_verify(TEST_DATA, signature, pubKey));
+		assertFalse(CryptoLib.verify(TEST_DATA, signature, pubKey));
 	}
 	
 }

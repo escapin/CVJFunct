@@ -8,9 +8,25 @@ import de.uni.trier.infsec.environment.crypto.KeyPair;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
- * Ideal functionality for PKI (Public Key Infrastructure).
+ * Ideal functionality for public-key encryption with PKI (Public Key Infrastructure).
+ * 
+ * The intended usage is as follows. An agent who wants to use this functionality to
+ * receive (decrypt) messages must first register herself to obtain its, so called, 
+ * decryptor: 
+ * 
+ *     PKIEnc.Decryptor decryptor_of_A = PKIEnc.register(ID_OF_A);
+ *        
+ * Another agent can encrypt messages for A as follows:
+ *  
+ *     PKIEnc.Encryptor encryptor_for_A = getEncryptor(ID_OF_A);
+ *     byte[] ciphertext1 = encryptor_for_A.encrypt(message1);
+ *     byte[] ciphertext2 = encryptor_for_A.encrypt(message2);
+ *     
+ * A can decrypt such messages using her decryptor:
+ * 
+ *     byte[] message = decryptor_of_A.decrypt(ciphertext);
  */
-public class PKI {
+public class PKIEnc {
 	
 /// The public interface ///
 	
@@ -42,6 +58,7 @@ public class PKI {
 			log.add(copyOf(message), randomCipher);
 			return copyOf(randomCipher);
 		}
+
 		public byte[] getPublicKey() {
 			return copyOf(publicKey);
 		}
@@ -81,32 +98,33 @@ public class PKI {
 
 	public static Decryptor register(byte[] id) {
 		id = copyOf(id);
-		if( handlers.fetch(id) != null ) return null; // a party with this id has already registered
+		if( registeredAgents.fetch(id) != null ) return null; // a party with this id has already registered
 		Decryptor decryptor = new Decryptor(id);
 		Encryptor encryptor = decryptor.getEncryptor();
-		handlers.add(encryptor);
+		registeredAgents.add(encryptor);
 		return decryptor;
 	}
 	
 	public static Encryptor getEncryptor(byte[] id) {
-		return handlers.fetch(id);
+		return registeredAgents.fetch(id);
 	}
 	
 	
 /// Implementation ///
-		
-	private static class MessagePairList {
-		byte[] ciphertext;
-		byte[] plaintext;
-		MessagePairList next;
-		public MessagePairList(byte[] ciphertext, byte[] plaintext, MessagePairList next) {
-			this.ciphertext = ciphertext;
-			this.plaintext = plaintext;
-			this.next = next;
-		}
-	}
-	
+
 	private static class EncryptionLog {
+		
+		private static class MessagePairList {
+			byte[] ciphertext;
+			byte[] plaintext;
+			MessagePairList next;
+			public MessagePairList(byte[] ciphertext, byte[] plaintext, MessagePairList next) {
+				this.ciphertext = ciphertext;
+				this.plaintext = plaintext;
+				this.next = next;
+			}
+		}
+
 		private MessagePairList first = null;
 		
 		public void add(byte[] plaintext, byte[] ciphertext) {
@@ -126,25 +144,25 @@ public class PKI {
 	    }    
 	}
 
-		
-	private static class EncrList {
-		Encryptor encryptor;
-		EncrList  next;
-		EncrList(Encryptor encryptor, EncrList next) {
-			this.encryptor= encryptor;
-			this.next = next;
+
+	private static class RegisteredAgents {
+		private static class EncryptorList {
+			Encryptor encryptor;
+			EncryptorList  next;
+			EncryptorList(Encryptor encryptor, EncryptorList next) {
+				this.encryptor= encryptor;
+				this.next = next;
+			}
 		}
-	}
-	
-	private static class Handlers {	
-		private EncrList first = null;
+
+		private EncryptorList first = null;
 		
 		public void add(Encryptor encr) {
-			first = new EncrList(encr, first);
+			first = new EncryptorList(encr, first);
 		}
 		
 		Encryptor fetch(byte[] ID) {
-			for( EncrList node = first;  node != null;  node = node.next ) {
+			for( EncryptorList node = first;  node != null;  node = node.next ) {
 				if( equal(ID, node.encryptor.ID) )
 					return node.encryptor;
 			}
@@ -152,5 +170,5 @@ public class PKI {
 		}
 	}
 
-	private static Handlers handlers = new Handlers();	
+	private static RegisteredAgents registeredAgents = new RegisteredAgents();	
 }

@@ -17,7 +17,8 @@ interface PKIServerInterface extends java.rmi.Remote {
 
 
 /**
- *	PKIServer enables Remote Procedure Calls for PKI. In order to run it, simply start this server and set property on Client-side:
+ *	PKIServer enables Remote Procedure Calls for PKI. In order to run it, simply start this 
+ *  server and set property on Client-side:
  *	-Dremotemode=true
  *	Every server response is a pair <m, signature(m)> which will be validated before processing.
  *	In order to use encrypted communication for PKIServer, refer to this manual to enable SSL/TLS:
@@ -41,15 +42,15 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 
 	@Override
 	public byte[] register(byte[] id) throws RemoteException {
-		byte[] data = PKI.decryptorToBytes(PKI.register(id));
-		byte[] signature = CryptoLib.ds_sign(data, Utilities.hexStringToByteArray(SigningKey));
+		byte[] data = PKIEnc.decryptorToBytes(PKIEnc.register(id));
+		byte[] signature = CryptoLib.sign(data, Utilities.hexStringToByteArray(SigningKey));
 		return MessageTools.concatenate(data, signature);
 	}
 
 	@Override
 	public byte[] getPublicKey(byte[] id) throws RemoteException {
-		byte[] data = PKI.getEncryptor(id).getPublicKey();
-		byte[] signature = CryptoLib.ds_sign(data, Utilities.hexStringToByteArray(SigningKey));
+		byte[] data = PKIEnc.getEncryptor(id).getPublicKey();
+		byte[] signature = CryptoLib.sign(data, Utilities.hexStringToByteArray(SigningKey));
 		return MessageTools.concatenate(data, signature);
 	}
 	
