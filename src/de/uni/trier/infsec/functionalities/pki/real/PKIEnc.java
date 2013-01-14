@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.HashMap;
 
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
@@ -16,7 +15,7 @@ import de.uni.trier.infsec.utils.Utilities;
 /**
  * Real functionality for PKI (Public Key Infrastructure).
  * 
- * For intended usage, see ...functionalities.pki.ideal
+ * For intended usage, see functionalities.pki.ideal
  * 	
  * The serialization methods (decryptorToBytes, decryptorFromBytes)
  * can be used to store/restore a decryptor.
@@ -76,57 +75,47 @@ public class PKIEnc {
 	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
 	 */
 	public static Decryptor register(byte[] id) {
-		if (!Boolean.parseBoolean(System.getProperty("remotemode"))) {
-			KeyPair keypair = CryptoLib.pke_generateKeyPair();
-			byte[] privateKey = copyOf(keypair.privateKey);
-			byte[] publicKey = copyOf(keypair.publicKey);  
-			if( !pki_register(copyOf(id), copyOf(publicKey)) ) return null; // registration has not succeeded (id already used)
-			return new Decryptor(publicKey, privateKey);
-		} else {
-			PKIServerInterface server;
-			try {
-				server = (PKIServerInterface) Naming.lookup("//" + PKIServer.HOSTNAME + ":" + PKIServer.PORT + "/server");
-				server.test();
-				byte[] bytes = server.register(id);
-				byte[] data = MessageTools.first(bytes);
-				byte[] signature = MessageTools.second(bytes);
-				
-				if (CryptoLib.verify(data, signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {					
-					return decryptorFromBytes(data);
-				} else {
-					return null;
-				}
-			} catch (Exception e) {
-				System.out.println("There was an error with Remoting: " + e.getMessage());
+		if (pki_server == null) return null;
+
+		KeyPair keypair = CryptoLib.pke_generateKeyPair();
+		byte[] privateKey = copyOf(keypair.privateKey);
+		byte[] publicKey = copyOf(keypair.publicKey);
+		try {
+			SignedMessage responce = pki_server.register(copyOf(id), copyOf(publicKey));
+			if( responce == null) {
+				// registration failed, perhaps because id has been already claimed.
+				// TODO: (later) it would be useful to distinguish this reason (id has been claimed)
+				// from some other possible problems.
+				return null;
 			}
+		}
+		catch (RemoteException e) {
 			return null;
 		}
+
+		if (remoteMode) {
+			// TODO: verify the signature
+		}
+		return new Decryptor(publicKey, privateKey);
 	}
 	
 	public static Encryptor getEncryptor(byte[] id) {
-		if (!Boolean.parseBoolean(System.getProperty("remotemode"))) {			
-			// fetch the public key of id
-			byte[] publKey = pke_getPublicKey(id);
-			if( publKey==null ) return null;
-			return new Encryptor(publKey);
-		} else {
-			try {
-				PKIServer server = (PKIServer) Naming.lookup("server");
-				byte[] bytes = server.getPublicKey(id);
-				byte[] data = MessageTools.first(bytes);
-				byte[] signature = MessageTools.second(bytes);
-				if (CryptoLib.verify(data, signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {					
-					Encryptor encryptor = new Encryptor(data);
-					return encryptor;
-				} else {
+		try {
+			SignedMessage responce = pki_server.getPublicKey(id);
+			if( responce==null ) return null;
+			byte[] data = responce.message;
+			byte[] publKey = MessageTools.second(data);
+			if (remoteMode) {
+				byte[] id_from_data = MessageTools.first(data);
+				if (id != id_from_data) return null;
+				if(! CryptoLib.verify(data, responce.signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey)) )
 					return null;
-				}
-				
-			} catch (MalformedURLException | RemoteException | NotBoundException e) {
-				System.out.println("There was an error with Remoting: " + e.getMessage());
 			}
+			return new Encryptor(publKey);
 		}
-		return null;
+		catch (RemoteException e) {
+			return null;
+		}
 	}
 		
 
@@ -147,22 +136,22 @@ public class PKIEnc {
 		Decryptor decryptor = new Decryptor(publ, priv);
 		return decryptor; 
 	}
-
-/// Implementation ///
 	
-	private static HashMap<String, byte[]> pkLst = new HashMap<>();
-	
-	private static boolean pki_register(byte[] id, byte[] pubKey) {
-		// Key of the HashMap is not the id itself but its String (Hex) representation, because we´d need "array-Equal" for byte arrays.
-		if (pkLst.containsKey(Utilities.byteArrayToHexString(id))) {
-			return false;
+	private static boolean remoteMode = Boolean.parseBoolean(System.getProperty("remotemode"));
+	private static PKIServerInterface pki_server = null;
+	// FIXME: does it make sense (can we simply create an instance of PKIServer?)
+	static {
+		try {
+			if( remoteMode ) {
+				pki_server = (PKIServerInterface) Naming.lookup("//" + PKIServer.HOSTNAME + ":" + PKIServer.PORT + "/server");
+				System.out.println("Cannot create a remote object PKIServer");
+			}
+			else {
+				pki_server = new PKIServer();
+			}
 		}
-		pkLst.put(Utilities.byteArrayToHexString(id), pubKey);
-		return true;
-	}
-	
-	private static byte[] pke_getPublicKey(byte[] id) {
-		return pkLst.get(Utilities.byteArrayToHexString(id));
+		catch (MalformedURLException | RemoteException | NotBoundException e) {
+			pki_server = null; // probably redundant
+		}
 	}
 }
-

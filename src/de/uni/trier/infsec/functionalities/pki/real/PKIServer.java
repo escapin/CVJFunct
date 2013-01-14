@@ -4,21 +4,16 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.utils.Utilities;
 
-interface PKIServerInterface extends java.rmi.Remote {
-	public byte[] register(byte[] id) throws RemoteException;
-	public byte[] getPublicKey(byte[] id) throws RemoteException;
-	public void test() throws RemoteException;
-}
-
 
 /**
  *	PKIServer enables Remote Procedure Calls for PKI. In order to run it, simply start this 
- *  server and set property on Client-side:
+ *  server and set property on the client side:
  *	-Dremotemode=true
  *	Every server response is a pair <m, signature(m)> which will be validated before processing.
  *	In order to use encrypted communication for PKIServer, refer to this manual to enable SSL/TLS:
@@ -41,17 +36,31 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 	}
 
 	@Override
-	public byte[] register(byte[] id) throws RemoteException {
-		byte[] data = PKIEnc.decryptorToBytes(PKIEnc.register(id));
+	public SignedMessage register(byte[] id, byte[] pubKey) throws RemoteException {
+		// byte[] data = PKIEnc.decryptorToBytes(PKIEnc.register(id));
+		//
+		// FIXME: this class should not refer to PKIEnc (PKIEnc is a peculiarity related to our functionalities,
+		// while PKIServer may be used without using PKIEnc).
+		// Maintaining registered agents should be done here. Also, this data (that is the registered users) should
+		// have some persistency -- it should be stored in some database (something file-based, like for instance
+		// sqlite would do).
+		//
+		// Temporarily, I put here this:
+		if( !pki_register(id, pubKey) ) return null;
+		// Signed confirmation
+		byte[] data = MessageTools.concatenate(id, pubKey);
 		byte[] signature = CryptoLib.sign(data, Utilities.hexStringToByteArray(SigningKey));
-		return MessageTools.concatenate(data, signature);
+		return new SignedMessage(data, signature);
 	}
 
 	@Override
-	public byte[] getPublicKey(byte[] id) throws RemoteException {
-		byte[] data = PKIEnc.getEncryptor(id).getPublicKey();
+	public SignedMessage getPublicKey(byte[] id) throws RemoteException {
+		// byte[] data = PKIEnc.getEncryptor(id).getPublicKey();
+		// FIXME: as above. For now, I put this:
+		byte[] pubKey = pki_getPublicKey(id);
+		byte[] data = MessageTools.concatenate(id, pubKey);
 		byte[] signature = CryptoLib.sign(data, Utilities.hexStringToByteArray(SigningKey));
-		return MessageTools.concatenate(data, signature);
+		return new SignedMessage(data, signature);
 	}
 	
 	public static void main(String[] args) throws RemoteException {
@@ -73,5 +82,24 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 	@Override
 	public void test() throws RemoteException {
 		System.out.println();
+	}
+
+
+	/// Implementation ///
+	// FIXME: just for now -- needs to be changed, as discussed
+
+	private static HashMap<String, byte[]> pkLst = new HashMap<>();
+
+	private static boolean pki_register(byte[] id, byte[] pubKey) {
+		// Key of the HashMap is not the id itself but its String (Hex) representation, because we´d need "array-Equal" for byte arrays.
+		if (pkLst.containsKey(Utilities.byteArrayToHexString(id))) {
+			return false;
+		}
+		pkLst.put(Utilities.byteArrayToHexString(id), pubKey);
+		return true;
+	}
+
+	private static byte[] pki_getPublicKey(byte[] id) {
+		return pkLst.get(Utilities.byteArrayToHexString(id));
 	}
 }

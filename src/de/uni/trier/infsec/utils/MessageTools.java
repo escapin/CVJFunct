@@ -51,6 +51,8 @@ public class MessageTools {
 		byte[] length = new byte[4];
 		for (int i = 0; i < 4; i ++) length[i] = message[i];
 		int len = byteArrayToInt(length);
+		// FIXME: We do not need to copy the first 4 bytes to a new buffer ('length')
+		// byteArrayToInt can be applied directly to 'message'. Correct?
 		if (position == 0) {
 			byte[] m1 = new byte[len];
 			for (int i = 0; i < len; i ++) m1[i] = message[i + 4];
