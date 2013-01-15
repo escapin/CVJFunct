@@ -1,6 +1,8 @@
 package de.uni.trier.infsec.functionalities.pki.real;
 
-public class SignedMessage {
+import java.io.Serializable;
+
+public class SignedMessage implements Serializable {
 	public final byte[] message;
 	public final byte[] signature;
 	
