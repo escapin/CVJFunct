@@ -35,17 +35,7 @@ public class CryptoLib {
 		}
 		return resval;
 	}
-	
-	
-	public static byte[] sign(byte[] message, byte[] privKey) {
-		// input
-		Environment.untrustedOutput(0x11); // Function code for digital signature generation ds_sign
-		Environment.untrustedOutputMessage(message);
-		Environment.untrustedOutputMessage(privKey);		
-		// output
-		return Environment.untrustedInputMessage();
-	}
-	
+
 	public static boolean verify(byte[] message, byte[] signature, byte[] pubKey) {
 		// input
 		Environment.untrustedOutput(0x22); // Function code for digital signature verification ds_verify
@@ -54,20 +44,6 @@ public class CryptoLib {
 		Environment.untrustedOutputMessage(pubKey);		
 		// output
 		return Environment.untrustedInput() != 0;
-	}
-
-	public static KeyPair generateSignatureKeyPair() {
-		// input
-		Environment.untrustedOutput(0x89); // Function code for ds_generateKeyPair
-		
-		// ouptut
-		KeyPair resval = null;
-		if( Environment.untrustedInput()==0 ) {
-			resval = new KeyPair();
-			resval.privateKey = Environment.untrustedInputMessage();
-			resval.publicKey = Environment.untrustedInputMessage();
-		}
-		return resval;
 	}
 
 	public static byte[] sign(byte[] message, byte[] signingKey) {
@@ -88,11 +64,11 @@ public class CryptoLib {
 		// output
 		return Environment.untrustedInputMessage();
 	}
-		
+
 	public static KeyPair generateSignatureKeyPair() {
 		// input
-		Environment.untrustedOutput(0x88); // Function code for generateKeyPair
-		
+		Environment.untrustedOutput(0x88); // Function code for generateSignatureKeyPair
+
 		// ouptut
 		KeyPair resval = null;
 		if( Environment.untrustedInput()==0 ) {
@@ -102,7 +78,5 @@ public class CryptoLib {
 		}
 		return resval;
 	}
-	
-	
-	
+
 }

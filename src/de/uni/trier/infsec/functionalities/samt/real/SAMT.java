@@ -113,7 +113,7 @@ public class SAMT {
 	 * If this id has been already used (registered), registration fails (the method returns null).
 	 */	
 	public static AgentProxy register(int id) {
-		KeyPair enc_keypair = CryptoLib.generateKeyPair();
+		KeyPair enc_keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(enc_keypair.privateKey);
 		byte[] publicKey = copyOf(enc_keypair.publicKey);
 		KeyPair sig_keypair = CryptoLib.generateSignatureKeyPair();
