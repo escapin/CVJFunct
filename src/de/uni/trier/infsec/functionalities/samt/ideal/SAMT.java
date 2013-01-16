@@ -65,7 +65,7 @@ public class SAMT {
 		public AuthenticatedMessage getMessage() {
 			// The environment decides which message is to be delivered.
 			// Note that the same message may be delivered several times or not delivered at all.
-			Environment.untrustedOutput(this.ID);
+			Environment.untrustedOutput(ID);
 			int index = Environment.untrustedInput();
 			return queue.get(index);
 		}
@@ -115,11 +115,18 @@ public class SAMT {
 	 * registration fails (the method returns null).
 	 */
 	public static AgentProxy register(int id) {
+		Environment.untrustedOutput(id); // we try to register id --> adversary
+		// the environment can make registration impossible (by blocking the communication)
+		if(  Environment.untrustedInput() == 0 ) return null;
 		// check if the id is free
-		if( registeredAgents.fetch(id) != null ) return null;
+		if( registeredAgents.fetch(id) != null ) {
+			Environment.untrustedOutput(0); // registration unsuccessful --> adversary
+			return null;
+		}
 		// create a new agent, add it to the list of registered agents, and return it
 		AgentProxy agent = new AgentProxy(id);
 		registeredAgents.add(agent);
+		Environment.untrustedOutput(0); // registration successful --> adversary
 		return agent;
 	}
 		
@@ -159,7 +166,7 @@ public class SAMT {
 	}
 
 	//
-	// Handlers -- a collection of registered agents.
+	// AgentsQueue -- a collection of registered agents.
 	//
 	private static class AgentsQueue
 	{	
@@ -185,6 +192,6 @@ public class SAMT {
 		}
 	}
 
-	// one static list of handlers:
+	// static list of registered agents:
 	private static AgentsQueue registeredAgents = new AgentsQueue();
 }
