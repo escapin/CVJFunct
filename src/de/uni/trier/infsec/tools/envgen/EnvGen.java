@@ -31,8 +31,8 @@ public class EnvGen {
 	 * package, here only use classname like 'String') Parameter 4 = Package of generated Environment.java - by default package is "environment"
 	 * 
 	 * Notes: - For optimal class recognition do not use wildcard-imports (java.util.*) but fully qualified imports (java.util.HashMap) - Classes must not extend imported classes but only ones from IE
-	 * 
-	 * TODO: - If code contains constructor, just leave it out from IE or generate IE and fail on verification? - Accept all primitive types (float, long,...) or only byte, byte[], void and int?
+	 *        - If code contains constructor, just leave it out from IE or generate IE and fail on verification? 
+	 *        - Accept all primitive types (float, long,...) or only byte, byte[], void and int?
 	 */
 	public static void main(String[] args) throws Exception {
 		if (args.length < 2) {

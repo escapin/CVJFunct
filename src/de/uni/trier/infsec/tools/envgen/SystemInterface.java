@@ -145,7 +145,7 @@ public class SystemInterface {
 		public String name = "";
 		public String visibility = "";
 		public boolean isStatic = false;
-		//TODO More modifiers needed? (volatile, synchronized...)
+		// There might be more modifiers, which are currently not supported (volatile, synchronized...)
 		
 		public Field(String type, String name) {
 			this.type = type;
