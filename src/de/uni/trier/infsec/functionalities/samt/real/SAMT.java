@@ -38,7 +38,7 @@ public class SAMT {
 	 */
 	static public class AgentProxy 
 	{
-		private int ID;
+		public final int ID;
 		byte[] publicKey;
 		byte[] privateKey;
 		byte[] verificationKey;
