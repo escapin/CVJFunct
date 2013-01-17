@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.pki.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-import static de.uni.trier.infsec.utils.MessageTools.equal;
 import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
@@ -39,11 +38,11 @@ public class PKIEnc {
 	 *  for decryption.    
 	 */
 	static public class Encryptor {
-		private byte[] ID;	
+		private int ID;	
 		private byte[] publicKey;
 		private EncryptionLog log;
 
-		private Encryptor(byte[] id, byte[] publicKey, EncryptionLog log) {
+		private Encryptor(int id, byte[] publicKey, EncryptionLog log) {
 			this.ID = id;
 			this.publicKey = publicKey;
 			this.log = log;
@@ -66,12 +65,12 @@ public class PKIEnc {
 	
 	/** An object encapsulating the private and public keys of some party. */
 	static public class Decryptor {
-		private byte[] ID;
+		private int ID;
 		private byte[] publicKey;
 		private byte[] privateKey;
 		private EncryptionLog log;
 
-		private Decryptor(byte[] id) {
+		private Decryptor(int id) {
 			KeyPair keypair = CryptoLib.pke_generateKeyPair();
 			this.privateKey = copyOf(keypair.privateKey);
 			this.publicKey = copyOf(keypair.publicKey);
@@ -96,8 +95,7 @@ public class PKIEnc {
 		}	
 	}
 
-	public static Decryptor register(byte[] id) {
-		id = copyOf(id);
+	public static Decryptor register(int id) {
 		if( registeredAgents.fetch(id) != null ) return null; // a party with this id has already registered
 		Decryptor decryptor = new Decryptor(id);
 		Encryptor encryptor = decryptor.getEncryptor();
@@ -105,7 +103,7 @@ public class PKIEnc {
 		return decryptor;
 	}
 	
-	public static Encryptor getEncryptor(byte[] id) {
+	public static Encryptor getEncryptor(int id) {
 		return registeredAgents.fetch(id);
 	}
 	
@@ -161,9 +159,9 @@ public class PKIEnc {
 			first = new EncryptorList(encr, first);
 		}
 		
-		Encryptor fetch(byte[] ID) {
+		Encryptor fetch(int ID) {
 			for( EncryptorList node = first;  node != null;  node = node.next ) {
-				if( equal(ID, node.encryptor.ID) )
+				if( ID == node.encryptor.ID )
 					return node.encryptor;
 			}
 			return null;

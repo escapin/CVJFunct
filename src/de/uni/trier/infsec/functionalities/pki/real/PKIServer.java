@@ -52,7 +52,7 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 	}
 
 	@Override
-	public SignedMessage register(byte[] id, byte[] pubKey) throws RemoteException {
+	public SignedMessage register(int id, byte[] pubKey) throws RemoteException {
 		// byte[] data = PKIEnc.decryptorToBytes(PKIEnc.register(id));
 		//
 		// XXX: this class should not refer to PKIEnc (PKIEnc is a peculiarity related to our functionalities,
@@ -64,17 +64,17 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 		// Temporarily, I put here this:
 		if( !pki_register(id, pubKey) ) return null;
 		// Signed confirmation
-		byte[] data = MessageTools.concatenate(id, pubKey);
+		byte[] data = MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey);
 		byte[] signature = CryptoLib.sign(data, Utilities.hexStringToByteArray(SigningKey));
 		return new SignedMessage(data, signature);
 	}
 
 	@Override
-	public SignedMessage getPublicKey(byte[] id) throws RemoteException {
+	public SignedMessage getPublicKey(int id) throws RemoteException {
 		// byte[] data = PKIEnc.getEncryptor(id).getPublicKey();
 		// XXX: as above. For now, I put this:
 		byte[] pubKey = pki_getPublicKey(id);
-		byte[] data = MessageTools.concatenate(id, pubKey);
+		byte[] data = MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey);
 		byte[] signature = CryptoLib.sign(data, Utilities.hexStringToByteArray(SigningKey));
 		return new SignedMessage(data, signature);
 	}
@@ -103,18 +103,18 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 	// XXX: just for now -- needs to be changed, as discussed
 	// We store the public keys in the SQLite DB (located in system temp directory)
 
-	private static boolean pki_register(byte[] id, byte[] pubKey) {
+	private static boolean pki_register(int id, byte[] pubKey) {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.WRITE);
 			ISqlJetTable table = db.getTable(DB_TABLE_NAME);
-			ISqlJetCursor cursor = table.lookup(null, Utilities.byteArrayToHexString(id));
+			ISqlJetCursor cursor = table.lookup(null, id);
 			if (cursor.first()) {
-				System.out.println("Public Key for id " + Utilities.byteArrayToHexString(id) + " is already registered!");
+				System.out.println("Public Key for id " + id + " is already registered!");
 				return false;
 			}
 			
-			table.insert(Utilities.byteArrayToHexString(id), Utilities.byteArrayToHexString(pubKey));
+			table.insert(id, Utilities.byteArrayToHexString(pubKey));
 			db.commit();
 			
 			return true;
@@ -124,12 +124,12 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 		}
 	}
 
-	private static byte[] pki_getPublicKey(byte[] id) {
+	private static byte[] pki_getPublicKey(int id) {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
 			ISqlJetTable table = db.getTable(DB_TABLE_NAME);
-			ISqlJetCursor cursor = table.lookup(null, Utilities.byteArrayToHexString(id));
+			ISqlJetCursor cursor = table.lookup(null, id);
 			if (cursor.first()) {
 				String sPubKey = cursor.getString(DB_COLUMN_NAME);
 				byte[] pubKey  = Utilities.hexStringToByteArray(sPubKey);

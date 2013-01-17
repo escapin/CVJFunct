@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.pki.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-import static de.uni.trier.infsec.utils.MessageTools.equal;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.utils.MessageTools;
@@ -34,11 +33,11 @@ public class PKISig {
 	 * pair message/signature has been registered in the log.
 	 */
 	static public class Verifier {
-		private byte[] ID;
+		private int ID;
 		private byte[] verifKey;
 		private Log log;
 
-		private Verifier(byte[] id, byte[] verifKey, Log log) {
+		private Verifier(int id, byte[] verifKey, Log log) {
 			this.ID = id;
 			this.verifKey = verifKey;
 			this.log = log;
@@ -64,12 +63,12 @@ public class PKISig {
 	 * is stores in the log.
 	 */
 	static public class Signer {
-		private byte[] ID;
+		private int ID;
 		private byte[] verifKey;
 		private byte[] signKey;
 		private Log log;
 
-		private Signer(byte[] id) {
+		private Signer(int id) {
 			KeyPair keypair = CryptoLib.generateSignatureKeyPair(); // note usage of the real cryto lib here
 			this.signKey = copyOf(keypair.privateKey);
 			this.verifKey = copyOf(keypair.publicKey);
@@ -94,8 +93,7 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(byte[] id) {
-		id = copyOf(id);
+	public static Signer register(int id) {
 		if( registeredAgents.fetch(id) != null ) return null; // a party with this id has already registered
 		Signer signer = new Signer(id);
 		Verifier verifier = signer.getVerifier();
@@ -103,7 +101,7 @@ public class PKISig {
 		return signer;
 	}
 
-	public static Verifier getVerifier(byte[] id) {
+	public static Verifier getVerifier(int id) {
 		return registeredAgents.fetch(id);
 	}
 
@@ -126,9 +124,9 @@ public class PKISig {
 			first = new VerifierList(ver, first);
 		}
 
-		Verifier fetch(byte[] ID) {
+		Verifier fetch(int ID) {
 			for( VerifierList node = first;  node != null;  node = node.next ) {
-				if( equal(ID, node.verifier.ID) )
+				if( ID == node.verifier.ID )
 					return node.verifier;
 			}
 			return null;

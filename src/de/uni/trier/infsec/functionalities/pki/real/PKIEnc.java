@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.Arrays;
 
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
@@ -75,14 +74,14 @@ public class PKIEnc {
 	 *   It fails (returns null) if this id has been already registered. Otherwise, it creates
 	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
 	 */
-	public static Decryptor register(byte[] id) {
+	public static Decryptor register(int id) {
 		if (pki_server == null) return null;
 
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);
 		try {
-			SignedMessage responce = pki_server.register(copyOf(id), copyOf(publicKey));
+			SignedMessage responce = pki_server.register(id, copyOf(publicKey));
 			if( responce == null) {
 				// registration failed, perhaps because id has been already claimed.
 				// TODO: (later) it would be useful to distinguish this reason (id has been claimed)
@@ -91,14 +90,14 @@ public class PKIEnc {
 				return null;
 			}
 			if (remoteMode) {
-				byte[] id_from_data = MessageTools.first(responce.message);
+				int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(responce.message));
 				// Verify Signature!
 				if (!CryptoLib.verify(responce.message, responce.signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
 					System.out.println("Signature verification failed!");
 					return null;
 				}
 				// Verify that the response message contains the correct id
-				if (!Utilities.arrayEqual(id, id_from_data)) {
+				if (id == id_from_data) {
 					System.out.println("ID in response message is not equal to expected id!");
 					return null;
 				}
@@ -112,22 +111,22 @@ public class PKIEnc {
 		return new Decryptor(publicKey, privateKey);
 	}
 	
-	public static Encryptor getEncryptor(byte[] id) {
+	public static Encryptor getEncryptor(int id) {
 		try {
 			SignedMessage responce = pki_server.getPublicKey(id);
 			if( responce==null ) return null;
 			byte[] data = responce.message;
 			byte[] publKey = MessageTools.second(data);
 			if (remoteMode) {
-				byte[] id_from_data = MessageTools.first(data);
+				int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(data));
 				// Verify Signature
 				if(!CryptoLib.verify(data, responce.signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
 					System.out.println("Signature verification failed!");
 					return null;
 				}
 				
-				// Verify that the response message contains the correct id (Always use arrayEqual, not '==' which only compares references)
-				if (!Utilities.arrayEqual(id, id_from_data)) {
+				// Verify that the response message contains the correct id
+				if (id != id_from_data) {
 					System.out.println("ID in response message is not equal to expected id!");
 					return null;
 				}

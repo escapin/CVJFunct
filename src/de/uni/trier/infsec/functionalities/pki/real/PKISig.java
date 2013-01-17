@@ -55,12 +55,12 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(byte[] id) {
+	public static Signer register(int id) {
 		// TODO: implement
 		return null;
 	}
 
-	public static Verifier getVerifier(byte[] id) {
+	public static Verifier getVerifier(int id) {
 		// TODO: implement
 		return null;
 	}
