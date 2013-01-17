@@ -32,8 +32,8 @@ public class AMT {
 	 * Objects of this class are returned when an agent reads a message from its queue.
 	 */
 	static public class AuthenticatedMessage {
-		public byte[] message;
-		public int sender_id;
+		public final byte[] message;
+		public final int sender_id;
 		public AuthenticatedMessage(byte[] message, int sender) {
 			this.sender_id = sender;  this.message = message;
 		}
@@ -51,8 +51,8 @@ public class AMT {
 	 */
 	static public class AgentProxy
 	{
-		private int ID;
-		private MessageQueue queue;  // messages sent to this agent
+		private final int ID;
+		private final MessageQueue queue;  // messages sent to this agent
 
 		private AgentProxy(int id) {
 			this.ID = id;
@@ -81,8 +81,8 @@ public class AMT {
 	 */
 	static public class Channel
 	{
-		private AgentProxy sender;
-		private AgentProxy recipient;
+		private final AgentProxy sender;
+		private final AgentProxy recipient;
 
 		private Channel(AgentProxy from, AgentProxy to) {
 			this.sender = from;
@@ -130,9 +130,9 @@ public class AMT {
 	private static class MessageQueue
 	{
 		private static class Node {
-			byte[] message;
-			int sender_id;
-			Node next;
+			final byte[] message;
+			final int sender_id;
+			final Node next;
 			Node(byte[] message, int sender_id, Node next) {
 				this.message = message;
 				this.sender_id = sender_id;
@@ -160,8 +160,8 @@ public class AMT {
 	private static class AgentsQueue
 	{
 		private static class Node {
-			AgentProxy agent;
-			Node  next;
+			final AgentProxy agent;
+			final Node  next;
 			Node(AgentProxy agent, Node next) {
 				this.agent = agent;
 				this.next = next;
