@@ -1,12 +1,12 @@
 package de.uni.trier.infsec.functionalities.samt.real;
 
-import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-import de.uni.trier.infsec.environment.crypto.CryptoLib;
-import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig;
+import de.uni.trier.infsec.utils.MessageTools;
 
 /**
  * Real functionality for SAMT (Secure Authenticated Message Transmission).
- * See ...samt.ideal.SAMT for typical usage pattern.
+ * See samt.ideal.SAMT for typical usage pattern.
  */
 public class SAMT {
 
@@ -39,42 +39,35 @@ public class SAMT {
 	static public class AgentProxy 
 	{
 		public final int ID;
-		byte[] publicKey;
-		byte[] privateKey;
-		byte[] verificationKey;
-		byte[] signingKey;
+		private PKIEnc.Decryptor decryptor;
+		private PKISig.Signer signer;
 
-		private AgentProxy(int id, byte[] pubKey, byte[] privKey, byte[] verifKey, byte[] signKey) {
+		private AgentProxy(int id, PKIEnc.Decryptor decryptor, PKISig.Signer signer) {
 			this.ID = id;
-			this.publicKey = pubKey;
-			this.privateKey = privKey;
-			this.verificationKey = verifKey;
-			this.signingKey = signKey;
+			this.decryptor = decryptor;
+			this.signer = signer;
 		}
 
 		public AuthenticatedMessage getMessage() {
-			// TODO
-			// (1) Somehow get a next message msg from the network.
-			// (2) Check that this message contains a known identifier of some party sender.
-			// (3) Fetch the verification key of the sender from PKI and using this key
-			// (4) verify that the message is signed by the sender (if not, ignore the message).
-			// (5) Decrypt the message using this.privateKey and
-			// (6) return the result of this decryption with the identifier of the sender
-			return null;
+			byte[] inputMessage = null; // TODO: read this message somehow from the network 
+			byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
+			int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
+			PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id);
+			byte[] signedAndEncrypted = MessageTools.second(inputMessage);
+			byte[] signed = decryptor.decrypt(signedAndEncrypted);
+			byte[] signature = MessageTools.first(signed);
+			byte[] message = MessageTools.second(signed);
+			if( sender_verifier.verify(signature, message) )
+				return new AuthenticatedMessage(message, sender_id);
+			else
+				return null;
+			// TODO: error handling / border cases
 		}
 
-		// the primary method to create a channel from this agent to the agent represented by 
-		// recipient_id
 		public Channel channelTo(int recipient_id, String network_address) {
-			byte[] recipient_public_key = pki_getPublicKey(recipient_id);
-			if (recipient_public_key == null) return null;  // there is no recipient registered with this id
-			return new Channel(this.ID, this.signingKey, recipient_public_key, network_address);
-		}
-
-		// additional method that cannot be used in a distributed setting, but may be useful  
-		// for verification purposes
-		public Channel channelToAgent(AgentProxy recipient, String network_address) {
-			return new Channel(this.ID, this.signingKey, recipient.publicKey, network_address);
+			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id);
+			if (recipient_encryptor == null) return null;  // there is no recipient registered with this id
+			return new Channel(this.ID, this.signer, recipient_encryptor, network_address);
 		}
 	}
 
@@ -87,24 +80,24 @@ public class SAMT {
 	static public class Channel 
 	{
 		private int    sender_id;
-		private byte[] sender_signing_key;
-		private byte[] recipient_encryption_key;
+		private PKISig.Signer sender_signer;
+		private PKIEnc.Encryptor recipient_encryptor;
 
-		private Channel(int sender_id, byte[] sender_signing_key, 
-				        byte[] recipient_encryption_key, String network_address) {
+		private Channel(int sender_id, PKISig.Signer sender_signer, PKIEnc.Encryptor recipient_encryptor, String network_address) {
 			this.sender_id = sender_id;
-			this.sender_signing_key = sender_signing_key;
-			this.recipient_encryption_key = recipient_encryption_key;
-			// TODO: establish the network connection (assuming that the recipient is at 
-			// the given network_address.
+			this.sender_signer = sender_signer;
+			this.recipient_encryptor = recipient_encryptor;
 		}		
 
 		public void send(byte[] message) {
-			// TODO
-			// (1) Encrypt the message with recipient_encryption_key.
-			// (2) Sign it with sender_signing_key.
-			// (3) Concatenate the sender_id, the signature, and the encrypted message and
-			// (4) send it to the recipient.
+			// sign and encrypt
+			byte[] signature = sender_signer.sign(message);
+			byte[] signed = MessageTools.concatenate(signature, message);
+			byte[] signedAndEncrypted = recipient_encryptor.encrypt(signed);
+			byte[] sender_id_as_bytes = MessageTools.intToByteArray(sender_id);
+			byte[] outputMessage = MessageTools.concatenate(sender_id_as_bytes, signedAndEncrypted);
+			// TODO: send outputMessage somehow.
+			// TODO: error handling / border cases
 		}
 	}
 
@@ -113,26 +106,10 @@ public class SAMT {
 	 * If this id has been already used (registered), registration fails (the method returns null).
 	 */	
 	public static AgentProxy register(int id) {
-		KeyPair enc_keypair = CryptoLib.pke_generateKeyPair();
-		byte[] privateKey = copyOf(enc_keypair.privateKey);
-		byte[] publicKey = copyOf(enc_keypair.publicKey);
-		KeyPair sig_keypair = CryptoLib.generateSignatureKeyPair();
-		byte[] verificationKey = copyOf(sig_keypair.publicKey);
-		byte[] signingKey = copyOf(sig_keypair.privateKey);
-		if( !pki_register(id, copyOf(publicKey), copyOf(verificationKey)) ) 
-			return null; // registration has not succeeded (id already used)
-		return new AgentProxy(id, publicKey, privateKey, verificationKey, signingKey);
+		PKIEnc.Decryptor decryptor = PKIEnc.register(id);
+		PKISig.Signer signer = PKISig.register(id);
+		if (decryptor==null || signer==null) return null;
+		return new AgentProxy(id, decryptor, signer);
 	}
 
-
-	//// Implementation ////
-
-	private static boolean pki_register(int id, byte[] publicKey, byte[] verificationKey)
-		{return false;}  // TODO
-
-	private static byte[] pki_getPublicKey(int id)
-		{return null;}	 // TODO
-
-	private static byte[] pki_getVerificationKey(int id)
-		{return null;}	 // TODO
 }
