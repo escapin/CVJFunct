@@ -51,7 +51,7 @@ public class AMT {
 	 */
 	static public class AgentProxy
 	{
-		private final int ID;
+		public final int ID;
 		private final MessageQueue queue;  // messages sent to this agent
 
 		private AgentProxy(int id) {
