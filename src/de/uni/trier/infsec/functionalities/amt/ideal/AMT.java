@@ -26,6 +26,13 @@ public class AMT {
 
 	//// The public interface ////
 
+	@SuppressWarnings("serial")
+	static public class Error extends Exception {}
+	@SuppressWarnings("serial")
+	static public class NetworkError extends Error {}
+	@SuppressWarnings("serial")
+	static public class PKIError extends Error {}
+
 	/**
 	 * Pair (message, sender_id).
 	 *
@@ -59,22 +66,32 @@ public class AMT {
 			this.queue = new MessageQueue();
 		}
 
+		/**
+		 * Returns next message sent to the agent. It return null, if there is no such a message.
+		 *
+		 * In this ideal implementation the environment decides which message is to be delivered.
+		 * The same message may be delivered several times or not delivered at all.
+		 */
 		public AuthenticatedMessage getMessage() {
-			// The environment decides which message is to be delivered.
-			// Note that the same message may be delivered several times or not delivered at all.
 			Environment.untrustedOutput(ID);
 			int index = Environment.untrustedInput();
 			return queue.get(index);
 		}
 
-		public Channel channelTo(int recipient_id) {
+		public Channel channelTo(int recipient_id) throws Error {
 			// leak our ID and the ID of the recipient:
 			Environment.untrustedOutput(ID);
 			Environment.untrustedOutput(recipient_id);
+			// ask the environment, whether we get any answer from the PKI
+			if (Environment.untrustedInput() == 0) throw new NetworkError();
+			// get the answer from PKI
 			AgentProxy recipient = registeredAgents.fetch(recipient_id);
-			return recipient!=null ? new Channel(this,recipient) : null;
+			if (recipient==null) throw new PKIError(); // the agent not registered
+			// create and return the channel
+			return new Channel(this,recipient);
 		}
 	}
+		
 
 	/**
 	 * Objects representing authenticated channel from sender to recipient.
@@ -92,11 +109,13 @@ public class AMT {
 			this.recipient = to;
 		}
 
-		public void send(byte[] message) {
+		public void send(byte[] message) throws NetworkError {
 			// leak the message and the identities of the involved parties
 			Environment.untrustedOutput(sender.ID);
 			Environment.untrustedOutput(recipient.ID);
 			Environment.untrustedOutputMessage(message);
+			// possibly there are problems with the network (up to the environment)
+			if (Environment.untrustedInput() == 0) throw new NetworkError();
 			// add the message along with the identity of the sender to the queue of the recipient
 			recipient.queue.add(copyOf(message), sender.ID);
 		}
@@ -106,14 +125,14 @@ public class AMT {
 	 * Registering an agent with the given id. If this id has been already used (registered),
 	 * registration fails (the method returns null).
 	 */
-	public static AgentProxy register(int id) {
+	public static AgentProxy register(int id) throws Error {
 		Environment.untrustedOutput(id); // we try to register id --> adversary
 		// the environment can make registration impossible (by blocking the communication)
-		if(  Environment.untrustedInput() == 0 ) return null;
+		if(  Environment.untrustedInput() == 0 ) throw new NetworkError();
 		// check if the id is free
 		if( registeredAgents.fetch(id) != null ) {
 			Environment.untrustedOutput(0); // registration unsuccessful --> adversary
-			return null;
+			throw new PKIError();
 		}
 		// create a new agent, add it to the list of registered agents, and return it
 		AgentProxy agent = new AgentProxy(id);
