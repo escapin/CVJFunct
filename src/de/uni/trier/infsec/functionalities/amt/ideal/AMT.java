@@ -1,6 +1,6 @@
 package de.uni.trier.infsec.functionalities.amt.ideal;
 
-import static de.uni.trier.infsec.utils.MessageTools.copyOf;
+import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.environment.Environment;
 
 /**
@@ -117,7 +117,7 @@ public class AMT {
 			// possibly there are problems with the network (up to the environment)
 			if (Environment.untrustedInput() == 0) throw new NetworkError();
 			// add the message along with the identity of the sender to the queue of the recipient
-			recipient.queue.add(copyOf(message), sender.ID);
+			recipient.queue.add(MessageTools.copyOf(message), sender.ID);
 		}
 	}
 
@@ -172,7 +172,7 @@ public class AMT {
 			Node node = first;
 			for( int i=0;  i<index && node!=null;  ++i )
 				node = node.next;
-			return  node!=null ? new AuthenticatedMessage(copyOf(node.message), node.sender_id) : null;
+			return  node!=null ? new AuthenticatedMessage(MessageTools.copyOf(node.message), node.sender_id) : null;
 		}
 	}
 
