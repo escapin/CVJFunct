@@ -12,6 +12,13 @@ public class SAMT {
 
 	//// The public interface ////
 
+	@SuppressWarnings("serial")
+	static public class Error extends Exception {}
+	@SuppressWarnings("serial")
+	static public class NetworkError extends Error {}
+	@SuppressWarnings("serial")
+	static public class PKIError extends Error {}
+
 	/** 
 	 * Pair message, sender_id. 
 	 *
@@ -64,10 +71,11 @@ public class SAMT {
 			// TODO: error handling / border cases
 		}
 
-		public Channel channelTo(int recipient_id, String network_address) {
+		public Channel channelTo(int recipient_id, String network_address) throws Error {
 			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id);
-			if (recipient_encryptor == null) return null;  // there is no recipient registered with this id
+			if (recipient_encryptor == null) throw new PKIError();  // there is no recipient registered with this id
 			return new Channel(this.ID, this.signer, recipient_encryptor, network_address);
+			// TODO: error handling
 		}
 	}
 
@@ -89,7 +97,7 @@ public class SAMT {
 			this.recipient_encryptor = recipient_encryptor;
 		}		
 
-		public void send(byte[] message) {
+		public void send(byte[] message) throws NetworkError {
 			// sign and encrypt
 			byte[] signature = sender_signer.sign(message);
 			byte[] signed = MessageTools.concatenate(signature, message);
@@ -105,11 +113,12 @@ public class SAMT {
 	 * Registering an agent with the given id. 
 	 * If this id has been already used (registered), registration fails (the method returns null).
 	 */	
-	public static AgentProxy register(int id) {
+	public static AgentProxy register(int id) throws Error {
 		PKIEnc.Decryptor decryptor = PKIEnc.register(id);
 		PKISig.Signer signer = PKISig.register(id);
-		if (decryptor==null || signer==null) return null;
+		if (decryptor==null || signer==null) throw new PKIError();
 		return new AgentProxy(id, decryptor, signer);
+		// TODO: error handling
 	}
 
 }
