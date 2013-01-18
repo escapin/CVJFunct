@@ -73,6 +73,9 @@ public class SAMT {
 		// the primary method to create a channel from this agent to the agent represented by 
 		// recipient_id
 		public Channel channelTo(int recipient_id) {
+			// leak our ID and the ID of the recipient:
+			Environment.untrustedOutput(ID);
+			Environment.untrustedOutput(recipient_id);
 			AgentProxy recipient = registeredAgents.fetch(recipient_id);
 			return recipient!=null ? new Channel(this,recipient) : null; 
 		}

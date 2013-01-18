@@ -68,6 +68,9 @@ public class AMT {
 		}
 
 		public Channel channelTo(int recipient_id) {
+			// leak our ID and the ID of the recipient:
+			Environment.untrustedOutput(ID);
+			Environment.untrustedOutput(recipient_id);
 			AgentProxy recipient = registeredAgents.fetch(recipient_id);
 			return recipient!=null ? new Channel(this,recipient) : null;
 		}
