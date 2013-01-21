@@ -28,7 +28,14 @@ import de.uni.trier.infsec.utils.MessageTools;
 public class PKIEnc {
 	
 /// The public interface ///
-	
+
+	@SuppressWarnings("serial")
+	static public class Error extends Exception {}
+	@SuppressWarnings("serial")
+	static public class ConnectionError extends Error {}
+	@SuppressWarnings("serial")
+	static public class PKIError extends Error {}
+
 	/** An object encapsulating the public key of some party.
 	 *  
 	 *  This key can be accessed directly of indirectly via method encrypt.

@@ -53,15 +53,9 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 
 	@Override
 	public SignedMessage register(int id, byte[] pubKey) throws RemoteException {
-		// byte[] data = PKIEnc.decryptorToBytes(PKIEnc.register(id));
-		//
-		// XXX: this class should not refer to PKIEnc (PKIEnc is a peculiarity related to our functionalities,
-		// while PKIServer may be used without using PKIEnc).
-		// Maintaining registered agents should be done here. Also, this data (that is the registered users) should
-		// have some persistency -- it should be stored in some database (something file-based, like for instance
-		// sqlite would do).
-		//
-		// Temporarily, I put here this:
+		// TODO: in the case the id is registered, it should return (signed) response
+		// which explicitly says that.
+
 		if( !pki_register(id, pubKey) ) return null;
 		// Signed confirmation
 		byte[] data = MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey);
@@ -100,7 +94,7 @@ public class PKIServer extends UnicastRemoteObject implements PKIServerInterface
 
 
 	/// Implementation ///
-	// XXX: just for now -- needs to be changed, as discussed
+
 	// We store the public keys in the SQLite DB (located in system temp directory)
 
 	private static boolean pki_register(int id, byte[] pubKey) {

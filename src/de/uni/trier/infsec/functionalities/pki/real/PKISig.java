@@ -2,7 +2,9 @@ package de.uni.trier.infsec.functionalities.pki.real;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
+import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
+
 
 /**
  * Real functionality for digital signatures with PKI (Public Key Infrastructure).

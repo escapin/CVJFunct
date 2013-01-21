@@ -11,6 +11,7 @@ import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.utils.Utilities;
+import de.uni.trier.infsec.lib.network.NetworkError;
 
 /**
  * Real functionality for PKI (Public Key Infrastructure).
@@ -74,8 +75,8 @@ public class PKIEnc {
 	 *   It fails (returns null) if this id has been already registered. Otherwise, it creates
 	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
 	 */
-	public static Decryptor register(int id) {
-		if (pki_server == null) return null;
+	public static Decryptor register(int id) throws NetworkError, PKIError {
+		if (pki_server == null) throw new PKIError();
 
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
@@ -84,8 +85,6 @@ public class PKIEnc {
 			SignedMessage responce = pki_server.register(id, copyOf(publicKey));
 			if( responce == null) {
 				// registration failed, perhaps because id has been already claimed.
-				// TODO: (later) it would be useful to distinguish this reason (id has been claimed)
-				// from some other possible problems.
 				System.out.println("Did not receive any response from server");
 				return null;
 			}
@@ -104,14 +103,14 @@ public class PKIEnc {
 			}
 		}
 		catch (RemoteException e) {
-			e.printStackTrace();
-			return null;
+			// e.printStackTrace();
+			throw new NetworkError();
 		}
 
 		return new Decryptor(publicKey, privateKey);
 	}
 	
-	public static Encryptor getEncryptor(int id) {
+	public static Encryptor getEncryptor(int id) throws NetworkError, PKIError {
 		try {
 			SignedMessage responce = pki_server.getPublicKey(id);
 			if( responce==null ) return null;
