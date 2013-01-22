@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.lib.network;
+package de.uni.trier.infsec.protocols.simplevoting;
 
 import java.io.IOException;
 import java.net.ServerSocket;

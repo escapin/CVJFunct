@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import de.uni.trier.infsec.functionalities.pkenc.real.Decryptor;
 import de.uni.trier.infsec.functionalities.pkenc.real.Encryptor;
-import de.uni.trier.infsec.lib.network.Network;
 import de.uni.trier.infsec.protocols.simplevoting.voterGUI.VotingServerDialog;
 import de.uni.trier.infsec.utils.Utilities;
 

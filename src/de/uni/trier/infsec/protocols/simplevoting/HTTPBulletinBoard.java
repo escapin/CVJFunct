@@ -11,7 +11,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-import de.uni.trier.infsec.lib.network.Network;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.utils.Utilities;
 

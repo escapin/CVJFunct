@@ -5,7 +5,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.lib.network.Network;
 import de.uni.trier.infsec.utils.Utilities;
 
 public class NetworkProxy {
