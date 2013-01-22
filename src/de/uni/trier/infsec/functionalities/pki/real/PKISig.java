@@ -57,12 +57,12 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id) {
+	public static Signer register(int id) throws NetworkError, PKIError {
 		// TODO: implement
 		return null;
 	}
 
-	public static Verifier getVerifier(int id) {
+	public static Verifier getVerifier(int id) throws NetworkError, PKIError {
 		// TODO: implement
 		return null;
 	}

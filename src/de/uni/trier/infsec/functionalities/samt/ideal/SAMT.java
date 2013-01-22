@@ -2,6 +2,8 @@ package de.uni.trier.infsec.functionalities.samt.ideal;
 
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.environment.Environment;
+import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
+import de.uni.trier.infsec.environment.network.NetworkError;
 
 /**
  * Ideal functionality for SAMT (Secure Authenticated Message Transmission).
@@ -27,13 +29,6 @@ import de.uni.trier.infsec.environment.Environment;
 public class SAMT {
 	
 	//// The public interface ////
-
-	@SuppressWarnings("serial")
-	static public class Error extends Exception {}
-	@SuppressWarnings("serial")
-	static public class NetworkError extends Error {}
-	@SuppressWarnings("serial")
-	static public class PKIError extends Error {}
 
 	/** 
 	 * Pair (message, sender_id).
@@ -75,13 +70,13 @@ public class SAMT {
 		 * In this ideal implementation the environment decides which message is to be delivered.
 		 * The same message may be delivered several times or not delivered at all.
 		 */
-		public AuthenticatedMessage getMessage() {
+		public AuthenticatedMessage getMessage() throws NetworkError, PKIError {
 			Environment.untrustedOutput(ID);
 			int index = Environment.untrustedInput();
 			return queue.get(index);
 		}
 
-		public Channel channelTo(int recipient_id) throws Error {
+		public Channel channelTo(int recipient_id) throws PKIError, NetworkError {
 			// leak our ID and the ID of the recipient:
 			Environment.untrustedOutput(ID);
 			Environment.untrustedOutput(recipient_id);
@@ -89,7 +84,6 @@ public class SAMT {
 			if (Environment.untrustedInput() == 0) throw new NetworkError();
 			// get the answer from PKI
 			AgentProxy recipient = registeredAgents.fetch(recipient_id);
-			if (recipient==null) throw new PKIError(); // the agent not registered
 			// create and return the channel
 			return new Channel(this,recipient);
 		}
@@ -127,10 +121,10 @@ public class SAMT {
 	 * Registering an agent with the given id. If this id has been already used (registered), 
 	 * registration fails (the method returns null).
 	 */
-	public static AgentProxy register(int id) throws Error {
+	public static AgentProxy register(int id) throws PKIError, NetworkError {
 		Environment.untrustedOutput(id); // we try to register id --> adversary
 		// the environment can make registration impossible (by blocking the communication)
-		if(  Environment.untrustedInput() == 0 ) throw new NetworkError();
+		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
 		// check if the id is free
 		if( registeredAgents.fetch(id) != null ) {
 			Environment.untrustedOutput(0); // registration unsuccessful --> adversary

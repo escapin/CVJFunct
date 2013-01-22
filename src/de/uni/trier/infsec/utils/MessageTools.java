@@ -49,7 +49,6 @@ public class MessageTools {
 	 */
 	private static byte[] project(byte[] message, int position) {
 		int len = byteArrayToInt(message);
-		// XXX: We do not need to copy the first 4 bytes to a new buffer ('length') // You´re Right! 
 		if (position == 0) {
 			byte[] m1 = new byte[len];
 			for (int i = 0; i < len; i ++) m1[i] = message[i + 4];
