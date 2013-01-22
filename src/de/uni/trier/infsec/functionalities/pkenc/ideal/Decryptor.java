@@ -15,7 +15,7 @@ public final class Decryptor {
 	private MessagePairList log = new MessagePairList();
 
 	public Decryptor() {
-		KeyPair keypair = CryptoLib.generateKeyPair();
+		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		publKey = copyOf(keypair.publicKey);  
 		privKey = copyOf(keypair.privateKey); 
 	}

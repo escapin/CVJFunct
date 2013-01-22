@@ -28,8 +28,7 @@ public class MessageTools {
 	}	
 	
 	public static byte[] concatenate(byte[] m1, byte[] m2) {
-		// Concatenated Message --> byte[0] = Type, byte[1-4] = BigInteger,
-		// Length of Message 1
+		// Concatenated Message --> byte[0-3] = Integer, Length of Message 1
 		byte[] out = new byte[m1.length + m2.length + 4];
 
 		// 4 bytes for length
@@ -49,9 +48,7 @@ public class MessageTools {
 	 * length of m1, m1, m2
 	 */
 	private static byte[] project(byte[] message, int position) {
-		byte[] length = new byte[4];
-		for (int i = 0; i < 4; i ++) length[i] = message[i];
-		int len = byteArrayToInt(length);
+		int len = byteArrayToInt(message);
 		if (position == 0) {
 			byte[] m1 = new byte[len];
 			for (int i = 0; i < len; i ++) m1[i] = message[i + 4];
@@ -72,17 +69,6 @@ public class MessageTools {
 		return project(in, 1);
 	}
 
-	/*
-	public static byte[] hexStringToByteArray(String s) {
-	    int len = s.length();
-	    byte[] data = new byte[len / 2];
-	    for (int i = 0; i < len; i += 2) {
-	        data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
-	    }
-	    return data;
-	}
-	*/
-	
 	public static final int byteArrayToInt(byte [] b) {
         return (b[0] << 24)
                 + ((b[1] & 0xFF) << 16)

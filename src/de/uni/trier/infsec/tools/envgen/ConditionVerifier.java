@@ -59,7 +59,7 @@ public class ConditionVerifier {
 		// byte[]. These methods may return values of primitive types, of type byte[], or objects of predefined classes
 		// and classes defined in IE. These methods can throw exceptions of predefined classes and of classes defined in IE.
 
-		// TODO: open problem is to find out the fully qualified name of parameter and field classes! (import abc.def.* etc)
+		// Currently we do not resolve the fully qualified names of all parameters and field classes, because they might be imported with wildcards (import abc.def.* etc) 
 
 		for (ClassInterface ci : si.classes) {
 			
