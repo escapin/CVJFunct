@@ -2,8 +2,11 @@ package de.uni.trier.infsec.functionalities.pki.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
+import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
+import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
@@ -28,13 +31,6 @@ import de.uni.trier.infsec.utils.MessageTools;
 public class PKIEnc {
 	
 /// The public interface ///
-
-	@SuppressWarnings("serial")
-	static public class Error extends Exception {}
-	@SuppressWarnings("serial")
-	static public class ConnectionError extends Error {}
-	@SuppressWarnings("serial")
-	static public class PKIError extends Error {}
 
 	/** An object encapsulating the public key of some party.
 	 *  
@@ -102,16 +98,20 @@ public class PKIEnc {
 		}	
 	}
 
-	public static Decryptor register(int id) {
-		if( registeredAgents.fetch(id) != null ) return null; // a party with this id has already registered
+	public static Decryptor register(int id) throws NetworkError, PKIError {
+		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
+		if( registeredAgents.fetch(id) != null ) throw new PKIError(); // a party with this id has already registered
 		Decryptor decryptor = new Decryptor(id);
 		Encryptor encryptor = decryptor.getEncryptor();
 		registeredAgents.add(encryptor);
 		return decryptor;
 	}
 	
-	public static Encryptor getEncryptor(int id) {
-		return registeredAgents.fetch(id);
+	public static Encryptor getEncryptor(int id) throws NetworkError, PKIError {
+		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
+		Encryptor enc = registeredAgents.fetch(id);
+		if (enc == null) throw new PKIError(); // there is no registered agent with this id
+		return enc;
 	}
 	
 	
