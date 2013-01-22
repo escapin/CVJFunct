@@ -8,8 +8,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Hashtable;
 
-import de.uni.trier.infsec.utils.Utilities;
-
 
 public class NetworkServer {
 	
@@ -133,15 +131,14 @@ public class NetworkServer {
 		}
 	};
 	
-	public static void main(String[] args) throws NetworkError {
-		while (true) {
-			byte[] b = nextRequest();
-			if (b != null ) {
-				System.out.println(Utilities.byteArrayToHexString(nextRequest()));
-				response(new byte[] {0x66, 0x33});
-				break;
-			}
-		}
-	}
-	
+//	public static void main(String[] args) throws NetworkError {
+//		while (true) {
+//			byte[] b = nextRequest();
+//			if (b != null ) {
+//				System.out.println(Utilities.byteArrayToHexString(nextRequest()));
+//				response(new byte[] {0x66, 0x33});
+//				break;
+//			}
+//		}
+//	}
 }

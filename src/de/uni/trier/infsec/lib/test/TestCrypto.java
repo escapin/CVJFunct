@@ -11,7 +11,6 @@ import de.uni.trier.infsec.lib.crypto.DigitalSignature;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 
 public class TestCrypto extends TestCase {
-
 	
 	public static byte[] TEST_DATA = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 	
@@ -39,6 +38,7 @@ public class TestCrypto extends TestCase {
 		assertTrue(DigitalSignature.verify(TEST_DATA, signature, pubKey));
 		signature[0] ++;
 		assertFalse(DigitalSignature.verify(TEST_DATA, signature, pubKey));
+
 	}
 	
 }

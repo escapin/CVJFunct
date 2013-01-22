@@ -22,25 +22,6 @@ public class CryptoLib {
 		return Environment.untrustedInputMessage();
 	}
 	
-	public static byte[] ds_sign(byte[] message, byte[] privKey) {
-		// input
-		Environment.untrustedOutput(0x11); // Function code for digital signature generation ds_sign
-		Environment.untrustedOutputMessage(message);
-		Environment.untrustedOutputMessage(privKey);		
-		// output
-		return Environment.untrustedInputMessage();
-	}
-	
-	public static boolean ds_verify(byte[] message, byte[] signature, byte[] pubKey) {
-		// input
-		Environment.untrustedOutput(0x22); // Function code for digital signature verification ds_verify
-		Environment.untrustedOutputMessage(message);
-		Environment.untrustedOutputMessage(signature);
-		Environment.untrustedOutputMessage(pubKey);		
-		// output
-		return Environment.untrustedInput() != 0; // TODO: Do we prefer byte[] as output?
-	}
-
 	public static KeyPair pke_generateKeyPair() {
 		// input
 		Environment.untrustedOutput(0x88); // Function code for pke_generateKeyPair
