@@ -24,8 +24,10 @@ public class SAMT {
 	static public class AuthenticatedMessage {
 		public byte[] message;
 		public int sender_id;
-		public AuthenticatedMessage(byte[] message, int sender) {
-			this.sender_id = sender;  this.message = message;
+		public byte[] raw_input;
+
+		public AuthenticatedMessage(byte[] message, int sender, byte[] raw_input) {
+			this.sender_id = sender;  this.message = message;  this.raw_input = raw_input;
 		}
 	}
 
@@ -66,7 +68,7 @@ public class SAMT {
 				byte[] message = MessageTools.second(signed);
 				// verify the signature
 				if( sender_verifier.verify(signature, message) )
-					return new AuthenticatedMessage(message, sender_id);
+					return new AuthenticatedMessage(message, sender_id, inputMessage);
 				else
 					return null; // invalid signature; ignore the message
 			}
@@ -105,7 +107,7 @@ public class SAMT {
 			this.port = port;
 		}		
 
-		public void send(byte[] message) throws NetworkError {
+		public byte[] send(byte[] message) throws NetworkError {
 			// sign and encrypt
 			byte[] signature = sender_signer.sign(message);
 			byte[] signed = MessageTools.concatenate(signature, message);
@@ -113,6 +115,7 @@ public class SAMT {
 			byte[] sender_id_as_bytes = MessageTools.intToByteArray(sender_id);
 			byte[] outputMessage = MessageTools.concatenate(sender_id_as_bytes, signedAndEncrypted);
 			NetworkClient.send(outputMessage, server, port);
+			return outputMessage; // used by the simulator for SAMT
 			// TODO: can we assume that messages at each step are not null?
 		}
 	}
