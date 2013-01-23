@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.samt.ideal;
 
 import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.environment.smt.SAMTEnv;
