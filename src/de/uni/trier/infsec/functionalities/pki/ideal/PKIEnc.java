@@ -98,8 +98,11 @@ public class PKIEnc {
 		}	
 	}
 
-	public static Decryptor register(int id) throws NetworkError, PKIError {
-		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
+	/**
+	 * We assume that the registration process is not blocked (no network problems).
+	 */
+	public static Decryptor register(int id) throws PKIError {
+		Environment.untrustedOutput(id);
 		if( registeredAgents.fetch(id) != null ) throw new PKIError(); // a party with this id has already registered
 		Decryptor decryptor = new Decryptor(id);
 		Encryptor encryptor = decryptor.getEncryptor();
