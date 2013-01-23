@@ -52,23 +52,27 @@ public class SAMT {
 			this.signer = signer;
 		}
 
-		public AuthenticatedMessage getMessage() throws NetworkError, PKIError {
-			byte[] inputMessage = NetworkServer.read();
-			// get the sender id and her verifier
-			byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
-			int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
-			PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id);
-			// retrieve the message and the signature
-			byte[] signedAndEncrypted = MessageTools.second(inputMessage);
-			byte[] signed = decryptor.decrypt(signedAndEncrypted);
-			byte[] signature = MessageTools.first(signed);
-			byte[] message = MessageTools.second(signed);
-			// verify the signature
-			if( sender_verifier.verify(signature, message) )
-				return new AuthenticatedMessage(message, sender_id);
-			else
-				return null; // invalid signature; ignore the message
-
+		public AuthenticatedMessage getMessage() {
+			try {
+				byte[] inputMessage = NetworkServer.read();
+				// get the sender id and her verifier
+				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
+				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
+				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id);
+				// retrieve the message and the signature
+				byte[] signedAndEncrypted = MessageTools.second(inputMessage);
+				byte[] signed = decryptor.decrypt(signedAndEncrypted);
+				byte[] signature = MessageTools.first(signed);
+				byte[] message = MessageTools.second(signed);
+				// verify the signature
+				if( sender_verifier.verify(signature, message) )
+					return new AuthenticatedMessage(message, sender_id);
+				else
+					return null; // invalid signature; ignore the message
+			}
+			catch (NetworkError | PKIError e) {
+				return null;
+			}
 			// TODO: take care of bad things that may happen with MessageTools.first/second, when applied
 			// to ill-formed messages.
 		}
@@ -87,16 +91,18 @@ public class SAMT {
 	 */
 	static public class Channel 
 	{
-		private int sender_id;
-		private PKISig.Signer sender_signer;
-		private PKIEnc.Encryptor recipient_encryptor;
-		private String server;
-		private int port;
+		private final int sender_id;
+		private final PKISig.Signer sender_signer;
+		private final PKIEnc.Encryptor recipient_encryptor;
+		private final String server;
+		private final int port;
 
 		private Channel(int sender_id, PKISig.Signer sender_signer, PKIEnc.Encryptor recipient_encryptor, String server, int port) {
 			this.sender_id = sender_id;
 			this.sender_signer = sender_signer;
 			this.recipient_encryptor = recipient_encryptor;
+			this.server = server;
+			this.port = port;
 		}		
 
 		public void send(byte[] message) throws NetworkError {
@@ -114,11 +120,25 @@ public class SAMT {
 	/**
 	 * Registering an agent with the given id. 
 	 * If this id has been already used (registered), registration fails (the method returns null).
+	 *
+	 * We assume that the registration is not blocked, that is it does not ends successfully only
+	 * if the given id has been already used (but not because of some network problems).
 	 */	
-	public static AgentProxy register(int id) throws PKIError, NetworkError {
-		PKIEnc.Decryptor decryptor = PKIEnc.register(id);
-		PKISig.Signer signer = PKISig.register(id);
-		return new AgentProxy(id, decryptor, signer);
+	public static AgentProxy register(int id) throws PKIError {
+		if( registrationInProgress ) return null;
+		registrationInProgress = true;
+		try {
+			PKIEnc.Decryptor decryptor = PKIEnc.register(id);
+			PKISig.Signer signer = PKISig.register(id);
+
+			registrationInProgress = false;
+			return new AgentProxy(id, decryptor, signer);
+		}
+		catch (PKIError err) {
+			registrationInProgress = false;
+			throw err;
+		}
 	}
 
+	private static boolean registrationInProgress = false;
 }

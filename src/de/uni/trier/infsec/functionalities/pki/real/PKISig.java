@@ -57,7 +57,7 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id) throws NetworkError, PKIError {
+	public static Signer register(int id) throws PKIError {
 		// TODO: implement
 		return null;
 	}

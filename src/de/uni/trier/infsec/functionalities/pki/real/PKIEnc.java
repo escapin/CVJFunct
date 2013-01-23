@@ -75,7 +75,7 @@ public class PKIEnc {
 	 *   It fails (returns null) if this id has been already registered. Otherwise, it creates
 	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
 	 */
-	public static Decryptor register(int id) throws NetworkError, PKIError {
+	public static Decryptor register(int id) throws PKIError {
 		if (pki_server == null) throw new PKIError();
 
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
@@ -104,7 +104,7 @@ public class PKIEnc {
 		}
 		catch (RemoteException e) {
 			// e.printStackTrace();
-			throw new NetworkError();
+			throw new Error(); // possibly network error
 		}
 
 		return new Decryptor(publicKey, privateKey);
