@@ -1,59 +1,44 @@
 package de.uni.trier.infsec.lib.test;
 
+import org.junit.Test;
+
+import de.uni.trier.infsec.lib.network.NetworkClient;
+import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.lib.network.NetworkServer;
+import de.uni.trier.infsec.utils.Utilities;
+
 import junit.framework.TestCase;
 
 public class TestNetwork extends TestCase {
 
-	// XXX Needs to be updated to current networking
-//	public static byte[] TEST_DATA = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
-//	byte[] received = null;
-//	Semaphore sem = new Semaphore(1);
-//	
-//	Runnable r1 = new Runnable() {
-//		@Override
-//		public void run() {
-//			try {
-//				Network.waitForClient(Network.DEFAULT_PORT);
-//				Network.networkOut(TEST_DATA);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		};
-//	};
-//
-//	Runnable r2 = new Runnable() {
-//		@Override
-//		public void run() {
-//			try {
-//				while (!Network.connectToServer(Network.DEFAULT_SERVER, Network.DEFAULT_PORT + 1));
-//				received = Network.networkIn();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			} finally {
-//				sem.release();
-//			}
-//		};
-//	};
-//	
-//	@Test
-//	public void testNetworking() throws Exception {
-//		new Thread(r1).start();
-//		Thread.sleep(100);
-//		Socket s = new Socket(Network.DEFAULT_SERVER, Network.DEFAULT_PORT);
-//		int len = s.getInputStream().read();
-//		byte[] res1 = new byte[len];
-//		s.getInputStream().read(res1);
-//		
-//		assertTrue(Arrays.equals(TEST_DATA, res1));
-//		
-//		sem.acquire();
-//		new Thread(r2).start();
-//		ServerSocket ss = new ServerSocket(Network.DEFAULT_PORT + 1);
-//		s = ss.accept();
-//		s.getOutputStream().write(TEST_DATA.length);
-//		s.getOutputStream().write(TEST_DATA);
-//		sem.acquire();
-//		assertTrue(Arrays.equals(TEST_DATA, received));
-//	}
+	public static byte[] TEST_DATA = {0x03, 0x42, 0x03, 0x03, 0x42, 0x03, 0x03, 0x42, 0x03, 0x03, 0x42, 0x03, 0x03, 0x42, 0x03, 0x03, 0x42, 0x03};
+	public static byte[] TEST_DATA_2 = {0x0F, 0x42, 0x0F, 0x0F, 0x42, 0x0F, 0x0F, 0x42, 0x0F, 0x0F, 0x42, 0x0F, 0x0F, 0x42, 0x0F, 0x0F, 0x42, 0x0F};
+	public static byte[] clientResponse = null;
 	
+	@Test
+	public void testNetworking() throws NetworkError, InterruptedException {
+		NetworkServer.nextRequest(); // Starts up the listening thread
+		Runnable r = new Runnable() {
+			@Override
+			public void run() {
+				try {
+					clientResponse = NetworkClient.sendRequest(TEST_DATA, "127.0.0.1", NetworkServer.LISTEN_PORT);
+				} catch (NetworkError e) {
+					fail(e.getMessage());
+				}
+			}
+		};
+		Thread t = new Thread(r);
+		t.start();
+		Thread.sleep(1000); // Wait for the message to be sent and received
+		byte[] received = NetworkServer.nextRequest();
+		NetworkServer.response(TEST_DATA_2);
+		Thread.sleep(1000); // Wait for the message to be sent and received
+		System.out.println("Server received: 0x" + Utilities.byteArrayToHexString(received));
+		System.out.println("Client received: 0x" + Utilities.byteArrayToHexString(clientResponse));
+		
+		assertTrue("The data has changed while transport!", Utilities.arrayEqual(received, TEST_DATA));
+		assertTrue("The client data has changed while transport!", Utilities.arrayEqual(clientResponse, TEST_DATA_2));
+		
+	}
 }
