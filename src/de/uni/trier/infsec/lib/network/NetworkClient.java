@@ -63,12 +63,5 @@ public class NetworkClient {
 			try { s.close(); } catch (Exception e) {}
 		}
 	}
-	
-	
-	
-//	public static void main(String[] args) throws NetworkError {
-//		byte[] out = send(new byte[] {(byte) 0x99,  (byte) 0x88}, "127.0.0.1", 7070);
-//		System.out.println(Utilities.byteArrayToHexString(out));
-//	}
 
 }

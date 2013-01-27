@@ -153,14 +153,4 @@ public class NetworkServer {
 		}
 	};
 	
-//	public static void main(String[] args) throws NetworkError {
-//		while (true) {
-//			byte[] b = nextRequest();
-//			if (b != null ) {
-//				System.out.println(Utilities.byteArrayToHexString(nextRequest()));
-//				response(new byte[] {0x66, 0x33});
-//				break;
-//			}
-//		}
-//	}
 }

@@ -1,17 +1,11 @@
 package de.uni.trier.infsec.functionalities.pki.real;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
+import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.utils.Utilities;
-import de.uni.trier.infsec.lib.network.NetworkError;
 
 /**
  * Real functionality for PKI (Public Key Infrastructure).
@@ -73,40 +67,46 @@ public class PKIEnc {
 	/** Registers a user with the given id. 
 	 * 
 	 *   It fails (returns null) if this id has been already registered. Otherwise, it creates
-	 *   new decryptor (with fresh public/private keys) and registers it under the given id. 
+	 *   new decryptor (with fresh public/private keys) and registers it under the given id.
+	 *   Message format for registration:
+	 *    
 	 */
-	public static Decryptor register(int id) throws PKIError {
+	public static Decryptor register(int id) throws NetworkError, PKIError {
 		if (pki_server == null) throw new PKIError();
 
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);
-		try {
-			SignedMessage responce = pki_server.register(id, copyOf(publicKey));
-			if( responce == null) {
-				// registration failed, perhaps because id has been already claimed.
-				System.out.println("Did not receive any response from server");
+		SignedMessage responce = pki_server.register(id, copyOf(publicKey));
+		if( responce == null) {
+			// registration failed, perhaps because id has been already claimed.
+			System.out.println("Did not receive any response from server");
+			return null;
+		}
+		if (remoteMode) {
+			// Verify Signature first!
+			if (!CryptoLib.verify(responce.message, responce.signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
+				System.out.println("Signature verification failed!");
 				return null;
 			}
-			if (remoteMode) {
-				int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(responce.message));
-				// Verify Signature!
-				if (!CryptoLib.verify(responce.message, responce.signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
-					System.out.println("Signature verification failed!");
-					return null;
-				}
-				// Verify that the response message contains the correct id
-				if (id == id_from_data) {
-					System.out.println("ID in response message is not equal to expected id!");
-					return null;
-				}
+			
+			if (Utilities.arrayEqual(responce.message, PKIServerInterface.MSG_ERROR_REGISTRATION)) {
+				System.out.println("Server responded with registration error");
+				throw new PKIError();
+			}
+			
+			// Verify that the response message contains the correct id and public key
+			int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(responce.message));
+			byte[] pk_from_data = MessageTools.second(responce.message);
+			if (id != id_from_data) {
+				System.out.println("ID in response message is not equal to expected id: \nReceived: " +  id + "\nExpected: " + id_from_data);
+				return null;
+			}
+			if (!Utilities.arrayEqual(pk_from_data, publicKey)) {
+				System.out.println("PK in response message is not equal to expected id: \nReceived: " + Utilities.byteArrayToHexString(pk_from_data) + "\nExpected: " + Utilities.byteArrayToHexString(publicKey));
+				return null;
 			}
 		}
-		catch (RemoteException e) {
-			// e.printStackTrace();
-			throw new Error(); // possibly network error
-		}
-
 		return new Decryptor(publicKey, privateKey);
 	}
 	
@@ -115,8 +115,9 @@ public class PKIEnc {
 			SignedMessage responce = pki_server.getPublicKey(id);
 			if( responce==null ) return null;
 			byte[] data = responce.message;
-			byte[] publKey = MessageTools.second(data);
+			byte[] publKey;
 			if (remoteMode) {
+				publKey = MessageTools.second(data);
 				int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(data));
 				// Verify Signature
 				if(!CryptoLib.verify(data, responce.signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
@@ -126,14 +127,22 @@ public class PKIEnc {
 				
 				// Verify that the response message contains the correct id
 				if (id != id_from_data) {
-					System.out.println("ID in response message is not equal to expected id!");
+					System.out.println("ID in response message is not equal to expected id: \nReceived: " + 
+							id + "\nExpected: " + id_from_data);
 					return null;
 				}
+			} else {
+				int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(data));
+				if (id != id_from_data) {
+					System.out.println("ID in response message is not equal to expected id: \nReceived: " + 
+							id + "\nExpected: " + id_from_data);
+					return null;
+				}
+				publKey = MessageTools.second(data);
 			}
 			return new Encryptor(publKey);
-		}
-		catch (RemoteException e) {
-			return null;
+		} catch (NetworkError e) {
+			throw new Error(); // possibly network error
 		}
 	}
 		
@@ -165,18 +174,13 @@ public class PKIEnc {
 	//    In RPC this happens invisibly, so the function calls remain the same, only instead of an instanciation, we use a call to "Naming.lookup".
 	// So in the end, I think this should be fine?!
 	static {
-		try {
-			if(remoteMode) {
-				pki_server = (PKIServerInterface) Naming.lookup("//" + PKIServer.HOSTNAME + ":" + PKIServer.PORT + "/server");
-				System.out.println("Working in remote mode. Using RPC Server " + PKIServer.HOSTNAME + ":" + PKIServer.PORT + "/server");
-			}
-			else {
-				pki_server = new PKIServer();
-				System.out.println("Working in local mode.");
-			}
-		} catch (MalformedURLException | RemoteException | NotBoundException e) {
-			System.out.println("Cannot create a remote object PKIServer");
-			pki_server = null; // probably redundant
+		if(remoteMode) {
+			pki_server = new RemotePKIServer();
+			System.out.println("Working in remote mode");
+		}
+		else {
+			pki_server = new PKIServerCore();
+			System.out.println("Working in local mode");
 		}
 	}
 }
