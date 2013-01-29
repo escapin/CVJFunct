@@ -77,77 +77,59 @@ public class PKIEnc {
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);
+		
+		SignedMessage responce;
 		try {
-			SignedMessage responce = pki_server.register(id, copyOf(publicKey));
+			responce = pki_server.register(id, copyOf(publicKey));
 			if( responce == null) {
 				// registration failed, perhaps because id has been already claimed.
-				System.out.println("Did not receive any response from server");
-				return null;
+				throw new PKIError();
 			}
-			if (remoteMode) {
-				// Verify Signature first!
-				if (!CryptoLib.verify(responce.message, responce.signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
-					System.out.println("Signature verification failed!");
-					return null;
-				}
-				
-				if (Utilities.arrayEqual(responce.message, PKIServerInterface.MSG_ERROR_REGISTRATION)) {
-					System.out.println("Server responded with registration error");
-					throw new PKIError();
-				}
-				
-				// Verify that the response message contains the correct id and public key
-				int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(responce.message));
-				byte[] pk_from_data = MessageTools.second(responce.message);
-				if (id != id_from_data) {
-					System.out.println("ID in response message is not equal to expected id: \nReceived: " +  id + "\nExpected: " + id_from_data);
-					return null;
-				}
-				if (!Utilities.arrayEqual(pk_from_data, publicKey)) {
-					System.out.println("PK in response message is not equal to expected id: \nReceived: " + Utilities.byteArrayToHexString(pk_from_data) + "\nExpected: " + Utilities.byteArrayToHexString(publicKey));
-					return null;
-				}
-			}
-			return new Decryptor(publicKey, privateKey);
 		} catch (NetworkError e) {
 			throw new PKIError();
 		}
+		
+		// Verify that the response message contains the correct id and public key
+		int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(responce.message));
+		byte[] pk_from_data = MessageTools.second(responce.message);
+		
+		if (id != id_from_data) {
+			System.out.println("ID in response message is not equal to expected id: \nReceived: " +  id + "\nExpected: " + id_from_data);
+			throw new PKIError();
+		}
+		
+		if (!Utilities.arrayEqual(pk_from_data, publicKey)) {
+			System.out.println("PK in response message is not equal to expected id: \nReceived: " + Utilities.byteArrayToHexString(pk_from_data) + "\nExpected: " + Utilities.byteArrayToHexString(publicKey));
+			throw new PKIError();
+		}
+		
+		return new Decryptor(publicKey, privateKey);
 	}
 	
-	public static Encryptor getEncryptor(int id) throws NetworkError, PKIError {
+	public static Encryptor getEncryptor(int id) throws PKIError {
+		if (pki_server == null) throw new PKIError();
+		
+		SignedMessage responce;
 		try {
-			SignedMessage responce = pki_server.getPublicKey(id);
-			if( responce==null ) return null;
-			byte[] data = responce.message;
-			byte[] publKey;
-			if (remoteMode) {
-				publKey = MessageTools.second(data);
-				int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(data));
-				// Verify Signature
-				if(!CryptoLib.verify(data, responce.signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
-					System.out.println("Signature verification failed!");
-					return null;
-				}
-				
-				// Verify that the response message contains the correct id
-				if (id != id_from_data) {
-					System.out.println("ID in response message is not equal to expected id: \nReceived: " + 
-							id + "\nExpected: " + id_from_data);
-					return null;
-				}
-			} else {
-				int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(data));
-				if (id != id_from_data) {
-					System.out.println("ID in response message is not equal to expected id: \nReceived: " + 
-							id + "\nExpected: " + id_from_data);
-					return null;
-				}
-				publKey = MessageTools.second(data);
-			}
-			return new Encryptor(publKey);
+			responce = pki_server.getPublicKey(id);
+			if( responce==null ) throw new PKIError();
 		} catch (NetworkError e) {
-			throw new Error(); // possibly network error
+			throw new PKIError();
 		}
+		
+		byte[] data = responce.message;
+		byte[] publKey;
+		
+		int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(data));
+		publKey = MessageTools.second(data);
+		
+		// Verify that the response message contains the correct id
+		if (id != id_from_data) {
+			System.out.println("ID in response message is not equal to expected id: \nReceived: " + id + "\nExpected: " + id_from_data);
+			throw new PKIError();
+		}
+		
+		return new Encryptor(publKey);
 	}
 		
 

@@ -95,7 +95,8 @@ public class PKIServer {
 			}
 		}
 		echo("Request unknown. Returning null");
-		return null; // TODO Perhaps send response "UNKNOWN_REQUEST"?
+		return null; 
+		// TODO Perhaps send response "UNKNOWN_REQUEST"?
 		// TODO: in the case the id is registered, it should return (signed) response which explicitly says that.
 	}
 	

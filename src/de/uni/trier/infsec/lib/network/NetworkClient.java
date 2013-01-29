@@ -34,9 +34,6 @@ public class NetworkClient {
 	public static byte[] sendRequest(byte[] message, String server, int port) throws NetworkError {
 		Socket s = null;
 		try {
-			// XXX: I do not quite get it (which is ok:)), but why you do not use this in the server's code?
-			// No Problem :-) Maybe the comments will help:
-
 			// First thing to do is, open a connection to the Server
 			s = new Socket(server, port);
 			s.setSoTimeout(SOCKET_TIMEOUT);

@@ -1,5 +1,6 @@
 package de.uni.trier.infsec.functionalities.pki.real;
 
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
@@ -25,6 +26,16 @@ public class RemotePKIServer implements PKIServerInterface {
 		byte[] signature = MessageTools.first(response);
 		byte[] data = MessageTools.second(response);
 		
+		// Verify Signature first!
+		if (!CryptoLib.verify(data, signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
+			System.out.println("Signature verification failed!");
+			return null;
+		}
+		
+		if (Utilities.arrayEqual(data, PKIServerInterface.MSG_ERROR_REGISTRATION)) {
+			System.out.println("Server responded with registration error");
+			return null;
+		}
 		return new SignedMessage(data, signature);
 	}
 
@@ -40,6 +51,12 @@ public class RemotePKIServer implements PKIServerInterface {
 		
 		byte[] signature = MessageTools.first(response);
 		byte[] data = MessageTools.second(response);
+		
+		// Verify Signature
+		if(!CryptoLib.verify(data, signature, Utilities.hexStringToByteArray(PKIServer.VerificationKey))) {
+			System.out.println("Signature verification failed!");
+			return null;
+		}
 		
 		return new SignedMessage(data, signature);
 	}

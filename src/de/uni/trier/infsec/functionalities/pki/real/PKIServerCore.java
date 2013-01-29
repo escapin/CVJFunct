@@ -28,7 +28,7 @@ public class PKIServerCore implements PKIServerInterface {
 	 * True, if key was successfully stored,
 	 * False, in case key is already registered or an error occured. 
 	 */
-	public static boolean pki_register(int id, byte[] pubKey) {
+	protected static boolean pki_register(int id, byte[] pubKey) {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.WRITE);
@@ -55,7 +55,7 @@ public class PKIServerCore implements PKIServerInterface {
 	 * Reads the public key from a local database and returns it.
 	 * Returns null if no entry found. 
 	 */
-	public static byte[] pki_getPublicKey(int id) {
+	protected static byte[] pki_getPublicKey(int id) {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
@@ -96,7 +96,7 @@ public class PKIServerCore implements PKIServerInterface {
 
 	@Override
 	public SignedMessage register(int id, byte[] pubKey) {
-		if (!pki_register(id, pubKey));
+		if (!pki_register(id, pubKey)) return null;
 		byte[] out = MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey);
 		return new SignedMessage(out, null);
 	}

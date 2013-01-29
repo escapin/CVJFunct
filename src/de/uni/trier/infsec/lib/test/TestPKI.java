@@ -71,21 +71,7 @@ public class TestPKI extends TestCase {
 		}
 	}
 
-//	@Test
-//	public void testRealPKILocal() throws Exception {
-//		System.setProperty("remotemode", Boolean.toString(false));
-//		Decryptor d1 = PKIEnc.register(TEST_ID1);
-//		Encryptor e1 = PKIEnc.getEncryptor(TEST_ID1);
-//
-//		System.out.println("plaintxt: " + Utilities.byteArrayToHexString(TEST_DATA));
-//		byte[] ctxt1 = e1.encrypt(TEST_DATA);
-//		System.out.println("ciphertxt: " + Utilities.byteArrayToHexString(ctxt1));
-//		byte[] ptxt = d1.decrypt(ctxt1);
-//		System.out.println("plaintxt: " + Utilities.byteArrayToHexString(ptxt));
-//		assertTrue("Plaintext has changed during encryption", Arrays.equals(ptxt, TEST_DATA));
-//	}
-	
-	
+
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();

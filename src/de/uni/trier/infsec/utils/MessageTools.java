@@ -48,17 +48,21 @@ public class MessageTools {
 	 * length of m1, m1, m2
 	 */
 	private static byte[] project(byte[] message, int position) {
-		int len = byteArrayToInt(message);
-		if (position == 0) {
-			byte[] m1 = new byte[len];
-			for (int i = 0; i < len; i ++) m1[i] = message[i + 4];
-			return m1;
-		} else if (position == 1) {
-			byte[] m2 = new byte[message.length - len - 4];
-			for (int i = 0; i < message.length - len - 4; i ++) m2[i] = message[i + 4 + len];
-			return m2;
+		try {
+			int len = byteArrayToInt(message);
+			if (len > (message.length - 4)) return new byte[]{}; // Something is wrong with the message!
+			if (position == 0) {
+				byte[] m1 = new byte[len];
+				for (int i = 0; i < len; i ++) m1[i] = message[i + 4];
+				return m1;
+			} else if (position == 1) {
+				byte[] m2 = new byte[message.length - len - 4];
+				for (int i = 0; i < message.length - len - 4; i ++) m2[i] = message[i + 4 + len];
+				return m2;
+			} else return new byte[]{};
+		} catch (Exception e) {
+			return new byte[]{};
 		}
-		return null;
 	}
 
 	public static byte[] first(byte[] in) {
