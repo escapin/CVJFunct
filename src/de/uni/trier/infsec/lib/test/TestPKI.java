@@ -24,7 +24,6 @@ public class TestPKI extends TestCase {
 	public static byte[] TEST_DATA = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
 	
 	
-	// FIXME Test aktualisieren!!
 	@Test
 	public void testRealPKIRemote() throws PKIError, NetworkError, IOException {
 		Process pr = null;
@@ -59,7 +58,7 @@ public class TestPKI extends TestCase {
 
 			boolean error = false;
 			try {
-				Decryptor dd1 = PKIEnc.register(TEST_ID1);
+				PKIEnc.register(TEST_ID1);
 			} catch (PKIError e) {
 				error = true;
 			}

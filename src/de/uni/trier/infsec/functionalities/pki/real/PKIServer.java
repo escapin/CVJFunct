@@ -104,21 +104,4 @@ public class PKIServer {
 		System.out.println("[" + this.getClass().getSimpleName() + "] " + txt);
 	}
 	
-
-//	public SignedMessage register(int id, byte[] pubKey) throws RemoteException {
-//		if( !pki_register(id, pubKey) ) return null;
-//		// Signed confirmation
-//		byte[] data = MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey);
-//		byte[] signature = CryptoLib.sign(data, Utilities.hexStringToByteArray(SigningKey));
-//		return new SignedMessage(data, signature);
-//	}
-//	public SignedMessage getPublicKey(int id) throws RemoteException {
-//		// byte[] data = PKIEnc.getEncryptor(id).getPublicKey();
-//		// XXX: as above. For now, I put this:
-//		byte[] pubKey = pki_getPublicKey(id);
-//		byte[] data = MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey);
-//		byte[] signature = CryptoLib.sign(data, Utilities.hexStringToByteArray(SigningKey));
-//		return new SignedMessage(data, signature);
-//	}
-	
 }

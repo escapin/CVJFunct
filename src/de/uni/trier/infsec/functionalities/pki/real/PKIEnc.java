@@ -167,12 +167,6 @@ public class PKIEnc {
 	
 	private static boolean remoteMode = Boolean.parseBoolean(System.getProperty("remotemode"));
 	private static PKIServerInterface pki_server = null;
-	// FIXME: does it make sense (can we simply create an instance of PKIServer?)
-	// Well, there are two modes here:
-	// 1. We use local mode, which means we instantiate the Server locally and run the methods on the local instance
-	// 2. We use remote mode, which means we do not instantiate a server, but we use the Proxy interface and use the remote object for the method calls
-	//    In RPC this happens invisibly, so the function calls remain the same, only instead of an instanciation, we use a call to "Naming.lookup".
-	// So in the end, I think this should be fine?!
 	static {
 		if(remoteMode) {
 			pki_server = new RemotePKIServer();

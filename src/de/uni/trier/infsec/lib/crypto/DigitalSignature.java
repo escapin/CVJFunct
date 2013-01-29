@@ -17,8 +17,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class DigitalSignature {
 	
-	// TODO: Also add functionalities Signer and Verifier ?
-	// TODO: In which repository? Master AND/OR PKI?
+	// FIXME Delete this class?
 	
 	static {
 		Security.addProvider(new BouncyCastleProvider());

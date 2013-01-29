@@ -46,8 +46,6 @@ public class NetworkServer {
 	 * sent the last request obtained by calling method 'nextRequest').
 	 */
 	public static void response(byte[] message) throws NetworkError {
-		// XXX: does it works fine with message==null?
-		// Right, thanks! This would cause a null-pointer.
 		if (message == null) return;
 		
 		OutputStream os;
