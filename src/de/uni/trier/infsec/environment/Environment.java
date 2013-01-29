@@ -57,5 +57,10 @@ public class Environment {
 		}
     }
     
-    
+    public static void untrustedOutputString(String s) {
+    	untrustedOutput(s.length());
+    	for (int i = 0; i < s.length(); i++) {
+    		untrustedOutput((int)s.charAt(i));
+    	}
+    }
 }        

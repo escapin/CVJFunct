@@ -1,7 +1,9 @@
 package de.uni.trier.infsec.functionalities.amt.ideal;
 
 import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.environment.Environment;
+import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
+import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.environment.amt.AMTEnv;
 
 /**
  * Ideal functionality for AMT (Authenticated Message Transmission).
@@ -26,21 +28,16 @@ public class AMT {
 
 	//// The public interface ////
 
-	@SuppressWarnings("serial")
-	static public class Error extends Exception {}
-	@SuppressWarnings("serial")
-	static public class NetworkError extends Error {}
-	@SuppressWarnings("serial")
-	static public class PKIError extends Error {}
+	static public class AMTError extends Exception {}
 
-	/**
+	/** 
 	 * Pair (message, sender_id).
-	 *
+	 * 
 	 * Objects of this class are returned when an agent reads a message from its queue.
 	 */
 	static public class AuthenticatedMessage {
-		public final byte[] message;
-		public final int sender_id;
+		public byte[] message;
+		public int sender_id;
 		public AuthenticatedMessage(byte[] message, int sender) {
 			this.sender_id = sender;  this.message = message;
 		}
@@ -48,108 +45,108 @@ public class AMT {
 
 	/**
 	 * Objects representing agents' restricted (private) data that can be used
-	 * to send and receive authenticated message.
-	 *
-	 * Such an object allows one to
+	 * to securely send and receive authenticated message.
+	 * 
+	 * Such an object allows one to 
 	 *  - get messages from the queue or this agent (method getMessage),
 	 *    where the environment decides which message is to be delivered,
-	 *  - create a channel to another agent (channelTo and channelToAgent); such
-	 *    a channel can be used to send authenticated messages to the chosen agent.
+	 *  - create a channel to another agent (channelTo and channelToAgent); such 
+	 *    a channel can be used to securely send authenticated messages to the 
+	 *    chosen agent.
 	 */
 	static public class AgentProxy
 	{
 		public final int ID;
 		private final MessageQueue queue;  // messages sent to this agent
-
+		
 		private AgentProxy(int id) {
 			this.ID = id;
 			this.queue = new MessageQueue();
 		}
-
+		
 		/**
 		 * Returns next message sent to the agent. It return null, if there is no such a message.
 		 *
 		 * In this ideal implementation the environment decides which message is to be delivered.
 		 * The same message may be delivered several times or not delivered at all.
 		 */
-		public AuthenticatedMessage getMessage() {
-			Environment.untrustedOutput(ID);
-			int index = Environment.untrustedInput();
+		public AuthenticatedMessage getMessage() throws AMTError {
+			if (registrationInProgress) throw new AMTError();
+			int index = AMTEnv.getMessage(this.ID);
+			if (index < 0) return null;
 			return queue.get(index);
 		}
 
-		public Channel channelTo(int recipient_id) throws Error {
-			// leak our ID and the ID of the recipient:
-			Environment.untrustedOutput(ID);
-			Environment.untrustedOutput(recipient_id);
-			// ask the environment, whether we get any answer from the PKI
-			if (Environment.untrustedInput() == 0) throw new NetworkError();
+		public Channel channelTo(int recipient_id, String server, int port) throws AMTError, PKIError, NetworkError {
+			if (registrationInProgress) throw new AMTError();
+			boolean network_ok = AMTEnv.channelTo(ID, recipient_id, server, port);
+			if (!network_ok) throw new NetworkError();
 			// get the answer from PKI
 			AgentProxy recipient = registeredAgents.fetch(recipient_id);
-			if (recipient==null) throw new PKIError(); // the agent not registered
+			if (recipient == null) throw new PKIError();
 			// create and return the channel
-			return new Channel(this,recipient);
+			return new Channel(this, recipient, server, port);
 		}
 	}
-		
 
 	/**
-	 * Objects representing authenticated channel from sender to recipient.
-	 *
-	 * Such objects allow one to send a message to the recipient, where the
+	 * Objects representing secure and authenticated channel from sender to recipient. 
+	 * 
+	 * Such objects allow one to securely send a message to the recipient, where the 
 	 * sender is authenticated to the recipient.
 	 */
-	static public class Channel
+	static public class Channel 
 	{
 		private final AgentProxy sender;
 		private final AgentProxy recipient;
+		private final String server;
+		private final int port;		
 
-		private Channel(AgentProxy from, AgentProxy to) {
+		private Channel(AgentProxy from, AgentProxy to, String server, int port) {
 			this.sender = from;
 			this.recipient = to;
-		}
-
-		public void send(byte[] message) throws NetworkError {
-			// leak the message and the identities of the involved parties
-			Environment.untrustedOutput(sender.ID);
-			Environment.untrustedOutput(recipient.ID);
-			Environment.untrustedOutputMessage(message);
-			// possibly there are problems with the network (up to the environment)
-			if (Environment.untrustedInput() == 0) throw new NetworkError();
-			// add the message along with the identity of the sender to the queue of the recipient
+			this.server = server;
+			this.port = port;
+		}		
+		
+		public void send(byte[] message) {
+			AMTEnv.send(message, sender.ID, recipient.ID, server, port);
 			recipient.queue.add(MessageTools.copyOf(message), sender.ID);
 		}
 	}
-
+	
 	/**
-	 * Registering an agent with the given id. If this id has been already used (registered),
+	 * Registering an agent with the given id. If this id has been already used (registered), 
 	 * registration fails (the method returns null).
 	 */
-	public static AgentProxy register(int id) throws Error {
-		Environment.untrustedOutput(id); // we try to register id --> adversary
-		// the environment can make registration impossible (by blocking the communication)
-		if(  Environment.untrustedInput() == 0 ) throw new NetworkError();
-		// check if the id is free
+	public static AgentProxy register(int id) throws AMTError, PKIError {
+		if (registrationInProgress) throw new AMTError();
+		registrationInProgress = true;
+		// call the environment/simulator
+		AMTEnv.register(id);
+		// check whether the id has not been claimed
 		if( registeredAgents.fetch(id) != null ) {
-			Environment.untrustedOutput(0); // registration unsuccessful --> adversary
+			registrationInProgress = false;
 			throw new PKIError();
 		}
 		// create a new agent, add it to the list of registered agents, and return it
 		AgentProxy agent = new AgentProxy(id);
 		registeredAgents.add(agent);
-		Environment.untrustedOutput(0); // registration successful --> adversary
+		registrationInProgress = false;
 		return agent;
 	}
 
-
+	private static boolean registrationInProgress = false;
+		
+	
 	//// Implementation ////
-
+		
 	//
 	// MessageQueue -- a queue of messages (along with the id of the sender).
-	// Such a queue is kept by an agent and represents the messages that has been
+	// Such a queue is kept by an agent and represents the messages that has been 
 	// sent to this agent.
 	//
-	private static class MessageQueue
+	private static class MessageQueue 
 	{
 		private static class Node {
 			final byte[] message;
@@ -160,13 +157,13 @@ public class AMT {
 				this.sender_id = sender_id;
 				this.next = next;
 			}
-		}
+		}		
 		private Node first = null;
-
+		
 		void add(byte[] message, int sender_id) {
 			first = new Node(message, sender_id, first);
 		}
-
+	
 		AuthenticatedMessage get(int index) {
 			if (index<0) return null;
 			Node node = first;
@@ -180,7 +177,7 @@ public class AMT {
 	// AgentsQueue -- a collection of registered agents.
 	//
 	private static class AgentsQueue
-	{
+	{	
 		private static class Node {
 			final AgentProxy agent;
 			final Node  next;
@@ -188,13 +185,13 @@ public class AMT {
 				this.agent = agent;
 				this.next = next;
 			}
-		}
+		}			
 		private Node first = null;
-
+		
 		public void add(AgentProxy agent) {
 			first = new Node(agent, first);
 		}
-
+		
 		AgentProxy fetch(int id) {
 			for( Node node = first;  node != null;  node = node.next )
 				if( id == node.agent.ID )

@@ -16,6 +16,8 @@ public class SAMT {
 
 	//// The public interface ////
 
+	static public class SAMTError extends Exception {}
+
 	/** 
 	 * Pair message, sender_id. 
 	 *
@@ -24,8 +26,10 @@ public class SAMT {
 	static public class AuthenticatedMessage {
 		public byte[] message;
 		public int sender_id;
-		public AuthenticatedMessage(byte[] message, int sender) {
-			this.sender_id = sender;  this.message = message;
+		public byte[] raw_input; // FIXME: remove from this variant
+
+		private AuthenticatedMessage(byte[] message, int sender, byte[] raw_input) {
+			this.sender_id = sender;  this.message = message;  this.raw_input = raw_input;
 		}
 	}
 
@@ -52,7 +56,8 @@ public class SAMT {
 			this.signer = signer;
 		}
 
-		public AuthenticatedMessage getMessage() {
+		public AuthenticatedMessage getMessage() throws SAMTError {
+			if (registrationInProgress) throw new SAMTError();
 			try {
 				byte[] inputMessage = NetworkServer.read();
 				// get the sender id and her verifier
@@ -66,7 +71,7 @@ public class SAMT {
 				byte[] message = MessageTools.second(signed);
 				// verify the signature
 				if( sender_verifier.verify(signature, message) )
-					return new AuthenticatedMessage(message, sender_id);
+					return new AuthenticatedMessage(message, sender_id, inputMessage);
 				else
 					return null; // invalid signature; ignore the message
 			}
@@ -77,7 +82,8 @@ public class SAMT {
 			// to ill-formed messages.
 		}
 
-		public Channel channelTo(int recipient_id, String server, int port) throws PKIError, NetworkError {
+		public Channel channelTo(int recipient_id, String server, int port) throws SAMTError, PKIError, NetworkError {
+			if (registrationInProgress) throw new SAMTError();
 			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id);
 			return new Channel(this.ID, this.signer, recipient_encryptor, server, port);
 		}
@@ -86,7 +92,7 @@ public class SAMT {
 	/**
 	 * Objects representing secure and authenticated channel from sender to recipient. 
 	 * 
-	 * Such objects allow one to securely send a message to the recipient, where the 
+	 * Such objects allow one to securely send a message to the recipient, where the
 	 * sender is authenticated to the recipient.
 	 */
 	static public class Channel 
@@ -105,15 +111,17 @@ public class SAMT {
 			this.port = port;
 		}		
 
-		public void send(byte[] message) throws NetworkError {
+		public byte[] send(byte[] message) {
 			// sign and encrypt
 			byte[] signature = sender_signer.sign(message);
 			byte[] signed = MessageTools.concatenate(signature, message);
 			byte[] signedAndEncrypted = recipient_encryptor.encrypt(signed);
 			byte[] sender_id_as_bytes = MessageTools.intToByteArray(sender_id);
 			byte[] outputMessage = MessageTools.concatenate(sender_id_as_bytes, signedAndEncrypted);
-			NetworkClient.send(outputMessage, server, port);
-			// TODO: can we assume that messages at each step are not null?
+			try {
+				NetworkClient.send(outputMessage, server, port);
+			} catch (NetworkError e) {}
+			return outputMessage; // used by the simulator for SAMT // FIXME: remove from this variant
 		}
 	}
 
@@ -124,13 +132,12 @@ public class SAMT {
 	 * We assume that the registration is not blocked, that is it does not ends successfully only
 	 * if the given id has been already used (but not because of some network problems).
 	 */	
-	public static AgentProxy register(int id) throws PKIError {
-		if( registrationInProgress ) return null;
+	public static AgentProxy register(int id) throws SAMTError, PKIError {
+		if (registrationInProgress) throw new SAMTError();
 		registrationInProgress = true;
 		try {
 			PKIEnc.Decryptor decryptor = PKIEnc.register(id);
 			PKISig.Signer signer = PKISig.register(id);
-
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
 		}

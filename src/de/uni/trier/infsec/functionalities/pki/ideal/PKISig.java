@@ -79,10 +79,10 @@ public class PKISig {
 		public byte[] sign(byte[] message) {
 			byte[] signature = CryptoLib.sign(copyOf(message), copyOf(signKey)); // note usage of the real crypto lib here
 			// we make sure that the signing has not failed
-			if (signature == null) return null;
+			if (signature == null) return null; // FIXME: it should return something
 			// and that the signature is correct
 			if( !CryptoLib.verify(copyOf(message), copyOf(signature), copyOf(verifKey)) )
-				return null;
+				return null; // FIXME: it should return something
 			// now we log the message (only!) as signed and return the signature
 			log.add(copyOf(message));
 			return copyOf(copyOf(signature));

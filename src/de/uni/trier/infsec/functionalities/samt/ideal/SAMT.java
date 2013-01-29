@@ -30,6 +30,8 @@ public class SAMT {
 	
 	//// The public interface ////
 
+	static public class SAMTError extends Exception {}
+
 	/** 
 	 * Pair (message, sender_id).
 	 * 
@@ -70,13 +72,15 @@ public class SAMT {
 		 * In this ideal implementation the environment decides which message is to be delivered.
 		 * The same message may be delivered several times or not delivered at all.
 		 */
-		public AuthenticatedMessage getMessage() throws NetworkError, PKIError {
+		public AuthenticatedMessage getMessage() throws SAMTError {
+			if (registrationInProgress) throw new SAMTError();
 			int index = SAMTEnv.getMessage(this.ID);
-			if( index <0 ) return null;
+			if (index < 0) return null;
 			return queue.get(index);
 		}
 
-		public Channel channelTo(int recipient_id, String server, int port) throws PKIError, NetworkError {
+		public Channel channelTo(int recipient_id, String server, int port) throws SAMTError, PKIError, NetworkError {
+			if (registrationInProgress) throw new SAMTError();
 			boolean network_ok = SAMTEnv.channelTo(ID, recipient_id, server, port);
 			if (!network_ok) throw new NetworkError();
 			// get the answer from PKI
@@ -107,10 +111,9 @@ public class SAMT {
 			this.port = port;
 		}		
 		
-		public void send(byte[] message) throws NetworkError {
-			boolean network_ok = SAMTEnv.send(message.length, sender.ID, recipient.ID, server, port);
+		public void send(byte[] message) {
+			SAMTEnv.send(message.length, sender.ID, recipient.ID, server, port);
 			recipient.queue.add(MessageTools.copyOf(message), sender.ID);
-			if (!network_ok) throw new NetworkError();
 		}
 	}
 	
@@ -118,10 +121,11 @@ public class SAMT {
 	 * Registering an agent with the given id. If this id has been already used (registered), 
 	 * registration fails (the method returns null).
 	 */
-	public static AgentProxy register(int id) throws PKIError {
-		if( registrationInProgress ) return null;
+	public static AgentProxy register(int id) throws SAMTError, PKIError {
+		if (registrationInProgress) throw new SAMTError();
+		registrationInProgress = true;
 		// call the environment/simulator
-		SAMTEnv.register(id); // it should hold that if this succeed, then the following succeeds as well
+		SAMTEnv.register(id);
 		// check whether the id has not been claimed
 		if( registeredAgents.fetch(id) != null ) {
 			registrationInProgress = false;
