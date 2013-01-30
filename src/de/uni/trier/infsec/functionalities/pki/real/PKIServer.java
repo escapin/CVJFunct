@@ -23,6 +23,10 @@ public class PKIServer {
 	public static final String 	HOSTNAME = "localhost";
 	public static final int 	PORT = NetworkServer.LISTEN_PORT;
 
+	public static final byte[] MSG_GET_PUBLIC_KEY	  = new byte[]{0x08, 0x0F, 0x0D, 0x0E}; 
+	public static final byte[] MSG_REGISTER 		  = new byte[]{0x07, 0x0F, 0x0D, 0x0E};
+	public static final byte[] MSG_ERROR_REGISTRATION = new byte[]{0x06, 0x0F, 0x0D, 0x0E};
+	
 	protected PKIServer() {
 	}
 
@@ -43,14 +47,13 @@ public class PKIServer {
 		}
 	}
 	
-	
 	private byte[] handleRequest(byte[] request) {
 		echo("Received Request: 0x" + Utilities.byteArrayToHexString(request));
 		byte[] requestType = MessageTools.first(request);
 		byte[] requestMsg  = MessageTools.second(request);
 		echo("Request type: 0x" + Utilities.byteArrayToHexString(requestType));
 		
-		if (Utilities.arrayEqual(requestType, PKIServerInterface.MSG_GET_PUBLIC_KEY)) {
+		if (Utilities.arrayEqual(requestType, MSG_GET_PUBLIC_KEY)) {
 			echo("Request is: Get public Key");
 			byte[] pubKey = PKIServerCore.pki_getPublicKey(MessageTools.byteArrayToInt(requestMsg));
 			echo("Public key is: " + Utilities.byteArrayToHexString(pubKey));
@@ -64,7 +67,7 @@ public class PKIServer {
 			byte[] out = MessageTools.concatenate(signature, response);
 			echo("Responding Request: 0x" + Utilities.byteArrayToHexString(out));
 			return out;
-		} else if (Utilities.arrayEqual(requestType, PKIServerInterface.MSG_REGISTER)) {
+		} else if (Utilities.arrayEqual(requestType, MSG_REGISTER)) {
 			echo("Request is: Register");
 			byte[] id  = MessageTools.first(requestMsg);
 			byte[] pubKey = MessageTools.second(requestMsg);
@@ -86,10 +89,10 @@ public class PKIServer {
 			} else {
 				echo("Could not register public key!");
 
-				byte[] signature = CryptoLib.sign(PKIServerInterface.MSG_ERROR_REGISTRATION, Utilities.hexStringToByteArray(SigningKey));
+				byte[] signature = CryptoLib.sign(MSG_ERROR_REGISTRATION, Utilities.hexStringToByteArray(SigningKey));
 				echo("Signature is: " + Utilities.byteArrayToHexString(signature));
 				
-				byte[] out = MessageTools.concatenate(signature, PKIServerInterface.MSG_ERROR_REGISTRATION);
+				byte[] out = MessageTools.concatenate(signature, MSG_ERROR_REGISTRATION);
 				echo("Responding Request: 0x" + Utilities.byteArrayToHexString(out));
 				return out;
 			}

@@ -8,7 +8,7 @@ import org.tmatesoft.sqljet.core.table.ISqlJetCursor;
 import org.tmatesoft.sqljet.core.table.ISqlJetTable;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
 
-import de.uni.trier.infsec.utils.MessageTools;
+import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
 
 public class PKIServerCore implements PKIServerInterface {
@@ -95,23 +95,16 @@ public class PKIServerCore implements PKIServerInterface {
 	}
 
 	@Override
-	public SignedMessage register(int id, byte[] pubKey) {
-		if (!pki_register(id, pubKey)) return null;
-		byte[] out = MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey);
-		return new SignedMessage(out, null);
+	public void register(int id, byte[] pubKey) throws PKIError, NetworkError {
+		if (!pki_register(id, pubKey)) throw new PKIError();
 	}
 
 	@Override
-	public SignedMessage getPublicKey(int id) {
+	public byte[] getPublicKey(int id) throws PKIError, NetworkError {
 		byte[] pubKey = pki_getPublicKey(id);
-		byte[] out = MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey);
-		return new SignedMessage(out, null);
+		return pubKey;
 	}
 
-	@Override
-	public void test() {
-		// TODO What is this method intended to do?
-	}
 	
 	static void echo(String txt) {
 		if (!Boolean.parseBoolean(System.getProperty("DEBUG"))) return;

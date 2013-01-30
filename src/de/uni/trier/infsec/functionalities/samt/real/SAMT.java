@@ -136,7 +136,7 @@ public class SAMT {
 		if (registrationInProgress) throw new SAMTError();
 		registrationInProgress = true;
 		try {
-			PKIEnc.Decryptor decryptor = PKIEnc.register(id);
+			PKIEnc.Decryptor decryptor = PKIEnc.register(id); // FIXME: I added NetworkError to PKIEnc.register. We can throw/handle it here - or handle it in PKIEnc...
 			PKISig.Signer signer = PKISig.register(id);
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);

@@ -1,11 +1,12 @@
 package de.uni.trier.infsec.functionalities.pki.real;
 
+import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
+import static de.uni.trier.infsec.utils.MessageTools.first;
+import static de.uni.trier.infsec.utils.MessageTools.second;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.network.NetworkError;
-import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.utils.Utilities;
 
 /**
  * Real functionality for PKI (Public Key Infrastructure).
@@ -71,63 +72,22 @@ public class PKIEnc {
 	 *   Message format for registration:
 	 *    
 	 */
-	public static Decryptor register(int id) throws PKIError {
+	public static Decryptor register(int id) throws PKIError, NetworkError {
 		if (pki_server == null) throw new PKIError();
 
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);
 		
-		SignedMessage responce;
-		try {
-			responce = pki_server.register(id, copyOf(publicKey));
-			if( responce == null) {
-				// registration failed, perhaps because id has been already claimed.
-				throw new PKIError();
-			}
-		} catch (NetworkError e) {
-			throw new PKIError();
-		}
-		
-		// Verify that the response message contains the correct id and public key
-		int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(responce.message));
-		byte[] pk_from_data = MessageTools.second(responce.message);
-		
-		if (id != id_from_data) {
-			System.out.println("ID in response message is not equal to expected id: \nReceived: " +  id + "\nExpected: " + id_from_data);
-			throw new PKIError();
-		}
-		
-		if (!Utilities.arrayEqual(pk_from_data, publicKey)) {
-			System.out.println("PK in response message is not equal to expected id: \nReceived: " + Utilities.byteArrayToHexString(pk_from_data) + "\nExpected: " + Utilities.byteArrayToHexString(publicKey));
-			throw new PKIError();
-		}
+		pki_server.register(id, copyOf(publicKey));
 		
 		return new Decryptor(publicKey, privateKey);
 	}
 	
-	public static Encryptor getEncryptor(int id) throws PKIError {
+	public static Encryptor getEncryptor(int id) throws PKIError, NetworkError {
 		if (pki_server == null) throw new PKIError();
 		
-		SignedMessage responce;
-		try {
-			responce = pki_server.getPublicKey(id);
-			if( responce==null ) throw new PKIError();
-		} catch (NetworkError e) {
-			throw new PKIError();
-		}
-		
-		byte[] data = responce.message;
-		byte[] publKey;
-		
-		int id_from_data = MessageTools.byteArrayToInt(MessageTools.first(data));
-		publKey = MessageTools.second(data);
-		
-		// Verify that the response message contains the correct id
-		if (id != id_from_data) {
-			System.out.println("ID in response message is not equal to expected id: \nReceived: " + id + "\nExpected: " + id_from_data);
-			throw new PKIError();
-		}
+		byte[] publKey = pki_server.getPublicKey(id);
 		
 		return new Encryptor(publKey);
 	}
@@ -139,13 +99,13 @@ public class PKIEnc {
 		byte[] priv = decryptor.privateKey;
 		byte[] publ = decryptor.publicKey;
 		
-		byte[] out = MessageTools.concatenate(priv, publ);
+		byte[] out = concatenate(priv, publ);
 		return out; 
 	}
 	
 	public static Decryptor decryptorFromBytes(byte[] bytes) {
-		byte[] priv = MessageTools.first(bytes);
-		byte[] publ = MessageTools.second(bytes);
+		byte[] priv = first(bytes);
+		byte[] publ = second(bytes);
 		
 		Decryptor decryptor = new Decryptor(publ, priv);
 		return decryptor; 
