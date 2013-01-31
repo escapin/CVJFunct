@@ -78,8 +78,6 @@ public class SAMT {
 			catch (NetworkError | PKIError e) {
 				return null;
 			}
-			// TODO: take care of bad things that may happen with MessageTools.first/second, when applied
-			// to ill-formed messages.
 		}
 
 		public Channel channelTo(int recipient_id, String server, int port) throws SAMTError, PKIError, NetworkError {
