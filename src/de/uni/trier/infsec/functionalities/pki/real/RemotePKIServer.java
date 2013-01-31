@@ -3,6 +3,8 @@ package de.uni.trier.infsec.functionalities.pki.real;
 import static de.uni.trier.infsec.utils.MessageTools.byteArrayToInt;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
+import static de.uni.trier.infsec.utils.MessageTools.concatenate;
+import static de.uni.trier.infsec.utils.MessageTools.intToByteArray;
 import static de.uni.trier.infsec.utils.Utilities.arrayEqual;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.network.NetworkClient;
@@ -19,10 +21,10 @@ public class RemotePKIServer implements PKIServerInterface {
 		// message = <MSG_REGISTER, <id,pubKey> >
 		echo("Requesting registration for: ID=" + id + ", PK=" + Utilities.byteArrayToHexString(pubKey));
 		
-		echo("id as byte: " + Utilities.byteArrayToHexString(MessageTools.intToByteArray(id)));
-		echo("id check: " + MessageTools.byteArrayToInt(MessageTools.intToByteArray(id)));
+		echo("id as byte: " + Utilities.byteArrayToHexString(intToByteArray(id)));
+		echo("id check: " + byteArrayToInt(intToByteArray(id)));
 		
-		message = MessageTools.concatenate(PKIServer.MSG_REGISTER, MessageTools.concatenate(MessageTools.intToByteArray(id), pubKey));
+		message = MessageTools.concatenate(PKIServer.MSG_REGISTER, concatenate(intToByteArray(id), pubKey));
 		echo("Sending message: " + Utilities.byteArrayToHexString(message));
 		
 		byte[] response = NetworkClient.sendRequest(message, PKIServer.HOSTNAME, PKIServer.PORT);
@@ -63,6 +65,7 @@ public class RemotePKIServer implements PKIServerInterface {
 		echo("Sending message: " + Utilities.byteArrayToHexString(message));		
 		
 		byte[] response = NetworkClient.sendRequest(message, PKIServer.HOSTNAME, PKIServer.PORT);
+	
 		echo("Received response: " + Utilities.byteArrayToHexString(response));
 		
 		byte[] signature = MessageTools.first(response);
@@ -82,8 +85,7 @@ public class RemotePKIServer implements PKIServerInterface {
 			System.out.println("ID in response message is not equal to expected id: \nReceived: " + id + "\nExpected: " + id_from_data);
 			throw new PKIError();
 		}
-		
-		
+
 		return publKey;
 	}
 
