@@ -14,6 +14,9 @@ import de.uni.trier.infsec.functionalities.pki.real.PKIEnc.Decryptor;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc.Encryptor;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.pki.real.PKIServerCore;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig.Signer;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig.Verifier;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
 
@@ -63,6 +66,42 @@ public class TestPKI extends TestCase {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not throw an Error!", error);
+			error = false;
+			try {
+				PKIEnc.getEncryptor(99292);
+			} catch (PKIError e) {
+				error = true;
+			}
+			assertTrue("Unknown ID did not throw an Error!", error);
+			
+			Signer s1 = PKISig.register(TEST_ID1);
+			Signer s2 = PKISig.register(TEST_ID2);
+			
+			byte[] sig1 = s1.sign(TEST_DATA);
+			byte[] sig2 = s2.sign(TEST_DATA);
+			
+			Verifier v1 = PKISig.getVerifier(TEST_ID1);
+			Verifier v2 = PKISig.getVerifier(TEST_ID2);
+			
+			assertTrue("Verification of correct signature failed", v1.verify(sig1, TEST_DATA));
+			assertTrue("Verification of correct signature failed", v2.verify(sig2, TEST_DATA));
+			assertFalse("Verification of incorrect signature succeeded", v1.verify(sig2, TEST_DATA));
+			assertFalse("Verification of incorrect signature succeeded", v2.verify(sig1, TEST_DATA));
+			
+			error = false;
+			try {
+				PKISig.register(TEST_ID1);
+			} catch (PKIError e) {
+				error = true;
+			}
+			assertTrue("Duplicate registration did not throw an Error!", error);
+			error = false;
+			try {
+				PKISig.getVerifier(9292);
+			} catch (PKIError e) {
+				error = true;
+			}
+			assertTrue("Unknown ID did not throw an Error!", error);
 			
 		} finally {
 			if (pr != null) {

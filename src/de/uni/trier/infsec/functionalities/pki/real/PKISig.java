@@ -2,8 +2,8 @@ package de.uni.trier.infsec.functionalities.pki.real;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
-import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
+import de.uni.trier.infsec.lib.network.NetworkError;
 
 
 /**
@@ -57,13 +57,34 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id) throws PKIError {
-		// TODO: implement
-		return null;
+	public static Signer register(int id) throws NetworkError, PKIError {
+		if (pki_server == null) throw new PKIError();
+
+		Signer signer = new Signer();
+		pki_server.registerVerificationKey(id, copyOf(signer.verifKey));
+		
+		return signer;
 	}
 
 	public static Verifier getVerifier(int id) throws NetworkError, PKIError {
-		// TODO: implement
-		return null;
+		if (pki_server == null) throw new PKIError();
+		
+		byte[] verKey = pki_server.getVerificationKey(id);
+		
+		return new Verifier(verKey);
 	}
+	
+	private static boolean remoteMode = Boolean.parseBoolean(System.getProperty("remotemode"));
+	private static PKIServerInterface pki_server = null;
+	static {
+		if(remoteMode) {
+			pki_server = new RemotePKIServer();
+			System.out.println("Working in remote mode");
+		}
+		else {
+			pki_server = new PKIServerCore();
+			System.out.println("Working in local mode");
+		}
+	}
+		
 }

@@ -1,6 +1,10 @@
 package de.uni.trier.infsec.functionalities.pki.real;
 
+import static de.uni.trier.infsec.utils.MessageTools.concatenate;
+import static de.uni.trier.infsec.utils.MessageTools.first;
+import static de.uni.trier.infsec.utils.MessageTools.second;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
+import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.utils.Utilities;
@@ -23,11 +27,15 @@ public class PKIServer {
 	public static final String 	HOSTNAME = "localhost";
 	public static final int 	PORT = NetworkServer.LISTEN_PORT;
 
-	public static final byte[] MSG_GET_PUBLIC_KEY	  = new byte[]{0x08, 0x0F, 0x0D, 0x0E}; 
-	public static final byte[] MSG_REGISTER 		  = new byte[]{0x07, 0x0F, 0x0D, 0x0E};
-	public static final byte[] MSG_ERROR_REGISTRATION = new byte[]{0x06, 0x0F, 0x0D, 0x0E};
+	public static final byte[] MSG_GET_PUBLIC_KEY	  	= new byte[]{0x08, 0x0F, 0x0D, 0x0E}; 
+	public static final byte[] MSG_REGISTER 		  	= new byte[]{0x07, 0x0F, 0x0D, 0x0E};
+	public static final byte[] MSG_ERROR_PKI 			= new byte[]{0x06, 0x0F, 0x0D, 0x0E};
+	public static final byte[] MSG_ERROR_NETWORK		= new byte[]{0x05, 0x0F, 0x0D, 0x0E};
+	public static final byte[] MSG_GET_VERIFICATION_KEY	= new byte[]{0x04, 0x0F, 0x0D, 0x0E}; 
+	public static final byte[] MSG_REGISTER_SIGNATUREKEY= new byte[]{0x03, 0x0F, 0x0D, 0x0E};
 	
-	protected PKIServer() {
+	
+	private PKIServer() {
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -39,73 +47,170 @@ public class PKIServer {
 		while(true) {
 			byte[] request = NetworkServer.nextRequest();
 			if (request != null) {
-				byte[] response = handleRequest(request);
-				NetworkServer.response(response);
+				PKIMessage msg = PKIMessage.fromBytes(request);
+				PKIMessage response = handleRequest(msg);
+				NetworkServer.response(PKIMessage.toBytes(response));
 			} else {				
 				Thread.sleep(500);
 			}
 		}
 	}
 	
-	private byte[] handleRequest(byte[] request) {
-		echo("Received Request: 0x" + Utilities.byteArrayToHexString(request));
-		byte[] requestType = MessageTools.first(request);
-		byte[] requestMsg  = MessageTools.second(request);
-		echo("Request type: 0x" + Utilities.byteArrayToHexString(requestType));
-		
-		if (Utilities.arrayEqual(requestType, MSG_GET_PUBLIC_KEY)) {
+	private PKIMessage handleRequest(PKIMessage request) {
+		if (Utilities.arrayEqual(request.request, MSG_GET_PUBLIC_KEY)) {
 			echo("Request is: Get public Key");
-			byte[] pubKey = PKIServerCore.pki_getPublicKey(MessageTools.byteArrayToInt(requestMsg));
-			echo("Public key is: " + Utilities.byteArrayToHexString(pubKey));
-			
-			byte[] response = MessageTools.concatenate(requestMsg, pubKey);
-			echo("Response is: " + Utilities.byteArrayToHexString(requestType));
-			
-			byte[] signature = CryptoLib.sign(response, Utilities.hexStringToByteArray(SigningKey));
-			echo("Signature is: " + Utilities.byteArrayToHexString(requestType));
-			
-			byte[] out = MessageTools.concatenate(signature, response);
-			echo("Responding Request: 0x" + Utilities.byteArrayToHexString(out));
-			return out;
-		} else if (Utilities.arrayEqual(requestType, MSG_REGISTER)) {
-			echo("Request is: Register");
-			byte[] id  = MessageTools.first(requestMsg);
-			byte[] pubKey = MessageTools.second(requestMsg);
-			echo("Request ID is: " + Utilities.byteArrayToHexString(id));
-			echo("Public key is: " + Utilities.byteArrayToHexString(pubKey));
-			
-			if (PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), pubKey)) {
-				echo("[PKIServer] Successfully registered Public key");
-
-				byte[] response = MessageTools.concatenate(id, pubKey);
-				echo("Response is: " + Utilities.byteArrayToHexString(response));
-				
-				byte[] signature = CryptoLib.sign(response, Utilities.hexStringToByteArray(SigningKey));
-				echo("Signature is: " + Utilities.byteArrayToHexString(signature));
-				
-				byte[] out = MessageTools.concatenate(signature, response);
-				echo("Responding Request: 0x" + Utilities.byteArrayToHexString(out));
+			byte[] pubKey;
+			try {
+				pubKey = PKIServerCore.pki_getPublicKey(MessageTools.byteArrayToInt(request.payload));
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MessageTools.concatenate(request.payload, pubKey);
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
 				return out;
-			} else {
-				echo("Could not register public key!");
-
-				byte[] signature = CryptoLib.sign(MSG_ERROR_REGISTRATION, Utilities.hexStringToByteArray(SigningKey));
-				echo("Signature is: " + Utilities.byteArrayToHexString(signature));
-				
-				byte[] out = MessageTools.concatenate(signature, MSG_ERROR_REGISTRATION);
-				echo("Responding Request: 0x" + Utilities.byteArrayToHexString(out));
+			} catch (PKIError e) {
+				echo("Public key has not been registered!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_PKI;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (NetworkError e) {
+				echo("Error while trying to find public key!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_NETWORK;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			}
+		} else if (Utilities.arrayEqual(request.request, MSG_REGISTER)) {
+			echo("Request is: Register");
+			byte[] id  = MessageTools.first(request.payload);
+			byte[] pubKey = MessageTools.second(request.payload);
+			
+			try {
+				PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), pubKey);
+				PKIMessage out = new PKIMessage();
+				out.payload = MessageTools.concatenate(id, pubKey);
+				out.nonce = request.nonce;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (PKIError p) {
+				echo("Public key has already been claimed!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_PKI;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (NetworkError n) {
+				echo("Error while trying to register public key!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_NETWORK;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			}
+		} else if (Utilities.arrayEqual(request.request, MSG_GET_VERIFICATION_KEY)) {
+			echo("Request is: Get verification Key");
+			byte[] verKey;
+			try {
+				verKey = PKIServerCore.pki_getVerificationKey(MessageTools.byteArrayToInt(request.payload));
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MessageTools.concatenate(request.payload, verKey);
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (PKIError e) {
+				echo("Verification key has not been registered!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_PKI;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (NetworkError e) {
+				echo("Error while trying to find verification key!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_NETWORK;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			}
+		} else if (Utilities.arrayEqual(request.request, MSG_REGISTER_SIGNATUREKEY)) {
+			echo("Request is: Register verification key");
+			byte[] id  = MessageTools.first(request.payload);
+			byte[] verKey = MessageTools.second(request.payload);
+			
+			try {
+				PKIServerCore.pki_register_verification(MessageTools.byteArrayToInt(id), verKey);
+				PKIMessage out = new PKIMessage();
+				out.payload = MessageTools.concatenate(id, verKey);
+				out.nonce = request.nonce;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (PKIError p) {
+				echo("Verification key has already been claimed!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_PKI;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (NetworkError n) {
+				echo("Error while trying to register verification key!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_NETWORK;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
 				return out;
 			}
 		}
-		echo("Request unknown. Returning null");
-		return null; 
-		// TODO Perhaps send response "UNKNOWN_REQUEST"?
-		// TODO: in the case the id is registered, it should return (signed) response which explicitly says that.
+		echo("Request unknown. Returning empty message");
+		return new PKIMessage(); 
 	}
 	
 	void echo(String txt) {
 		if (!Boolean.parseBoolean(System.getProperty("DEBUG"))) return;
 		System.out.println("[" + this.getClass().getSimpleName() + "] " + txt);
+	}
+	
+	/**
+	 *	Just a helper class to encode the messages identically 
+	 */
+	public static class PKIMessage {
+		byte[] signature = new byte[]{};
+		byte[] nonce = new byte[]{};
+		byte[] request = new byte[]{};
+		byte[] payload = new byte[]{};
+		
+		/**
+		 *	Expecting formatted message:
+		 *	<signature, <nonce, <request, payload>>> 
+		 */
+		public static PKIMessage fromBytes(byte[] input) {
+			PKIMessage pmsg = new PKIMessage();
+			pmsg.signature 	= first(input);
+			pmsg.nonce 		= first(second(input));
+			pmsg.request	= first(second(second(input)));
+			pmsg.payload	= second(second(second(input)));
+//			System.out.println("fromBytes:\nsignature:" + Utilities.byteArrayToHexString(pmsg.signature) + "\nnonce:" + Utilities.byteArrayToHexString(pmsg.nonce) + "\nrequest:" + Utilities.byteArrayToHexString(pmsg.request) + "\npayload" + Utilities.byteArrayToHexString(pmsg.payload));
+			return pmsg;
+		}
+		
+		/**
+		 *	Output message:
+		 *	<signature, <nonce, <request, payload>>> 
+		 */
+		public static byte[] toBytes(PKIMessage input) {
+//			System.out.println("toBytes:\nsignature:" + Utilities.byteArrayToHexString(input.signature) + "\nnonce:" + Utilities.byteArrayToHexString(input.nonce) + "\nrequest:" + Utilities.byteArrayToHexString(input.request) + "\npayload" + Utilities.byteArrayToHexString(input.payload));
+			byte[] out = concatenate(input.signature, input.bytesForSign());
+			return out;
+		}
+		
+		/**
+		 *	Returns the bytes which are expected to be signed 
+		 */
+		public byte[] bytesForSign() {
+			byte[] out = concatenate(nonce, concatenate(request, payload));
+			return out;
+		}
 	}
 	
 }
