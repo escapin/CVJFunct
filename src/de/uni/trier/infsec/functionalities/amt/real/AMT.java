@@ -10,7 +10,7 @@ import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 
 /**
  * Real functionality for AMT (Authenticated Message Transmission).
- * See samt.ideal.AMT for typical usage pattern.
+ * See amt.ideal.AMT for typical usage pattern.
  */
 public class AMT {
 

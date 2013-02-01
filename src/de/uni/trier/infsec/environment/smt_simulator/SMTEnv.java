@@ -1,10 +1,10 @@
 package de.uni.trier.infsec.environment.smt_simulator;
 
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
-import de.uni.trier.infsec.functionalities.samt.real.SMT;
-import de.uni.trier.infsec.functionalities.samt.real.SMT.AgentProxy;
-import de.uni.trier.infsec.functionalities.samt.real.SMT.Channel;
-import de.uni.trier.infsec.functionalities.samt.real.SMT.SMTError;
+import de.uni.trier.infsec.functionalities.smt.real.SMT;
+import de.uni.trier.infsec.functionalities.smt.real.SMT.AgentProxy;
+import de.uni.trier.infsec.functionalities.smt.real.SMT.Channel;
+import de.uni.trier.infsec.functionalities.smt.real.SMT.SMTError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
@@ -13,7 +13,7 @@ import de.uni.trier.infsec.utils.MessageTools;
  *
  * This interface is implemented by the simulator in the realization proof.
  */
-public class SAMTEnv {
+public class SMTEnv {
 
 	public static void register(int id)	{
 		try {

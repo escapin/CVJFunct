@@ -1,9 +1,9 @@
-package de.uni.trier.infsec.functionalities.samt.ideal;
+package de.uni.trier.infsec.functionalities.smt.ideal;
 
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
 import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.environment.smt.SAMTEnv;
+import de.uni.trier.infsec.environment.smt.SMTEnv;
 
 /**
  * Ideal functionality for SAMT (Secure Authenticated Message Transmission).
@@ -26,11 +26,11 @@ import de.uni.trier.infsec.environment.smt.SAMTEnv;
  * 		// msg.message contains the received message
  * 		// msg.sender_id contains the id of the sender
  */
-public class SAMT {
+public class SMT {
 	
 	//// The public interface ////
 
-	static public class SAMTError extends Exception {}
+	static public class SMTError extends Exception {}
 
 	/** 
 	 * Pair (message, sender_id).
@@ -72,16 +72,16 @@ public class SAMT {
 		 * In this ideal implementation the environment decides which message is to be delivered.
 		 * The same message may be delivered several times or not delivered at all.
 		 */
-		public AuthenticatedMessage getMessage() throws SAMTError {
-			if (registrationInProgress) throw new SAMTError();
-			int index = SAMTEnv.getMessage(this.ID);
+		public AuthenticatedMessage getMessage() throws SMTError {
+			if (registrationInProgress) throw new SMTError();
+			int index = SMTEnv.getMessage(this.ID);
 			if (index < 0) return null;
 			return queue.get(index);
 		}
 
-		public Channel channelTo(int recipient_id, String server, int port) throws SAMTError, PKIError, NetworkError {
-			if (registrationInProgress) throw new SAMTError();
-			boolean network_ok = SAMTEnv.channelTo(ID, recipient_id, server, port);
+		public Channel channelTo(int recipient_id, String server, int port) throws SMTError, PKIError, NetworkError {
+			if (registrationInProgress) throw new SMTError();
+			boolean network_ok = SMTEnv.channelTo(ID, recipient_id, server, port);
 			if (!network_ok) throw new NetworkError();
 			// get the answer from PKI
 			AgentProxy recipient = registeredAgents.fetch(recipient_id);
@@ -112,7 +112,7 @@ public class SAMT {
 		}		
 		
 		public void send(byte[] message) {
-			SAMTEnv.send(message.length, sender.ID, recipient.ID, server, port);
+			SMTEnv.send(message.length, sender.ID, recipient.ID, server, port);
 			recipient.queue.add(MessageTools.copyOf(message), sender.ID);
 		}
 	}
@@ -121,11 +121,11 @@ public class SAMT {
 	 * Registering an agent with the given id. If this id has been already used (registered), 
 	 * registration fails (the method returns null).
 	 */
-	public static AgentProxy register(int id) throws SAMTError, PKIError {
-		if (registrationInProgress) throw new SAMTError();
+	public static AgentProxy register(int id) throws SMTError, PKIError {
+		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		// call the environment/simulator
-		SAMTEnv.register(id);
+		SMTEnv.register(id);
 		// check whether the id has not been claimed
 		if( registeredAgents.fetch(id) != null ) {
 			registrationInProgress = false;

@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.samt.real;
+package de.uni.trier.infsec.functionalities.smt.real;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
@@ -11,7 +11,7 @@ import de.uni.trier.infsec.utils.MessageTools;
 
 /**
  * Real functionality for SAMT (Secure Authenticated Message Transmission).
- * See samt.ideal.SAMT for typical usage pattern.
+ * See smt.ideal.SAMT for typical usage pattern.
  */
 public class SMT {
 

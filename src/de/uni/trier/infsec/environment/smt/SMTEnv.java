@@ -4,7 +4,7 @@ package de.uni.trier.infsec.environment.smt;
 import de.uni.trier.infsec.environment.Environment;
 
 
-public class SAMTEnv {
+public class SMTEnv {
 
 	public static void register(int id)	{
 		Environment.untrustedOutput(7801);
