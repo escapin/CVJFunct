@@ -1,10 +1,10 @@
 package de.uni.trier.infsec.environment.smt_simulator;
 
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
-import de.uni.trier.infsec.functionalities.samt.real.SAMT;
-import de.uni.trier.infsec.functionalities.samt.real.SAMT.AgentProxy;
-import de.uni.trier.infsec.functionalities.samt.real.SAMT.Channel;
-import de.uni.trier.infsec.functionalities.samt.real.SAMT.SAMTError;
+import de.uni.trier.infsec.functionalities.samt.real.SMT;
+import de.uni.trier.infsec.functionalities.samt.real.SMT.AgentProxy;
+import de.uni.trier.infsec.functionalities.samt.real.SMT.Channel;
+import de.uni.trier.infsec.functionalities.samt.real.SMT.SMTError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
@@ -17,10 +17,10 @@ public class SAMTEnv {
 
 	public static void register(int id)	{
 		try {
-			AgentProxy proxy = SAMT.register(id);
+			AgentProxy proxy = SMT.register(id);
 			agentProxies.add(proxy);
 		}
-		catch (PKIError | SAMTError e) {}
+		catch (PKIError | SMTError e) {}
 	}
 
 	public static boolean channelTo(int sender_id, int recipient_id, String server, int port) {
@@ -29,7 +29,7 @@ public class SAMTEnv {
 			Channel channel = sender.channelTo(recipient_id, server, port);
 			channels.add(channel, sender_id, recipient_id, server, port);
 		}
-		catch (PKIError | SAMTError e) {}
+		catch (PKIError | SMTError e) {}
 		catch (NetworkError e) {
 			return false;
 		}
@@ -48,11 +48,11 @@ public class SAMTEnv {
 	public static int getMessage(int id) {
 		try {
 			AgentProxy proxy = agentProxies.fetch(id);
-			SAMT.AuthenticatedMessage am = proxy.getMessage();
+			SMT.AuthenticatedMessage am = proxy.getMessage();
 			if( am == null ) return -1; // no message
 			int index = agentProxies.getMessageQueue(id).getIndex(am.raw_input);
 			return index;
-		} catch (SAMTError e) {
+		} catch (SMTError e) {
 			return -1;
 		}
 	}

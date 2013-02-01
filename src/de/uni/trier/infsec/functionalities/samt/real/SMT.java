@@ -13,11 +13,11 @@ import de.uni.trier.infsec.utils.MessageTools;
  * Real functionality for SAMT (Secure Authenticated Message Transmission).
  * See samt.ideal.SAMT for typical usage pattern.
  */
-public class SAMT {
+public class SMT {
 
 	//// The public interface ////
 
-	static public class SAMTError extends Exception {}
+	static public class SMTError extends Exception {}
 
 	/** 
 	 * Pair message, sender_id. 
@@ -57,8 +57,8 @@ public class SAMT {
 			this.signer = signer;
 		}
 
-		public AuthenticatedMessage getMessage() throws SAMTError {
-			if (registrationInProgress) throw new SAMTError();
+		public AuthenticatedMessage getMessage() throws SMTError {
+			if (registrationInProgress) throw new SMTError();
 			try {
 				byte[] inputMessage = NetworkServer.read();
 				// get the sender id and her verifier
@@ -86,8 +86,8 @@ public class SAMT {
 			}
 		}
 
-		public Channel channelTo(int recipient_id, String server, int port) throws SAMTError, PKIError, NetworkError {
-			if (registrationInProgress) throw new SAMTError();
+		public Channel channelTo(int recipient_id, String server, int port) throws SMTError, PKIError, NetworkError {
+			if (registrationInProgress) throw new SMTError();
 			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id);
 			return new Channel(this.ID, recipient_id, this.signer, recipient_encryptor, server, port);
 		}
@@ -142,8 +142,8 @@ public class SAMT {
 	 * We assume that the registration is not blocked, that is it does not ends successfully only
 	 * if the given id has been already used (but not because of some network problems).
 	 */	
-	public static AgentProxy register(int id) throws SAMTError, PKIError {
-		if (registrationInProgress) throw new SAMTError();
+	public static AgentProxy register(int id) throws SMTError, PKIError {
+		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		try {
 			PKIEnc.Decryptor decryptor = PKIEnc.register(id);
@@ -156,7 +156,7 @@ public class SAMT {
 			throw err;
 		}
 		catch (NetworkError err) {
-			throw new SAMTError();
+			throw new SMTError();
 		}
 	}
 
