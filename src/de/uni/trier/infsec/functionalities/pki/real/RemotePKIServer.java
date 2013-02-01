@@ -17,7 +17,7 @@ import de.uni.trier.infsec.utils.Utilities;
 public class RemotePKIServer implements PKIServerInterface {
 
 	@Override
-	public void register(int id, byte[] pubKey) throws PKIError, NetworkError {
+	public void registerPublicKey(int id, byte[] pubKey) throws PKIError, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServer.MSG_REGISTER;
 		request.nonce = CryptoLib.generateNonce();

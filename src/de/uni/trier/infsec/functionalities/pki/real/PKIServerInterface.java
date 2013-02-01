@@ -5,7 +5,7 @@ import de.uni.trier.infsec.lib.network.NetworkError;
 
 public interface PKIServerInterface {
 	// throws PKIError if the id has been already claimed.  
-	void register(int id, byte[] pubKey) throws PKIError, NetworkError;
+	void registerPublicKey(int id, byte[] pubKey) throws PKIError, NetworkError;
 	
 	// throws PKIError if id is not registered
 	byte[] getPublicKey(int id) throws PKIError, NetworkError;

@@ -25,7 +25,7 @@ public class PKISig {
 		}
 
 		public boolean verify(byte[] signature, byte[] message) {
-			return CryptoLib.verify(message, signature, verifKey);
+			return CryptoLib.verify(copyOf(message), copyOf(signature), copyOf(verifKey));
 		}
 
 		public byte[] getVerifKey() {
@@ -49,7 +49,7 @@ public class PKISig {
 
 		public byte[] sign(byte[] message) {
 			byte[] signature = CryptoLib.sign(copyOf(message), copyOf(signKey));
-			return copyOf(copyOf(signature));
+			return copyOf(signature);
 		}
 
 		public Verifier getVerifier() {
@@ -58,19 +58,13 @@ public class PKISig {
 	}
 
 	public static Signer register(int id) throws NetworkError, PKIError {
-		if (pki_server == null) throw new PKIError();
-
 		Signer signer = new Signer();
-		pki_server.registerVerificationKey(id, copyOf(signer.verifKey));
-		
+		pki_server.registerVerificationKey(id, copyOf(signer.verifKey));		
 		return signer;
 	}
 
 	public static Verifier getVerifier(int id) throws NetworkError, PKIError {
-		if (pki_server == null) throw new PKIError();
-		
-		byte[] verKey = pki_server.getVerificationKey(id);
-		
+		byte[] verKey = pki_server.getVerificationKey(id);		
 		return new Verifier(verKey);
 	}
 	

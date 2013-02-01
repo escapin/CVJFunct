@@ -133,9 +133,9 @@ public class AMT {
 			registrationInProgress = false;
 			throw err;
 		}
-		//catch (NetworkError err) {
-		//	throw new AMTError();
-		//}
+		catch (NetworkError err) {
+			throw new AMTError();
+		}
 	}
 
 	private static boolean registrationInProgress = false;

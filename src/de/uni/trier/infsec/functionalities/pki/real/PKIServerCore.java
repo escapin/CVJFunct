@@ -25,7 +25,7 @@ public class PKIServerCore implements PKIServerInterface {
 	
 	
 	@Override
-	public void register(int id, byte[] pubKey) throws PKIError, NetworkError {
+	public void registerPublicKey(int id, byte[] pubKey) throws PKIError, NetworkError {
 		pki_register(id, pubKey);
 	}
 
@@ -64,6 +64,7 @@ public class PKIServerCore implements PKIServerInterface {
 		} catch (SqlJetException e) {
 			e.printStackTrace();
 			throw new NetworkError(); // Something went wrong 
+			// TODO: change this (later) for some other exception
 		}
 	}
 
@@ -86,7 +87,8 @@ public class PKIServerCore implements PKIServerInterface {
 			}
 		} catch (SqlJetException e) {
 			e.printStackTrace();
-			throw new NetworkError(); // Something went wrong 
+			throw new NetworkError(); // Something went wrong
+			// TODO: change this (later) for some other exception
 		}
 	}
 	

@@ -73,20 +73,16 @@ public class PKIEnc {
 	 *    
 	 */
 	public static Decryptor register(int id) throws PKIError, NetworkError {
-		if (pki_server == null) throw new PKIError();
-
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);
 		
-		pki_server.register(id, copyOf(publicKey));
+		pki_server.registerPublicKey(id, copyOf(publicKey));
 		
 		return new Decryptor(publicKey, privateKey);
 	}
 	
 	public static Encryptor getEncryptor(int id) throws PKIError, NetworkError {
-		if (pki_server == null) throw new PKIError();
-		
 		byte[] publKey = pki_server.getPublicKey(id);
 		
 		return new Encryptor(publKey);
