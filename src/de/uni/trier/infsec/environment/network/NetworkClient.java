@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.environment.network;
 
 import de.uni.trier.infsec.environment.Environment;
-import de.uni.trier.infsec.lib.network.NetworkError;
 
 public class NetworkClient {
 
