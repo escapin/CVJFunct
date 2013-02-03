@@ -15,17 +15,18 @@ import de.uni.trier.infsec.functionalities.amt.real.AMT.AMTError;
  */
 public class Server {
 
-	public static final int NumberOfVoters = 50;
-	private final boolean[] ballotCast = new boolean[NumberOfVoters];  // ballotCast[i]==true iff the i-th voter has already cast her ballot
+	
+	private final boolean[] ballotCast = new boolean[Server.NumberOfVoters];  // ballotCast[i]==true iff the i-th voter has already cast her ballot
 	private int votesForA = 0;
 	private int votesForB = 0;
 	private final SMT.AgentProxy samt_proxy;
 	private final AMT.Channel channel_to_BB;
+	static final int NumberOfVoters = 50;
 
 	public Server(SMT.AgentProxy samt_proxy, AMT.AgentProxy amt_proxy) throws AMTError, PKIError, NetworkError {
 		this.samt_proxy = samt_proxy;
-		channel_to_BB = amt_proxy.channelTo(Identifiers.BULLETIN_BOARD_ID, "www.bulletinboard.com", 89);
-		for( int i=0; i<NumberOfVoters; ++i)
+		channel_to_BB = amt_proxy.channelTo(Identifiers.BULLETIN_BOARD_ID, Identifiers.DEFAULT_HOST_BBOARD, Identifiers.DEFAULT_LISTEN_PORT_BBOARD);
+		for( int i=0; i<Server.NumberOfVoters; ++i)
 			ballotCast[i] = false; // initially no voter has cast her ballot
 	}
 
@@ -38,7 +39,7 @@ public class Server {
 		int voterID = am.sender_id;
 		byte[] ballot = am.message;
 
-		if( voterID<0 || voterID>=NumberOfVoters ) return;  // invalid  voter ID
+		if( voterID<0 || voterID>=Server.NumberOfVoters ) return;  // invalid  voter ID
 		if( ballotCast[voterID] ) return;  // the voter has already voted
 		ballotCast[voterID] = true; 
 		if( ballot==null || ballot.length!=1 ) return;  // malformed ballot
@@ -52,7 +53,7 @@ public class Server {
 	 * Returns true if the result is ready, that is if all the eligible voters have already voted.
 	 */
 	public boolean resultReady() {
-		for( int i=0; i<NumberOfVoters; ++i ) {
+		for( int i=0; i<Server.NumberOfVoters; ++i ) {
 			if( !ballotCast[i] )
 				return false;
 		}
@@ -93,9 +94,9 @@ public class Server {
 	/*
 	 * Format the result of the election.
 	 */
-	static byte[] formatResult(int a, int b) {
+	private static byte[] formatResult(int a, int b) {
 		String s = "Result of the election:";
-		s += "  Number of voters = " + NumberOfVoters + "\n";
+		s += "  Number of voters = " + Server.NumberOfVoters + "\n";
 		s += "  Number of votes for candidate 1 =" + a + "\n";
 		s += "  Number of votes for candidate 2 =" + b + "\n";
 		return s.getBytes();

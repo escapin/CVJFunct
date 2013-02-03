@@ -8,6 +8,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Hashtable;
 
+import sun.rmi.log.LogOutputStream;
+
 
 public class NetworkServer {
 	
@@ -88,9 +90,11 @@ public class NetworkServer {
 			mysock = s;
 		}
 		
+		private static final int SOCKET_TIMEOUT = 5000;
 		@Override
 		public void run() {
 			try {
+				mysock.setSoTimeout(SOCKET_TIMEOUT);
 				InputStream is = mysock.getInputStream();
 				ByteArrayOutputStream buffer = new ByteArrayOutputStream(); // we can handle Messages up to 1K
 				
@@ -132,8 +136,14 @@ public class NetworkServer {
 			// If not already done: Init server
 			if (server == null) {
 				try {
-					server = new ServerSocket(LISTEN_PORT);
-				} catch (IOException e) {
+					int port = LISTEN_PORT;
+					String sPort = System.getProperty("LISTEN_PORT");
+					if (sPort != null && !sPort.equals("")) {
+						port = Integer.parseInt(sPort);
+						System.out.println("Using custom listen port: " + port);
+					}
+					server = new ServerSocket(port);
+				} catch (Exception e) {
 					e.printStackTrace();
 					return;
 				}

@@ -24,7 +24,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
  */
 public class CryptoLib {
 
-	private static final int pkKeySize 		= 1024; // 1024 Bits keysize
+	private static final int pkKeySize 		= 1024; // 1024 Bits keysize for public key crypto
+	private static final int signKeySize 	= 512; // 512 Bits keysize for Signature -- in order to encrypt signatures, we need a larger PK for encryption!
 	private static final int nonce_length 	= 8; // 8 Bytes = 64 Bit nonce length
 
 	static {
@@ -125,7 +126,7 @@ public class CryptoLib {
 		KeyPairGenerator keyPairGen;
 		try {
 			keyPairGen = KeyPairGenerator.getInstance("RSA", "BC");
-			keyPairGen.initialize(pkKeySize);
+			keyPairGen.initialize(signKeySize);
 			java.security.KeyPair pair = keyPairGen.generateKeyPair();
 			out.privateKey = pair.getPrivate().getEncoded();
 			out.publicKey = pair.getPublic().getEncoded();

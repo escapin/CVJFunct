@@ -2,16 +2,16 @@ package de.uni.trier.infsec.functionalities.smt.real;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.real.PKISig;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
- * Real functionality for SAMT (Secure Authenticated Message Transmission).
- * See smt.ideal.SAMT for typical usage pattern.
+ * Real functionality for SMT (Secure Authenticated Message Transmission).
+ * See smt.ideal.SMT for typical usage pattern.
  */
 public class SMT {
 
@@ -61,6 +61,8 @@ public class SMT {
 			if (registrationInProgress) throw new SMTError();
 			try {
 				byte[] inputMessage = NetworkServer.read();
+				if (inputMessage == null) return null; // XXX Hope thats OK - needed for initialization! (first cal to read() will start listening-thread!)
+				
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
 				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);

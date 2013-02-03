@@ -36,7 +36,7 @@ public class PKIServerCore implements PKIServerInterface {
 
 	@Override
 	public void registerVerificationKey(int id, byte[] verKey) throws PKIError, NetworkError {
-		registerVerificationKey(id, verKey);
+		pki_register_verification(id, verKey);
 	}
 
 	@Override
