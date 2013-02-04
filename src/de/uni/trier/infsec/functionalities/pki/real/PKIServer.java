@@ -34,6 +34,7 @@ public class PKIServer {
 	public static final byte[] MSG_GET_VERIFICATION_KEY	= new byte[]{0x04, 0x0F, 0x0D, 0x0E}; 
 	public static final byte[] MSG_REGISTER_SIGNATUREKEY= new byte[]{0x03, 0x0F, 0x0D, 0x0E};
 	
+	public static final int LISTEN_PORT = 7070;
 	
 	private PKIServer() {
 	}
@@ -43,9 +44,10 @@ public class PKIServer {
 	}
 	
 	public void run() throws Exception {
-		// Busy waiting - not a nice solution at all, but should be ok for now. 
+		// Busy waiting - not a nice solution at all, but should be ok for now.
+		NetworkServer.listenForRequests(LISTEN_PORT);
 		while(true) {
-			byte[] request = NetworkServer.nextRequest();
+			byte[] request = NetworkServer.nextRequest(LISTEN_PORT);
 			if (request != null) {
 				PKIMessage msg = PKIMessage.fromBytes(request);
 				PKIMessage response = handleRequest(msg);
@@ -61,7 +63,7 @@ public class PKIServer {
 			echo("Request is: Get public Key");
 			byte[] pubKey;
 			try {
-				pubKey = PKIServerCore.pki_getPublicKey(MessageTools.byteArrayToInt(request.payload));
+				pubKey = PKIServerCore.pki_getPublicKey(MessageTools.byteArrayToInt(request.payload), request.domain);
 				PKIMessage out = new PKIMessage();
 				out.nonce = request.nonce;
 				out.payload = MessageTools.concatenate(request.payload, pubKey);
@@ -88,7 +90,7 @@ public class PKIServer {
 			byte[] pubKey = MessageTools.second(request.payload);
 			
 			try {
-				PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), pubKey);
+				PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), request.domain, pubKey);
 				PKIMessage out = new PKIMessage();
 				out.payload = MessageTools.concatenate(id, pubKey);
 				out.nonce = request.nonce;
@@ -113,7 +115,7 @@ public class PKIServer {
 			echo("Request is: Get verification Key");
 			byte[] verKey;
 			try {
-				verKey = PKIServerCore.pki_getVerificationKey(MessageTools.byteArrayToInt(request.payload));
+				verKey = PKIServerCore.pki_getVerificationKey(MessageTools.byteArrayToInt(request.payload), request.domain);
 				PKIMessage out = new PKIMessage();
 				out.nonce = request.nonce;
 				out.payload = MessageTools.concatenate(request.payload, verKey);
@@ -140,7 +142,7 @@ public class PKIServer {
 			byte[] verKey = MessageTools.second(request.payload);
 			
 			try {
-				PKIServerCore.pki_register_verification(MessageTools.byteArrayToInt(id), verKey);
+				PKIServerCore.pki_register_verification(MessageTools.byteArrayToInt(id), request.domain, verKey);
 				PKIMessage out = new PKIMessage();
 				out.payload = MessageTools.concatenate(id, verKey);
 				out.nonce = request.nonce;
@@ -178,6 +180,7 @@ public class PKIServer {
 		byte[] signature = new byte[]{};
 		byte[] nonce = new byte[]{};
 		byte[] request = new byte[]{};
+		byte[] domain = new byte[]{};
 		byte[] payload = new byte[]{};
 		
 		/**
@@ -189,8 +192,9 @@ public class PKIServer {
 			pmsg.signature 	= first(input);
 			pmsg.nonce 		= first(second(input));
 			pmsg.request	= first(second(second(input)));
-			pmsg.payload	= second(second(second(input)));
-//			System.out.println("fromBytes:\nsignature:" + Utilities.byteArrayToHexString(pmsg.signature) + "\nnonce:" + Utilities.byteArrayToHexString(pmsg.nonce) + "\nrequest:" + Utilities.byteArrayToHexString(pmsg.request) + "\npayload" + Utilities.byteArrayToHexString(pmsg.payload));
+			pmsg.domain 	= first(second(second(second(input))));
+			pmsg.payload	= second(second(second(second(input))));
+//			System.out.println("fromBytes:\nsignature:" + Utilities.byteArrayToHexString(pmsg.signature) + "\nnonce:" + Utilities.byteArrayToHexString(pmsg.nonce) + "\nrequest:" + Utilities.byteArrayToHexString(pmsg.request) + "\ndomain"+ Utilities.byteArrayToHexString(pmsg.domain) + "\npayload" + Utilities.byteArrayToHexString(pmsg.payload));
 			return pmsg;
 		}
 		
@@ -199,7 +203,7 @@ public class PKIServer {
 		 *	<signature, <nonce, <request, payload>>> 
 		 */
 		public static byte[] toBytes(PKIMessage input) {
-//			System.out.println("toBytes:\nsignature:" + Utilities.byteArrayToHexString(input.signature) + "\nnonce:" + Utilities.byteArrayToHexString(input.nonce) + "\nrequest:" + Utilities.byteArrayToHexString(input.request) + "\npayload" + Utilities.byteArrayToHexString(input.payload));
+//			System.out.println("toBytes:\nsignature:" + Utilities.byteArrayToHexString(input.signature) + "\nnonce:" + Utilities.byteArrayToHexString(input.nonce) + "\nrequest:" + Utilities.byteArrayToHexString(input.request) + "\ndomain"+ Utilities.byteArrayToHexString(input.domain) + "\npayload" + Utilities.byteArrayToHexString(input.payload));
 			byte[] out = concatenate(input.signature, input.bytesForSign());
 			return out;
 		}
@@ -208,7 +212,7 @@ public class PKIServer {
 		 *	Returns the bytes which are expected to be signed 
 		 */
 		public byte[] bytesForSign() {
-			byte[] out = concatenate(nonce, concatenate(request, payload));
+			byte[] out = concatenate(nonce, concatenate(request, concatenate(domain, payload)));
 			return out;
 		}
 	}

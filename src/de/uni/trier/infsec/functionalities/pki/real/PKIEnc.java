@@ -72,18 +72,18 @@ public class PKIEnc {
 	 *   Message format for registration:
 	 *    
 	 */
-	public static Decryptor register(int id) throws PKIError, NetworkError {
+	public static Decryptor register(int id, byte[] domain) throws PKIError, NetworkError {
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);
 		
-		pki_server.registerPublicKey(id, copyOf(publicKey));
+		pki_server.registerPublicKey(id, copyOf(domain), copyOf(publicKey));
 		
 		return new Decryptor(publicKey, privateKey);
 	}
 	
-	public static Encryptor getEncryptor(int id) throws PKIError, NetworkError {
-		byte[] publKey = pki_server.getPublicKey(id);
+	public static Encryptor getEncryptor(int id, byte[] domain) throws PKIError, NetworkError {
+		byte[] publKey = pki_server.getPublicKey(id, domain);
 		
 		return new Encryptor(publKey);
 	}

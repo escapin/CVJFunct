@@ -7,6 +7,7 @@ import de.uni.trier.infsec.functionalities.pki.real.PKISig;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
+import de.uni.trier.infsec.protocols.smt_voting.Identifiers;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
@@ -50,23 +51,32 @@ public class SMT {
 		public final int ID;
 		private PKIEnc.Decryptor decryptor;
 		private PKISig.Signer signer;
+		
+		private int myPort = NetworkServer.LISTEN_PORT;
 
 		private AgentProxy(int id, PKIEnc.Decryptor decryptor, PKISig.Signer signer) {
 			this.ID = id;
 			this.decryptor = decryptor;
 			this.signer = signer;
+			
+			// Used for testing: If the property is set, one can override the default port for listening.
+			try {
+				myPort = Integer.parseInt(System.getProperty("SMT.PORT"));
+			} catch (Throwable t) {
+				myPort = NetworkServer.LISTEN_PORT;
+			}
 		}
 
 		public AuthenticatedMessage getMessage() throws SMTError {
 			if (registrationInProgress) throw new SMTError();
 			try {
-				byte[] inputMessage = NetworkServer.read();
-				if (inputMessage == null) return null; // XXX Hope thats OK - needed for initialization! (first cal to read() will start listening-thread!)
+				byte[] inputMessage = NetworkServer.read(myPort);
+				if (inputMessage == null) return null;
 				
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
 				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
-				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id);
+				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id, Identifiers.DOMAIN_SMT);
 				// retrieve the message with the recipient id and the signature
 				byte[] signedAndEncrypted = MessageTools.second(inputMessage);
 				byte[] signed = decryptor.decrypt(signedAndEncrypted);
@@ -90,7 +100,7 @@ public class SMT {
 
 		public Channel channelTo(int recipient_id, String server, int port) throws SMTError, PKIError, NetworkError {
 			if (registrationInProgress) throw new SMTError();
-			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id);
+			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id, Identifiers.DOMAIN_SMT);
 			return new Channel(this.ID, recipient_id, this.signer, recipient_encryptor, server, port);
 		}
 	}
@@ -148,8 +158,8 @@ public class SMT {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		try {
-			PKIEnc.Decryptor decryptor = PKIEnc.register(id);
-			PKISig.Signer signer = PKISig.register(id);
+			PKIEnc.Decryptor decryptor = PKIEnc.register(id, Identifiers.DOMAIN_SMT);
+			PKISig.Signer signer = PKISig.register(id, Identifiers.DOMAIN_SMT);
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
 		}

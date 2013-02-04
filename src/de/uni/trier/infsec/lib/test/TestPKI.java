@@ -18,6 +18,7 @@ import de.uni.trier.infsec.functionalities.pki.real.PKISig;
 import de.uni.trier.infsec.functionalities.pki.real.PKISig.Signer;
 import de.uni.trier.infsec.functionalities.pki.real.PKISig.Verifier;
 import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.protocols.smt_voting.Identifiers;
 import de.uni.trier.infsec.utils.Utilities;
 
 public class TestPKI extends TestCase {
@@ -39,11 +40,11 @@ public class TestPKI extends TestCase {
 
 			System.setProperty("remotemode", Boolean.toString(true));
 
-			Decryptor d1 = PKIEnc.register(TEST_ID1);
-			Decryptor d2 = PKIEnc.register(TEST_ID2);
+			Decryptor d1 = PKIEnc.register(TEST_ID1, Identifiers.DOMAIN_NONE);
+			Decryptor d2 = PKIEnc.register(TEST_ID2, Identifiers.DOMAIN_NONE);
 
-			Encryptor e1 = PKIEnc.getEncryptor(TEST_ID1);
-			Encryptor e2 = PKIEnc.getEncryptor(TEST_ID2);
+			Encryptor e1 = PKIEnc.getEncryptor(TEST_ID1, Identifiers.DOMAIN_NONE);
+			Encryptor e2 = PKIEnc.getEncryptor(TEST_ID2, Identifiers.DOMAIN_NONE);
 			
 			System.err.println("plaintxt: " + Utilities.byteArrayToHexString(TEST_DATA));
 			byte[] ctxt1 = e1.encrypt(TEST_DATA);
@@ -61,27 +62,36 @@ public class TestPKI extends TestCase {
 
 			boolean error = false;
 			try {
-				PKIEnc.register(TEST_ID1);
+				PKIEnc.register(TEST_ID1, Identifiers.DOMAIN_NONE);
 			} catch (PKIError e) {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not throw an Error!", error);
 			error = false;
 			try {
-				PKIEnc.getEncryptor(99292);
+				PKIEnc.getEncryptor(99292, Identifiers.DOMAIN_NONE);
 			} catch (PKIError e) {
 				error = true;
 			}
 			assertTrue("Unknown ID did not throw an Error!", error);
 			
-			Signer s1 = PKISig.register(TEST_ID1);
-			Signer s2 = PKISig.register(TEST_ID2);
+			error = false;
+			try {
+				PKIEnc.getEncryptor(TEST_ID1, Identifiers.DOMAIN_SMT);
+			} catch (PKIError e) {
+				error = true;
+			}
+			assertTrue("Unknown Wrong domain did not lead to an error!", error);
+			
+			
+			Signer s1 = PKISig.register(TEST_ID1, Identifiers.DOMAIN_NONE);
+			Signer s2 = PKISig.register(TEST_ID2, Identifiers.DOMAIN_NONE);
 			
 			byte[] sig1 = s1.sign(TEST_DATA);
 			byte[] sig2 = s2.sign(TEST_DATA);
 			
-			Verifier v1 = PKISig.getVerifier(TEST_ID1);
-			Verifier v2 = PKISig.getVerifier(TEST_ID2);
+			Verifier v1 = PKISig.getVerifier(TEST_ID1, Identifiers.DOMAIN_NONE);
+			Verifier v2 = PKISig.getVerifier(TEST_ID2, Identifiers.DOMAIN_NONE);
 			
 			assertTrue("Verification of correct signature failed", v1.verify(sig1, TEST_DATA));
 			assertTrue("Verification of correct signature failed", v2.verify(sig2, TEST_DATA));
@@ -90,18 +100,26 @@ public class TestPKI extends TestCase {
 			
 			error = false;
 			try {
-				PKISig.register(TEST_ID1);
+				PKISig.register(TEST_ID1, Identifiers.DOMAIN_NONE);
 			} catch (PKIError e) {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not throw an Error!", error);
 			error = false;
 			try {
-				PKISig.getVerifier(9292);
+				PKISig.getVerifier(9292, Identifiers.DOMAIN_NONE);
 			} catch (PKIError e) {
 				error = true;
 			}
 			assertTrue("Unknown ID did not throw an Error!", error);
+			
+			error = false;
+			try {
+				PKISig.getVerifier(TEST_ID1, Identifiers.DOMAIN_SMT);
+			} catch (PKIError e) {
+				error = true;
+			}
+			assertTrue("Unknown Wrong domain did not lead to an error!", error);
 			
 		} finally {
 			if (pr != null) {

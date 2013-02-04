@@ -17,10 +17,11 @@ import de.uni.trier.infsec.utils.Utilities;
 public class RemotePKIServer implements PKIServerInterface {
 
 	@Override
-	public void registerPublicKey(int id, byte[] pubKey) throws PKIError, NetworkError {
+	public void registerPublicKey(int id, byte[] domain, byte[] pubKey) throws PKIError, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServer.MSG_REGISTER;
 		request.nonce = CryptoLib.generateNonce();
+		request.domain = domain;
 		request.payload = concatenate(intToByteArray(id), pubKey);
 		
 		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServer.HOSTNAME, PKIServer.PORT);
@@ -63,10 +64,11 @@ public class RemotePKIServer implements PKIServerInterface {
 	}
 
 	@Override
-	public byte[] getPublicKey(int id) throws PKIError, NetworkError {
+	public byte[] getPublicKey(int id, byte[] domain) throws PKIError, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServer.MSG_GET_PUBLIC_KEY;
 		request.nonce = CryptoLib.generateNonce();
+		request.domain = domain;
 		request.payload = MessageTools.intToByteArray(id);
 		
 		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServer.HOSTNAME, PKIServer.PORT);
@@ -107,10 +109,11 @@ public class RemotePKIServer implements PKIServerInterface {
 	}
 
 	@Override
-	public void registerVerificationKey(int id, byte[] verKey) throws PKIError, NetworkError {
+	public void registerVerificationKey(int id, byte[] domain, byte[] verKey) throws PKIError, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServer.MSG_REGISTER_SIGNATUREKEY;
 		request.nonce = CryptoLib.generateNonce();
+		request.domain = domain;
 		request.payload = concatenate(intToByteArray(id), verKey);
 		
 		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServer.HOSTNAME, PKIServer.PORT);
@@ -153,10 +156,11 @@ public class RemotePKIServer implements PKIServerInterface {
 	}
 
 	@Override
-	public byte[] getVerificationKey(int id) throws PKIError, NetworkError {
+	public byte[] getVerificationKey(int id, byte[] domain) throws PKIError, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServer.MSG_GET_VERIFICATION_KEY;
 		request.nonce = CryptoLib.generateNonce();
+		request.domain = domain;
 		request.payload = MessageTools.intToByteArray(id);
 		
 		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServer.HOSTNAME, PKIServer.PORT);

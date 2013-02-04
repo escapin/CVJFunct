@@ -12,7 +12,8 @@ public class BulletinBoardStandalone {
 
 	
 	public static void main(String[] args) {
-		System.setProperty("LISTEN_PORT", Integer.toString(Identifiers.DEFAULT_LISTEN_PORT_BBOARD));
+		System.setProperty("AMT.PORT", Integer.toString(Identifiers.DEFAULT_LISTEN_PORT_BBOARD_AMT));
+		System.setProperty("SMT.PORT", Integer.toString(Identifiers.DEFAULT_LISTEN_PORT_BBOARD_SMT));
 		System.setProperty("remotemode", Boolean.toString(true));
 		BulletinBoardStandalone.start();
 	}

@@ -8,8 +8,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Hashtable;
 
-import sun.rmi.log.LogOutputStream;
-
 
 public class NetworkServer {
 	
@@ -17,21 +15,18 @@ public class NetworkServer {
 	// The Messages get cached within a queue and every call to nextRequest returns the next element.
 	
 	public static final int LISTEN_PORT = 7070; // Default listening port. After connection is established, there will be another port used for communication!
-	private static Hashtable<Socket, byte[]> queue = new Hashtable<>(); // Not HashMap because Hashtable is Thread-safe!
-	private static Socket current = null; // Socket of the current message. Needed to answer the last request which has been processed
 	
-	static Thread listenThread = null; // Thread which is listening for new connections
+	private static Socket current = null; // Socket of the current message. Needed to answer the last request which has been processed
+	private static Hashtable<Integer, Thread> listenThreads = new Hashtable<>();
+	private static Hashtable<Integer, Hashtable<Socket, byte[]>> queues = new Hashtable<>();
 	
 	/**
 	 * Returns the next requests (a message).
 	 */
-	public static byte[] nextRequest() throws NetworkError {
-		// start the listener thread if not started yet
-		if (listenThread == null) {
-			Runnable listenRunnable = new ListenThread();
-			listenThread = new Thread(listenRunnable);
-			listenThread.start();
-		}
+	public static byte[] nextRequest(int port) throws NetworkError {
+		if (!queues.containsKey(port)) return null;
+		Hashtable<Socket, byte[]> queue = queues.get(port);
+		if (queue.isEmpty()) return null;
 		
 		// get the next message from the queue (null if there is none)
 		if (queue.keys().hasMoreElements()) {
@@ -42,13 +37,22 @@ public class NetworkServer {
 		}
 		return null;
 	}
-
+	
+	public static void listenForRequests(int port) throws NetworkError {
+		if (listenThreads.containsKey(port)) throw new NetworkError();
+		
+		Thread t = new Thread(new ListenThread(port));
+		t.start();
+		listenThreads.put(port, t);
+	}
+	
 	/**
 	 * Sends a response (a message) to the last request (that is the client who
 	 * sent the last request obtained by calling method 'nextRequest').
 	 */
 	public static void response(byte[] message) throws NetworkError {
 		if (message == null) return;
+		if (current == null) return;
 		
 		OutputStream os;
 		try {
@@ -58,19 +62,20 @@ public class NetworkServer {
 			os.close();
 			
 			current.close();
-			current = null;
+			current= null;
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new NetworkError();
 		}
 	}
-
 	
 	/**
 	 * Returns the next request (a message) and responds right away with the emtpy response.
 	 */
-	public static byte[] read() throws NetworkError {
-		byte[] message = nextRequest();
+	public static byte[] read(int port) throws NetworkError {
+		if (!listenThreads.containsKey(port)) listenForRequests(port);
+		
+		byte[] message = nextRequest(port);
 		response(null);
 		return message;
 	}
@@ -78,16 +83,20 @@ public class NetworkServer {
 	
 	///// Implementation //////
 	
-	private static void readMessageInThread(Socket socket) {
-		ReaderThread rt = new ReaderThread(socket);
+	private static void readMessageInThread(Socket socket, int port) {
+		queues.put(port, new Hashtable<Socket, byte[]>());
+		
+		ReaderThread rt = new ReaderThread(socket, port);
 		Thread t = new Thread(rt);
 		t.start();
 	}
 	
 	static class ReaderThread implements Runnable {
 		Socket mysock = null;
-		public ReaderThread(Socket s) {
+		int port;
+		public ReaderThread(Socket s, int port) {
 			mysock = s;
+			this.port = port;
 		}
 		
 		private static final int SOCKET_TIMEOUT = 5000;
@@ -122,7 +131,9 @@ public class NetworkServer {
 				// If you like, we can introduce a leading message-length and wait for the whole message to be received correctly, 
 				// so we could enforce some kind of integrity...
 				
-				queue.put(mysock, buffer.toByteArray()); // Put the received message to the queue. Socket is kept open!
+				Hashtable<Socket, byte[]> currQueue = queues.get(port);
+				currQueue.put(mysock, buffer.toByteArray()); // Put the received message to the queue. Socket is kept open!
+				queues.put(port, currQueue);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -131,18 +142,23 @@ public class NetworkServer {
 	
 	static class ListenThread implements Runnable {
 		private ServerSocket server = null;
+		
+		private int thePort;
+		
+		public ListenThread(int port) {
+			this.thePort = port;
+		}
+		
+		public ListenThread() {
+			thePort = LISTEN_PORT;
+		}
+		
 		@Override
 		public void run() {
 			// If not already done: Init server
 			if (server == null) {
 				try {
-					int port = LISTEN_PORT;
-					String sPort = System.getProperty("LISTEN_PORT");
-					if (sPort != null && !sPort.equals("")) {
-						port = Integer.parseInt(sPort);
-						System.out.println("Using custom listen port: " + port);
-					}
-					server = new ServerSocket(port);
+					server = new ServerSocket(thePort);
 				} catch (Exception e) {
 					e.printStackTrace();
 					return;
@@ -152,7 +168,7 @@ public class NetworkServer {
 			try {
 				while (true) {					
 					Socket next = server.accept(); // This is a blocking call, which means the Threat is suspended until a new connection is received (no CPU load)
-					readMessageInThread(next);
+					readMessageInThread(next, thePort);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

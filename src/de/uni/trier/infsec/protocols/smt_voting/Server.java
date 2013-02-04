@@ -25,7 +25,7 @@ public class Server {
 
 	public Server(SMT.AgentProxy samt_proxy, AMT.AgentProxy amt_proxy) throws AMTError, PKIError, NetworkError {
 		this.samt_proxy = samt_proxy;
-		channel_to_BB = amt_proxy.channelTo(Identifiers.BULLETIN_BOARD_ID, Identifiers.DEFAULT_HOST_BBOARD, Identifiers.DEFAULT_LISTEN_PORT_BBOARD);
+		channel_to_BB = amt_proxy.channelTo(Identifiers.BULLETIN_BOARD_ID, Identifiers.DEFAULT_HOST_BBOARD, Identifiers.DEFAULT_LISTEN_PORT_BBOARD_AMT);
 		for( int i=0; i<Server.NumberOfVoters; ++i)
 			ballotCast[i] = false; // initially no voter has cast her ballot
 	}
@@ -46,6 +46,7 @@ public class Server {
 		int candidate = ballot[0];
 		if (candidate==0) ++votesForA;
 		if (candidate==1) ++votesForB;
+//		System.out.println("Successfully casted vote from " + am.sender_id + " voted: " + candidate);
 		// all the remaining values are consider invalid
 	}
 

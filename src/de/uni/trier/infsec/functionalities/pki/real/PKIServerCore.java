@@ -16,32 +16,32 @@ public class PKIServerCore implements PKIServerInterface {
 	public static final String DEFAULT_DATABASE = System.getProperty("java.io.tmpdir") + File.separator + "evoting_server.db";
 	private static final String DB_TABLE_NAME_PKE = "PKI_ENC";
 	private static final String DB_TABLE_NAME_SIG = "PKI_SIG";
-	private static final String DB_COLUMN_NAME = "KEY";
+	private static final String DB_COLUMN_NAME_KEY = "KEY";
 	// Table PKI stores ID and corresponding Public Key in hex-representation
-	private static final String DB_TABLE_CREATE_PKE = "CREATE TABLE " + DB_TABLE_NAME_PKE + " (ID TEXT NOT NULL PRIMARY KEY, " + DB_COLUMN_NAME + " TEXT NOT NULL)";
-	private static final String DB_TABLE_CREATE_SIG = "CREATE TABLE " + DB_TABLE_NAME_SIG + " (ID TEXT NOT NULL PRIMARY KEY, " + DB_COLUMN_NAME + " TEXT NOT NULL)";
+	private static final String DB_TABLE_CREATE_PKE = "CREATE TABLE " + DB_TABLE_NAME_PKE + " (ID TEXT NOT NULL PRIMARY KEY, " + DB_COLUMN_NAME_KEY + " TEXT NOT NULL)";
+	private static final String DB_TABLE_CREATE_SIG = "CREATE TABLE " + DB_TABLE_NAME_SIG + " (ID TEXT NOT NULL PRIMARY KEY, " + DB_COLUMN_NAME_KEY + " TEXT NOT NULL)";
 	private static boolean dbInitialized = false;
 	
 	
 	
 	@Override
-	public void registerPublicKey(int id, byte[] pubKey) throws PKIError, NetworkError {
-		pki_register(id, pubKey);
+	public void registerPublicKey(int id, byte[] domain, byte[] pubKey) throws PKIError, NetworkError {
+		pki_register(id, domain, pubKey);
 	}
 
 	@Override
-	public byte[] getPublicKey(int id) throws PKIError, NetworkError {
-		return pki_getPublicKey(id);
+	public byte[] getPublicKey(int id, byte[] domain) throws PKIError, NetworkError {
+		return pki_getPublicKey(id, domain);
 	}
 
 	@Override
-	public void registerVerificationKey(int id, byte[] verKey) throws PKIError, NetworkError {
-		pki_register_verification(id, verKey);
+	public void registerVerificationKey(int id, byte[] domain, byte[] verKey) throws PKIError, NetworkError {
+		pki_register_verification(id, domain, verKey);
 	}
 
 	@Override
-	public byte[] getVerificationKey(int id) throws PKIError, NetworkError {
-		return pki_getVerificationKey(id);
+	public byte[] getVerificationKey(int id, byte[] domain) throws PKIError, NetworkError {
+		return pki_getVerificationKey(id, domain);
 	}
 	
 
@@ -51,15 +51,15 @@ public class PKIServerCore implements PKIServerInterface {
 	 * True, if key was successfully stored,
 	 * False, in case key is already registered or an error occured. 
 	 */
-	protected static void pki_register(int id, byte[] pubKey) throws PKIError, NetworkError {
+	protected static void pki_register(int id, byte[] domain, byte[] pubKey) throws PKIError, NetworkError {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.WRITE);
 			ISqlJetTable table = db.getTable(DB_TABLE_NAME_PKE);
-			ISqlJetCursor cursor = table.lookup(null, id);
+			ISqlJetCursor cursor = table.lookup(null, Utilities.byteArrayToHexString(domain) + "." + id);
 			if (cursor.first())	throw new PKIError(); // ID has been claimed
 			
-			table.insert(id, Utilities.byteArrayToHexString(pubKey));
+			table.insert(Utilities.byteArrayToHexString(domain) + "." + id, Utilities.byteArrayToHexString(pubKey));
 			db.commit();
 		} catch (SqlJetException e) {
 			e.printStackTrace();
@@ -72,14 +72,14 @@ public class PKIServerCore implements PKIServerInterface {
 	 * Reads the public key from a local database and returns it.
 	 * Returns null if no entry found. 
 	 */
-	protected static byte[] pki_getPublicKey(int id) throws PKIError, NetworkError {
+	protected static byte[] pki_getPublicKey(int id, byte[] domain) throws PKIError, NetworkError {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
 			ISqlJetTable table = db.getTable(DB_TABLE_NAME_PKE);
-			ISqlJetCursor cursor = table.lookup(null, id);
+			ISqlJetCursor cursor = table.lookup(null, Utilities.byteArrayToHexString(domain) + "." + id);
 			if (cursor.first()) {
-				String sPubKey = cursor.getString(DB_COLUMN_NAME);
+				String sPubKey = cursor.getString(DB_COLUMN_NAME_KEY);
 				byte[] pubKey  = Utilities.hexStringToByteArray(sPubKey);
 				return pubKey;
 			} else {
@@ -97,15 +97,15 @@ public class PKIServerCore implements PKIServerInterface {
 	 * True, if key was successfully stored,
 	 * False, in case key is already registered or an error occured. 
 	 */
-	protected static void pki_register_verification(int id, byte[] verificationKey) throws PKIError, NetworkError {
+	protected static void pki_register_verification(int id, byte[] domain, byte[] verificationKey) throws PKIError, NetworkError {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.WRITE);
 			ISqlJetTable table = db.getTable(DB_TABLE_NAME_SIG);
-			ISqlJetCursor cursor = table.lookup(null, id);
+			ISqlJetCursor cursor = table.lookup(null, Utilities.byteArrayToHexString(domain) + "." + id);
 			if (cursor.first()) throw new PKIError(); // ID has been claimed!
 			
-			table.insert(id, Utilities.byteArrayToHexString(verificationKey));
+			table.insert(Utilities.byteArrayToHexString(domain) + "." + id, Utilities.byteArrayToHexString(verificationKey));
 			db.commit();
 		} catch (SqlJetException e) {
 			e.printStackTrace();
@@ -118,14 +118,14 @@ public class PKIServerCore implements PKIServerInterface {
 	 * Reads the public key from a local database and returns it.
 	 * Returns null if no entry found. 
 	 */
-	protected static byte[] pki_getVerificationKey(int id) throws PKIError, NetworkError {
+	protected static byte[] pki_getVerificationKey(int id, byte[] domain) throws PKIError, NetworkError {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
 			ISqlJetTable table = db.getTable(DB_TABLE_NAME_SIG);
-			ISqlJetCursor cursor = table.lookup(null, id);
+			ISqlJetCursor cursor = table.lookup(null, Utilities.byteArrayToHexString(domain) + "." + id);
 			if (cursor.first()) {
-				String sPubKey = cursor.getString(DB_COLUMN_NAME);
+				String sPubKey = cursor.getString(DB_COLUMN_NAME_KEY);
 				byte[] pubKey  = Utilities.hexStringToByteArray(sPubKey);
 				return pubKey;
 			} else {

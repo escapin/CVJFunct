@@ -11,7 +11,8 @@ public class ServerStandalone {
 
 	
 	public static void main(String[] args) {		
-		System.setProperty("LISTEN_PORT", Integer.toString(Identifiers.DEFAULT_LISTEN_PORT_BBOARD));
+		System.setProperty("AMT.PORT", Integer.toString(Identifiers.DEFAULT_LISTEN_PORT_SERVER_AMT));
+		System.setProperty("SMT.PORT", Integer.toString(Identifiers.DEFAULT_LISTEN_PORT_SERVER_SMT));
 		System.setProperty("remotemode", Boolean.toString(true));
 		
 		ServerStandalone.startServer();
@@ -25,6 +26,7 @@ public class ServerStandalone {
 			Server s = new Server(samt_proxy, amt_proxy);
 			while (!s.resultReady()) {
 				s.onCollectBallot();
+				Thread.sleep(500);
 			}
 			s.onPostResult();
 			System.out.println("Server successfully collected all votes. Terminating.");
@@ -35,6 +37,8 @@ public class ServerStandalone {
 		} catch (AMTError e) {
 			e.printStackTrace();
 		} catch (NetworkError e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}

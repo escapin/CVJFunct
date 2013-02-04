@@ -3,6 +3,7 @@ package de.uni.trier.infsec.protocols.smt_voting;
 import de.uni.trier.infsec.functionalities.amt.real.AMT;
 import de.uni.trier.infsec.functionalities.amt.real.AMT.AMTError;
 import de.uni.trier.infsec.utils.MessageTools;
+import de.uni.trier.infsec.utils.Utilities;
 
 /*
  * Bulletin board on which the server can post messages (the result) and
@@ -26,6 +27,7 @@ public class BulletinBoard {
 
 		byte[] message = am.message;
 		content.add(message);
+		System.out.println("Received Message: " + Utilities.byteArrayToHexString(message));
 	}
 
 	/*

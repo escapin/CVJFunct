@@ -57,14 +57,14 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id) throws NetworkError, PKIError {
+	public static Signer register(int id, byte[] domain) throws NetworkError, PKIError {
 		Signer signer = new Signer();
-		pki_server.registerVerificationKey(id, copyOf(signer.verifKey));		
+		pki_server.registerVerificationKey(id, copyOf(domain), copyOf(signer.verifKey));		
 		return signer;
 	}
 
-	public static Verifier getVerifier(int id) throws NetworkError, PKIError {
-		byte[] verKey = pki_server.getVerificationKey(id);		
+	public static Verifier getVerifier(int id, byte[] domain) throws NetworkError, PKIError {
+		byte[] verKey = pki_server.getVerificationKey(id, domain);		
 		return new Verifier(verKey);
 	}
 	

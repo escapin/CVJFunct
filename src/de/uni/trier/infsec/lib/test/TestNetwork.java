@@ -17,7 +17,7 @@ public class TestNetwork extends TestCase {
 	
 	@Test
 	public void testNetworking() throws NetworkError, InterruptedException {
-		NetworkServer.nextRequest(); // Starts up the listening thread
+		NetworkServer.listenForRequests(NetworkServer.LISTEN_PORT);
 		Runnable r = new Runnable() {
 			@Override
 			public void run() {
@@ -28,12 +28,13 @@ public class TestNetwork extends TestCase {
 				}
 			}
 		};
+		
 		Thread t = new Thread(r);
 		t.start();
-		Thread.sleep(1000); // Wait for the message to be sent and received
-		byte[] received = NetworkServer.nextRequest();
+		Thread.sleep(2000); // Wait for the message to be sent and received
+		byte[] received = NetworkServer.nextRequest(NetworkServer.LISTEN_PORT);
 		NetworkServer.response(TEST_DATA_2);
-		Thread.sleep(1000); // Wait for the message to be sent and received
+		Thread.sleep(2000); // Wait for the message to be sent and received
 		System.out.println("Server received: 0x" + Utilities.byteArrayToHexString(received));
 		System.out.println("Client received: 0x" + Utilities.byteArrayToHexString(clientResponse));
 		

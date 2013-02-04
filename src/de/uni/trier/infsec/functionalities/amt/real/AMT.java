@@ -5,6 +5,7 @@ import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
+import de.uni.trier.infsec.protocols.smt_voting.Identifiers;
 import de.uni.trier.infsec.utils.MessageTools;
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 
@@ -40,20 +41,28 @@ public class AMT {
 	{
 		public final int ID;
 		private PKISig.Signer signer;
+		private int myPort = NetworkServer.LISTEN_PORT;
 
 		private AgentProxy(int id, PKISig.Signer signer) {
 			this.ID = id;
 			this.signer = signer;
+			
+			try {
+				myPort = Integer.parseInt(System.getProperty("AMT.PORT"));
+			} catch (Throwable t) {
+				myPort = NetworkServer.LISTEN_PORT;
+			}
 		}
 
 		public AuthenticatedMessage getMessage() throws AMTError {
 			if (registrationInProgress) throw new AMTError();
 			try {
-				byte[] inputMessage = NetworkServer.read();
+				byte[] inputMessage = NetworkServer.read(myPort);
+				if (inputMessage == null) return null;
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
 				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
-				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id);
+				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id, Identifiers.DOMAIN_AMT);
 				// retrieve the message and the signature
 				byte[] signed = MessageTools.second(inputMessage);
 				byte[] signature = MessageTools.first(signed);
@@ -125,7 +134,7 @@ public class AMT {
 		if (registrationInProgress) throw new AMTError();
 		registrationInProgress = true;
 		try {
-			PKISig.Signer signer = PKISig.register(id);
+			PKISig.Signer signer = PKISig.register(id, Identifiers.DOMAIN_AMT);
 			registrationInProgress = false;
 			return new AgentProxy(id, signer);
 		}
