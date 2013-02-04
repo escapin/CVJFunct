@@ -7,6 +7,7 @@ import de.uni.trier.infsec.functionalities.amt.real.AMT;
 import de.uni.trier.infsec.functionalities.amt.real.AMT.AMTError;
 import de.uni.trier.infsec.functionalities.amt.real.AMT.AgentProxy;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
+import de.uni.trier.infsec.lib.network.NetworkServer;
 
 public class BulletinBoardStandalone {
 
@@ -25,11 +26,19 @@ public class BulletinBoardStandalone {
 		try {
 			proxy = AMT.register(Identifiers.BULLETIN_BOARD_ID);
 			bb = new BulletinBoard(proxy);
-			Thread t = new Thread(receiveThread);
-			t.start();
+			
+			NetworkServer.listenForRequests(Identifiers.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
 			
 			while (true) {							
 				bb.onPost();
+				
+				try {					
+					byte[] req = NetworkServer.nextRequest(Identifiers.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
+					if (req == null || req.length == 0) {
+						NetworkServer.response(bb.onRequestContent());
+					}
+				} catch (Exception e) {e.printStackTrace();}
+				
 				Thread.sleep(500);
 			}
 		} catch (AMTError e) {
@@ -40,33 +49,4 @@ public class BulletinBoardStandalone {
 			e.printStackTrace();
 		}
 	}
-	
-	/**
-	 * This thread is used to compute requests for contents.
-	 * As we do not use an authenticated channel here, we respond any connect with the data and close the connection.
-	 */
-	static Runnable receiveThread = new Runnable() {
-		@Override
-		public void run() {
-			ServerSocket ss = null;
-			try {
-				ss = new ServerSocket(Identifiers.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
-				while (true) {
-					Socket requestSocket = ss.accept();
-					byte[] content = bb.onRequestContent();
-					if (content != null) {						
-						requestSocket.getOutputStream().write(content);
-						requestSocket.getOutputStream().flush();
-					}
-					requestSocket.close();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (ss != null) ss.close();
-				} catch (Exception e) {}
-			}
-		}
-	};
 }

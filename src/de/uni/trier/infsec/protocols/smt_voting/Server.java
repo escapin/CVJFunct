@@ -21,7 +21,8 @@ public class Server {
 	private int votesForB = 0;
 	private final SMT.AgentProxy samt_proxy;
 	private final AMT.Channel channel_to_BB;
-	static final int NumberOfVoters = 50;
+	
+	static final int NumberOfVoters = 50; 
 
 	public Server(SMT.AgentProxy samt_proxy, AMT.AgentProxy amt_proxy) throws AMTError, PKIError, NetworkError {
 		this.samt_proxy = samt_proxy;
@@ -46,7 +47,6 @@ public class Server {
 		int candidate = ballot[0];
 		if (candidate==0) ++votesForA;
 		if (candidate==1) ++votesForB;
-//		System.out.println("Successfully casted vote from " + am.sender_id + " voted: " + candidate);
 		// all the remaining values are consider invalid
 	}
 
