@@ -72,9 +72,9 @@ public class SMT {
 		 * In this ideal implementation the environment decides which message is to be delivered.
 		 * The same message may be delivered several times or not delivered at all.
 		 */
-		public AuthenticatedMessage getMessage() throws SMTError {
+		public AuthenticatedMessage getMessage(int port) throws SMTError {
 			if (registrationInProgress) throw new SMTError();
-			int index = SMTEnv.getMessage(this.ID);
+			int index = SMTEnv.getMessage(this.ID, port);
 			if (index < 0) return null;
 			return queue.get(index);
 		}

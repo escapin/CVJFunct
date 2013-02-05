@@ -35,7 +35,7 @@ public class Server {
 	 * Collect one ballot (read from a secure channel)
 	 */
 	public void onCollectBallot() throws SMTError {
-		SMT.AuthenticatedMessage am = samt_proxy.getMessage();
+		SMT.AuthenticatedMessage am = samt_proxy.getMessage(789);
 		if (am==null) return;
 		int voterID = am.sender_id;
 		byte[] ballot = am.message;

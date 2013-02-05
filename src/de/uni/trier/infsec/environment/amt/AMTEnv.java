@@ -26,9 +26,10 @@ public class AMTEnv {
 		Environment.untrustedOutput(port);
 	}
 
-	public static int getMessage(int id) {
+	public static int getMessage(int id, int port) {
 		Environment.untrustedOutput(7804);
 		Environment.untrustedOutput(id);
+		Environment.untrustedOutput(port);
 		return Environment.untrustedInput();
 	}
 }

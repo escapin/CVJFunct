@@ -21,7 +21,7 @@ public class BulletinBoard {
 	 * case, adds it to the maintained list of messages.
 	 */
 	public void onPost() throws AMTError {
-		AMT.AuthenticatedMessage am = amt_proxy.getMessage();
+		AMT.AuthenticatedMessage am = amt_proxy.getMessage(876);
 		if (am == null) return;
 		if (am.sender_id != Identifiers.SERVER_ID) return;
 

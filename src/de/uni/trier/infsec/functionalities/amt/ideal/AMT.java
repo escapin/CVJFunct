@@ -38,7 +38,8 @@ public class AMT {
 	static public class AuthenticatedMessage {
 		public byte[] message;
 		public int sender_id;
-		public AuthenticatedMessage(byte[] message, int sender) {
+
+		private AuthenticatedMessage(byte[] message, int sender) {
 			this.sender_id = sender;  this.message = message;
 		}
 	}
@@ -70,9 +71,9 @@ public class AMT {
 		 * In this ideal implementation the environment decides which message is to be delivered.
 		 * The same message may be delivered several times or not delivered at all.
 		 */
-		public AuthenticatedMessage getMessage() throws AMTError {
+		public AuthenticatedMessage getMessage(int port) throws AMTError {
 			if (registrationInProgress) throw new AMTError();
-			int index = AMTEnv.getMessage(this.ID);
+			int index = AMTEnv.getMessage(this.ID, port);
 			if (index < 0) return null;
 			return queue.get(index);
 		}

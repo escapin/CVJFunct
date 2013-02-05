@@ -45,10 +45,10 @@ public class SMTEnv {
 		agentProxies.getMessageQueue(recipient_id).add(output_message);
 	}
 
-	public static int getMessage(int id) {
+	public static int getMessage(int id, int port) {
 		try {
 			AgentProxy proxy = agentProxies.fetch(id);
-			SMT.AuthenticatedMessage am = proxy.getMessage();
+			SMT.AuthenticatedMessage am = proxy.getMessage(port);
 			if( am == null ) return -1; // no message
 			int index = agentProxies.getMessageQueue(id).getIndex(am.raw_input);
 			return index;
