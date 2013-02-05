@@ -1,13 +1,15 @@
 package de.uni.trier.infsec.functionalities.amt.real;
 
-import de.uni.trier.infsec.functionalities.pki.real.PKISig;
+import static de.uni.trier.infsec.utils.MessageTools.concatenate;
+import static de.uni.trier.infsec.utils.MessageTools.first;
+import static de.uni.trier.infsec.utils.MessageTools.second;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig.Signer;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
-import de.uni.trier.infsec.protocols.smt_voting.Identifiers;
 import de.uni.trier.infsec.utils.MessageTools;
-import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 
 /**
  * Real functionality for AMT (Authenticated Message Transmission).
@@ -15,8 +17,11 @@ import static de.uni.trier.infsec.utils.MessageTools.concatenate;
  */
 public class AMT {
 
+	public static final byte[] DOMAIN_AMT  = new byte[] {0x01, 0x01};	
+	
 	//// The public interface ////
 
+	@SuppressWarnings("serial")
 	static public class AMTError extends Exception {}
 
 	/**
@@ -55,7 +60,7 @@ public class AMT {
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
 				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
-				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id, Identifiers.DOMAIN_AMT);
+				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id, DOMAIN_AMT);
 				// retrieve the message and the signature
 				byte[] signed = MessageTools.second(inputMessage);
 				byte[] signature = MessageTools.first(signed);
@@ -127,7 +132,7 @@ public class AMT {
 		if (registrationInProgress) throw new AMTError();
 		registrationInProgress = true;
 		try {
-			PKISig.Signer signer = PKISig.register(id, Identifiers.DOMAIN_AMT);
+			PKISig.Signer signer = PKISig.register(id, DOMAIN_AMT);
 			registrationInProgress = false;
 			return new AgentProxy(id, signer);
 		}
@@ -141,4 +146,29 @@ public class AMT {
 	}
 
 	private static boolean registrationInProgress = false;
+	
+	/**
+	 * Method for serialization AMT AgentProxy -> Bytes
+	 */
+	public static byte[] agentToBytes(AgentProxy agent) {
+        byte[] id = MessageTools.intToByteArray(agent.ID);
+        byte[] signer = PKISig.signerToBytes(agent.signer);
+        byte[] out = concatenate(id, signer);
+        return out;
+	}
+
+	/**
+	 * Method for serialization AMT AgentProxy <- Bytes
+	 */
+	public static AgentProxy agentFromBytes(byte[] bytes) {
+        byte[] bId = first(bytes);
+        int id = MessageTools.byteArrayToInt(bId);
+        byte[] bSigner = second(bytes);
+
+        Signer signer = PKISig.signerFromBytes(bSigner);
+        AgentProxy agent = new AgentProxy(id, signer);
+
+        return agent;
+	}
+	
 }

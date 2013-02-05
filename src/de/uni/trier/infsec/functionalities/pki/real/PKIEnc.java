@@ -23,6 +23,8 @@ import de.uni.trier.infsec.lib.network.NetworkError;
  */
 public class PKIEnc {
 	
+	public static final byte[] DOMAIN_ENCRYPTION  = new byte[] {0x03, 0x01};
+	
 /// The public interface ///
 	
 	/** An object encapsulating the public key of some party. 
@@ -77,13 +79,13 @@ public class PKIEnc {
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);
 		
-		pki_server.registerPublicKey(id, copyOf(domain), copyOf(publicKey));
+		pki_server.register(id, copyOf(domain), copyOf(publicKey));
 		
 		return new Decryptor(publicKey, privateKey);
 	}
 	
 	public static Encryptor getEncryptor(int id, byte[] domain) throws PKIError, NetworkError {
-		byte[] publKey = pki_server.getPublicKey(id, domain);
+		byte[] publKey = pki_server.getKey(id, domain);
 		
 		return new Encryptor(publKey);
 	}
@@ -113,8 +115,7 @@ public class PKIEnc {
 		if(remoteMode) {
 			pki_server = new RemotePKIServer();
 			System.out.println("Working in remote mode");
-		}
-		else {
+		} else {
 			pki_server = new PKIServerCore();
 			System.out.println("Working in local mode");
 		}

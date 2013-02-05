@@ -1,13 +1,16 @@
 package de.uni.trier.infsec.functionalities.smt.real;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
+import static de.uni.trier.infsec.utils.MessageTools.first;
+import static de.uni.trier.infsec.utils.MessageTools.second;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.real.PKIEnc.Decryptor;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.pki.real.PKISig;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig.Signer;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
-import de.uni.trier.infsec.protocols.smt_voting.Identifiers;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
@@ -15,9 +18,13 @@ import de.uni.trier.infsec.utils.MessageTools;
  * See smt.ideal.SMT for typical usage pattern.
  */
 public class SMT {
+	
+	public static final byte[] DOMAIN_SMT_VERIFICATION  = new byte[] {0x02, 0x01};
+	public static final byte[] DOMAIN_SMT_ENCRYPTION  = new byte[] {0x02, 0x02};
 
 	//// The public interface ////
 
+	@SuppressWarnings("serial")
 	static public class SMTError extends Exception {}
 
 	/** 
@@ -67,7 +74,7 @@ public class SMT {
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
 				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
-				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id, Identifiers.DOMAIN_SMT);
+				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id, DOMAIN_SMT_VERIFICATION);
 				// retrieve the message with the recipient id and the signature
 				byte[] signedAndEncrypted = MessageTools.second(inputMessage);
 				byte[] signed = decryptor.decrypt(signedAndEncrypted);
@@ -91,7 +98,7 @@ public class SMT {
 
 		public Channel channelTo(int recipient_id, String server, int port) throws SMTError, PKIError, NetworkError {
 			if (registrationInProgress) throw new SMTError();
-			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id, Identifiers.DOMAIN_SMT);
+			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id, DOMAIN_SMT_ENCRYPTION);
 			return new Channel(this.ID, recipient_id, this.signer, recipient_encryptor, server, port);
 		}
 	}
@@ -149,8 +156,8 @@ public class SMT {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		try {
-			PKIEnc.Decryptor decryptor = PKIEnc.register(id, Identifiers.DOMAIN_SMT);
-			PKISig.Signer signer = PKISig.register(id, Identifiers.DOMAIN_SMT);
+			PKIEnc.Decryptor decryptor = PKIEnc.register(id, DOMAIN_SMT_ENCRYPTION);
+			PKISig.Signer signer = PKISig.register(id, DOMAIN_SMT_VERIFICATION);
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
 		}
@@ -164,4 +171,31 @@ public class SMT {
 	}
 
 	private static boolean registrationInProgress = false;
+	
+	 /**
+	  * Method for serialization AMT AgentProxy -> Bytes
+	  */
+	 public static byte[] agentToBytes(AgentProxy agent) {
+	         byte[] id = MessageTools.intToByteArray(agent.ID);
+	         byte[] signer = PKISig.signerToBytes(agent.signer);
+	         byte[] decryptor = PKIEnc.decryptorToBytes(agent.decryptor);
+	         byte[] out = concatenate(id, concatenate(decryptor, signer));
+	         return out;
+	 }
+
+	 /**
+	  * Method for serialization AMT AgentProxy <- Bytes
+	  */
+	 public static AgentProxy agentFromBytes(byte[] bytes) {
+	         byte[] bId = first(bytes);
+	         int id = MessageTools.byteArrayToInt(bId);
+	         byte[] bDecryptor = first(second(bytes));
+	         byte[] bSigner = second(second(bytes));
+
+	         Signer signer = PKISig.signerFromBytes(bSigner);
+	         Decryptor dec = PKIEnc.decryptorFromBytes(bDecryptor);
+	         AgentProxy agent = new AgentProxy(id, dec, signer);
+
+	         return agent;
+	 }
 }

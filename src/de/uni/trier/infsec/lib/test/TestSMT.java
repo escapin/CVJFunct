@@ -27,17 +27,19 @@ public class TestSMT extends TestCase {
 		Process pr = null;
 		try {
 			System.setProperty("remotemode", Boolean.toString(false));
-			System.setProperty("SMT.PORT", "7777");
 
 			AgentProxy p1 = SMT.register(TEST_ID1);
 			AgentProxy p2 = SMT.register(TEST_ID2);
 			
-			p2.getMessage(); // Starts listening for messages
+			p2 = SMT.agentFromBytes(SMT.agentToBytes(p2));
+			p1 = SMT.agentFromBytes(SMT.agentToBytes(p1));
+			
+			p2.getMessage(7777); // Starts listening for messages
 			
 			Channel c1 = p1.channelTo(TEST_ID2, "localhost", 7777);
 			c1.send(TEST_DATA);
 			Thread.sleep(5000);
-			AuthenticatedMessage msg = p2.getMessage();
+			AuthenticatedMessage msg = p2.getMessage(7777);
 			
 			System.out.println("REC " + Utilities.byteArrayToHexString(msg.message));
 			assertTrue("Received data is not equal to sent data", Utilities.arrayEqual(TEST_DATA, msg.message));

@@ -1,5 +1,7 @@
 package de.uni.trier.infsec.functionalities.pki.real;
 
+import static de.uni.trier.infsec.utils.Utilities.arrayEqual;
+
 import java.io.File;
 
 import org.tmatesoft.sqljet.core.SqlJetException;
@@ -8,6 +10,8 @@ import org.tmatesoft.sqljet.core.table.ISqlJetCursor;
 import org.tmatesoft.sqljet.core.table.ISqlJetTable;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
 
+import de.uni.trier.infsec.functionalities.amt.real.AMT;
+import de.uni.trier.infsec.functionalities.smt.real.SMT;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
 
@@ -25,26 +29,35 @@ public class PKIServerCore implements PKIServerInterface {
 	
 	
 	@Override
-	public void registerPublicKey(int id, byte[] domain, byte[] pubKey) throws PKIError, NetworkError {
-		pki_register(id, domain, pubKey);
+	public void register(int id, byte[] domain, byte[] key) throws PKIError, NetworkError {
+		if (arrayEqual(domain, AMT.DOMAIN_AMT)) {
+			pki_register_verification(id, domain, key);
+		} else if (arrayEqual(domain, SMT.DOMAIN_SMT_VERIFICATION)) {
+			pki_register_verification(id, domain, key);
+		} else if (arrayEqual(domain, PKISig.DOMAIN_VERIFICATION)) {
+			pki_register_verification(id, domain, key);
+		} else if (arrayEqual(domain, SMT.DOMAIN_SMT_ENCRYPTION)) {
+			pki_register(id, domain, key);
+		} else if (arrayEqual(domain, PKIEnc.DOMAIN_ENCRYPTION)) {
+			pki_register(id, domain, key);
+		}
 	}
 
 	@Override
-	public byte[] getPublicKey(int id, byte[] domain) throws PKIError, NetworkError {
-		return pki_getPublicKey(id, domain);
+	public byte[] getKey(int id, byte[] domain) throws PKIError, NetworkError {
+		if (arrayEqual(domain, AMT.DOMAIN_AMT)) {
+			return pki_getVerificationKey(id, domain);
+		} else if (arrayEqual(domain, SMT.DOMAIN_SMT_VERIFICATION)) {
+			return pki_getVerificationKey(id, domain);
+		} else if (arrayEqual(domain, PKISig.DOMAIN_VERIFICATION)) {
+			return pki_getVerificationKey(id, domain);
+		} else if (arrayEqual(domain, SMT.DOMAIN_SMT_ENCRYPTION)) {
+			return pki_getPublicKey(id, domain);
+		} else if (arrayEqual(domain, PKIEnc.DOMAIN_ENCRYPTION)) {
+			return pki_getPublicKey(id, domain);
+		}
+		return null;
 	}
-
-	@Override
-	public void registerVerificationKey(int id, byte[] domain, byte[] verKey) throws PKIError, NetworkError {
-		pki_register_verification(id, domain, verKey);
-	}
-
-	@Override
-	public byte[] getVerificationKey(int id, byte[] domain) throws PKIError, NetworkError {
-		return pki_getVerificationKey(id, domain);
-	}
-	
-
 
 	/**
 	 * Registers the key and stores it into a local filebased database.

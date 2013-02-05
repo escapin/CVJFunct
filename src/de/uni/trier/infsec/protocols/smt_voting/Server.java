@@ -1,12 +1,12 @@
 package de.uni.trier.infsec.protocols.smt_voting;
 
-import de.uni.trier.infsec.lib.network.NetworkClient;
-import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.functionalities.amt.real.AMT;
+import de.uni.trier.infsec.functionalities.amt.real.AMT.AMTError;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.smt.real.SMT;
 import de.uni.trier.infsec.functionalities.smt.real.SMT.SMTError;
-import de.uni.trier.infsec.functionalities.amt.real.AMT;
-import de.uni.trier.infsec.functionalities.amt.real.AMT.AMTError;
+import de.uni.trier.infsec.lib.network.NetworkClient;
+import de.uni.trier.infsec.lib.network.NetworkError;
 
 /*
  * The server of TrivVoting. Collects votes send to it directly (via method call).
@@ -35,15 +35,21 @@ public class Server {
 	 * Collect one ballot (read from a secure channel)
 	 */
 	public void onCollectBallot() throws SMTError {
-		SMT.AuthenticatedMessage am = samt_proxy.getMessage(789);
+		SMT.AuthenticatedMessage am = samt_proxy.getMessage(Identifiers.DEFAULT_LISTEN_PORT_SERVER_SMT);
 		if (am==null) return;
 		int voterID = am.sender_id;
 		byte[] ballot = am.message;
 
-		if( voterID<0 || voterID>=Server.NumberOfVoters ) return;  // invalid  voter ID
-		if( ballotCast[voterID] ) return;  // the voter has already voted
+		if( voterID<0 || voterID>=Server.NumberOfVoters ) {
+			return;  // invalid  voter ID
+		}
+		if( ballotCast[voterID] ) {
+			return;  // the voter has already voted
+		}
 		ballotCast[voterID] = true; 
-		if( ballot==null || ballot.length!=1 ) return;  // malformed ballot
+		if( ballot==null || ballot.length!=1 ) {
+			return;  // malformed ballot
+		}
 		int candidate = ballot[0];
 		if (candidate==0) ++votesForA;
 		if (candidate==1) ++votesForB;

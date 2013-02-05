@@ -1,6 +1,9 @@
 package de.uni.trier.infsec.functionalities.pki.real;
 
+import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
+import static de.uni.trier.infsec.utils.MessageTools.first;
+import static de.uni.trier.infsec.utils.MessageTools.second;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.network.NetworkError;
@@ -13,6 +16,8 @@ import de.uni.trier.infsec.lib.network.NetworkError;
  */
 public class PKISig {
 
+	public static final byte[] DOMAIN_VERIFICATION  = new byte[] {0x04, 0x01};
+	
 	/**
 	 * An object encapsulating the verification key and allowing a user to verify
 	 * a signature.
@@ -59,12 +64,12 @@ public class PKISig {
 
 	public static Signer register(int id, byte[] domain) throws NetworkError, PKIError {
 		Signer signer = new Signer();
-		pki_server.registerVerificationKey(id, copyOf(domain), copyOf(signer.verifKey));		
+		pki_server.register(id, copyOf(domain), copyOf(signer.verifKey));		
 		return signer;
 	}
 
 	public static Verifier getVerifier(int id, byte[] domain) throws NetworkError, PKIError {
-		byte[] verKey = pki_server.getVerificationKey(id, domain);		
+		byte[] verKey = pki_server.getKey(id, domain);		
 		return new Verifier(verKey);
 	}
 	
@@ -74,11 +79,27 @@ public class PKISig {
 		if(remoteMode) {
 			pki_server = new RemotePKIServer();
 			System.out.println("Working in remote mode");
-		}
-		else {
+		} else {
 			pki_server = new PKIServerCore();
 			System.out.println("Working in local mode");
 		}
 	}
-		
+	
+	public static byte[] signerToBytes(Signer signer) {
+        byte[] sign = signer.signKey;
+        byte[] verify = signer.verifKey;
+
+        byte[] out = concatenate(sign, verify);
+        return out;
+	}
+	
+	public static Signer signerFromBytes(byte[] bytes) {
+        byte[] sign = first(bytes);
+        byte[] verify = second(bytes);
+
+        Signer signer = new Signer();
+        signer.signKey = sign;
+        signer.verifKey = verify;
+        return signer;
+	}		
 }

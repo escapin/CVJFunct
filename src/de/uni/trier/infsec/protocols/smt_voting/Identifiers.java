@@ -10,10 +10,6 @@ public class Identifiers {
 	static final int ADVERSARY_ID = -3; 
 	// eligible voters get the identifiers in the range 0..Server.NumberOfVoters
 	
-	public static final byte[] DOMAIN_SMT  = new byte[] {0x07, 0x08};
-	public static final byte[] DOMAIN_AMT  = new byte[] {0x03, 0x04};
-	public static final byte[] DOMAIN_NONE = new byte[] {0x00, 0x00};
-	
 	static final int DEFAULT_LISTEN_PORT_SERVER_AMT = 88; // Listen port for Voter requests
 	static final int DEFAULT_LISTEN_PORT_SERVER_SMT = 89; // Listen port for Voter requests
 	
