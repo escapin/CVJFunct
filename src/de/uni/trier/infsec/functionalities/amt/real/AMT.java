@@ -41,23 +41,16 @@ public class AMT {
 	{
 		public final int ID;
 		private PKISig.Signer signer;
-		private int myPort = NetworkServer.LISTEN_PORT;
 
 		private AgentProxy(int id, PKISig.Signer signer) {
 			this.ID = id;
 			this.signer = signer;
-			
-			try {
-				myPort = Integer.parseInt(System.getProperty("AMT.PORT"));
-			} catch (Throwable t) {
-				myPort = NetworkServer.LISTEN_PORT;
-			}
 		}
 
-		public AuthenticatedMessage getMessage() throws AMTError {
+		public AuthenticatedMessage getMessage(int port) throws AMTError {
 			if (registrationInProgress) throw new AMTError();
 			try {
-				byte[] inputMessage = NetworkServer.read(myPort);
+				byte[] inputMessage = NetworkServer.read(port);
 				if (inputMessage == null) return null;
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);

@@ -52,25 +52,16 @@ public class SMT {
 		private PKIEnc.Decryptor decryptor;
 		private PKISig.Signer signer;
 		
-		private int myPort = NetworkServer.LISTEN_PORT;
-
 		private AgentProxy(int id, PKIEnc.Decryptor decryptor, PKISig.Signer signer) {
 			this.ID = id;
 			this.decryptor = decryptor;
-			this.signer = signer;
-			
-			// Used for testing: If the property is set, one can override the default port for listening.
-			try {
-				myPort = Integer.parseInt(System.getProperty("SMT.PORT"));
-			} catch (Throwable t) {
-				myPort = NetworkServer.LISTEN_PORT;
-			}
+			this.signer = signer;	
 		}
 
-		public AuthenticatedMessage getMessage() throws SMTError {
+		public AuthenticatedMessage getMessage(int port) throws SMTError {
 			if (registrationInProgress) throw new SMTError();
 			try {
-				byte[] inputMessage = NetworkServer.read(myPort);
+				byte[] inputMessage = NetworkServer.read(port);
 				if (inputMessage == null) return null;
 				
 				// get the sender id and her verifier
