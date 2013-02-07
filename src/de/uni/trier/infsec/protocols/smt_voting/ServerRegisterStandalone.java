@@ -17,10 +17,10 @@ public class ServerRegisterStandalone {
 	
 	public static void main(String[] args) {		
 		System.setProperty("remotemode", Boolean.toString(true));
-		ServerRegisterStandalone.startServer();
+		ServerRegisterStandalone.registerAndSave();
 	}
 
-	private static void startServer() {
+	private static void registerAndSave() {
 		SMT.AgentProxy samt_proxy;
 		try {
 			samt_proxy = SMT.register(Identifiers.SERVER_ID);

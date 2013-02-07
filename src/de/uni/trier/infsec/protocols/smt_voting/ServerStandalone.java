@@ -3,7 +3,6 @@ package de.uni.trier.infsec.protocols.smt_voting;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import de.uni.trier.infsec.functionalities.amt.real.AMT;
@@ -54,6 +53,7 @@ public class ServerStandalone {
 		}
 	}
 	
+	/*
 	public static void storeAsFile(byte[] data, String sFile) throws IOException {
 		File f = new File(sFile);
 		File fdir = new File(sFile.substring(0, sFile.lastIndexOf(File.separator)));
@@ -66,6 +66,7 @@ public class ServerStandalone {
 		file.flush();
 		file.close();
 	}
+	*/
 	
 	private static byte[] readFromFile(String path) throws IOException {
 		FileInputStream f = new FileInputStream(path);
