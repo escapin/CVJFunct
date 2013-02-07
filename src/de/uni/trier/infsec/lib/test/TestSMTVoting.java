@@ -91,7 +91,6 @@ public class TestSMTVoting extends TestCase {
 			String bb = readFileAsString(PATH + "BB.log"); // Received Message: 
 			String server = readFileAsString(PATH + "server.log"); // Server successfully collected all votes. Terminating.
 			
-			assertTrue("BulletinBoard did not receive result", bb.contains("Received Message:"));
 			assertTrue("Server did not terminate correctly!", server.contains("Server successfully collected all votes. Terminating."));
 		} finally {
 			if (pr1 != null) pr1.destroy();

@@ -65,7 +65,7 @@ public class PKIServer {
 			if (arrayEqual(request.domain, SMT.DOMAIN_SMT_ENCRYPTION) || arrayEqual(request.domain, PKIEnc.DOMAIN_ENCRYPTION)) {
 				byte[] pubKey;
 				try {
-					pubKey = PKIServerCore.pki_getPublicKey(MessageTools.byteArrayToInt(request.payload), request.domain);
+					pubKey = PKIServerCore.pki_getKey(MessageTools.byteArrayToInt(request.payload), request.domain);
 					PKIMessage out = new PKIMessage();
 					out.nonce = request.nonce;
 					out.payload = MessageTools.concatenate(request.payload, pubKey);
@@ -90,7 +90,7 @@ public class PKIServer {
 				echo("Request is: Get verification Key");
 				byte[] verKey;
 				try {
-					verKey = PKIServerCore.pki_getVerificationKey(MessageTools.byteArrayToInt(request.payload), request.domain);
+					verKey = PKIServerCore.pki_getKey(MessageTools.byteArrayToInt(request.payload), request.domain);
 					PKIMessage out = new PKIMessage();
 					out.nonce = request.nonce;
 					out.payload = MessageTools.concatenate(request.payload, verKey);
@@ -146,7 +146,7 @@ public class PKIServer {
 				byte[] verKey = MessageTools.second(request.payload);
 				
 				try {
-					PKIServerCore.pki_register_verification(MessageTools.byteArrayToInt(id), request.domain, verKey);
+					PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), request.domain, verKey);
 					PKIMessage out = new PKIMessage();
 					out.payload = MessageTools.concatenate(id, verKey);
 					out.nonce = request.nonce;
