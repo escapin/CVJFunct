@@ -93,7 +93,7 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id) {
+	public static Signer register(int id, byte[] smt_domain) {
 		if( registeredAgents.fetch(id) != null ) return null; // a party with this id has already registered
 		Signer signer = new Signer(id);
 		Verifier verifier = signer.getVerifier();
@@ -101,7 +101,7 @@ public class PKISig {
 		return signer;
 	}
 
-	public static Verifier getVerifier(int id) {
+	public static Verifier getVerifier(int id, byte[] smt_domain) {
 		return registeredAgents.fetch(id);
 	}
 

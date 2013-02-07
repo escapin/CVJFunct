@@ -1,12 +1,10 @@
 package de.uni.trier.infsec.environment.smt_simulator;
 
-import de.uni.trier.infsec.functionalities.pki.real.PKIError;
-import de.uni.trier.infsec.functionalities.smt.real.SMT;
-import de.uni.trier.infsec.functionalities.smt.real.SMT.AgentProxy;
-import de.uni.trier.infsec.functionalities.smt.real.SMT.Channel;
-import de.uni.trier.infsec.functionalities.smt.real.SMT.SMTError;
-import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
+import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
+import de.uni.trier.infsec.environment.smt_simulator.SMT.AgentProxy;
+import de.uni.trier.infsec.environment.smt_simulator.SMT.Channel;
 
 /**
  * Simulator for ideal SAMT.
@@ -20,7 +18,7 @@ public class SMTEnv {
 			AgentProxy proxy = SMT.register(id);
 			agentProxies.add(proxy);
 		}
-		catch (PKIError | SMTError e) {}
+		catch (PKIError | SMT.SMTError e) {}
 	}
 
 	public static boolean channelTo(int sender_id, int recipient_id, String server, int port) {
@@ -29,30 +27,31 @@ public class SMTEnv {
 			Channel channel = sender.channelTo(recipient_id, server, port);
 			channels.add(channel, sender_id, recipient_id, server, port);
 		}
-		catch (PKIError | SMTError e) {}
+		catch (PKIError | SMT.SMTError e) {}
 		catch (NetworkError e) {
 			return false;
 		}
 		return true;
 	}
 
-	public static void send(int message_length, int sender_id, int recipient_id, String server, int port) {
+	public static byte[] send(int message_length, int sender_id, int recipient_id, String server, int port) {
 		Channel channel = channels.fetch(sender_id, recipient_id, server, port);
 		// do the simulation (for a message of the same length)
 		byte[] message = MessageTools.getZeroMessage(message_length);
 		byte[] output_message = channel.send(message);
 		// and additionally, record this output message (used in getMessage)
 		agentProxies.getMessageQueue(recipient_id).add(output_message);
+		return output_message;
 	}
 
 	public static int getMessage(int id, int port) {
 		try {
 			AgentProxy proxy = agentProxies.fetch(id);
-			SMT.AuthenticatedMessage am = proxy.getMessage(port);
-			if( am == null ) return -1; // no message
-			int index = agentProxies.getMessageQueue(id).getIndex(am.raw_input);
+			byte[] input_message = proxy.getMessage(port);
+			if( input_message == null ) return -1; // no message
+			int index = agentProxies.getMessageQueue(id).getIndex(input_message);
 			return index;
-		} catch (SMTError e) {
+		} catch (SMT.SMTError e) {
 			return -1;
 		}
 	}

@@ -100,8 +100,9 @@ public class PKIEnc {
 
 	/**
 	 * We assume that the registration process is not blocked (no network problems).
+	 * @param domainSmtEncryption 
 	 */
-	public static Decryptor register(int id) throws PKIError {
+	public static Decryptor register(int id, byte[] smt_domain) throws PKIError {
 		Environment.untrustedOutput(id);
 		if( registeredAgents.fetch(id) != null ) throw new PKIError(); // a party with this id has already registered
 		Decryptor decryptor = new Decryptor(id);
@@ -110,7 +111,7 @@ public class PKIEnc {
 		return decryptor;
 	}
 	
-	public static Encryptor getEncryptor(int id) throws NetworkError, PKIError {
+	public static Encryptor getEncryptor(int id, byte[] smt_domain) throws NetworkError, PKIError {
 		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
 		Encryptor enc = registeredAgents.fetch(id);
 		if (enc == null) throw new PKIError(); // there is no registered agent with this id

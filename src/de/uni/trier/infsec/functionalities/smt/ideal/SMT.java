@@ -2,6 +2,7 @@ package de.uni.trier.infsec.functionalities.smt.ideal;
 
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
+import de.uni.trier.infsec.environment.network.NetworkClient;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.environment.smt.SMTEnv;
 
@@ -112,8 +113,11 @@ public class SMT {
 		}		
 		
 		public void send(byte[] message) {
-			SMTEnv.send(message.length, sender.ID, recipient.ID, server, port);
+			byte[] output_message = SMTEnv.send(message.length, sender.ID, recipient.ID, server, port);
 			recipient.queue.add(MessageTools.copyOf(message), sender.ID);
+			try {
+				NetworkClient.send(output_message, server, port);
+			} catch (NetworkError e) {}
 		}
 	}
 	
