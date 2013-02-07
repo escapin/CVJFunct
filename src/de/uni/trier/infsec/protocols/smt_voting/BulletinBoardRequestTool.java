@@ -12,7 +12,7 @@ public class BulletinBoardRequestTool {
 
 	private static void runRequest() {
 		try {
-			byte[] response = NetworkClient.sendRequest(new byte[] {0x01}, Identifiers.DEFAULT_HOST_BBOARD, Identifiers.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
+			byte[] response = NetworkClient.sendRequest(new byte[] {0x01}, Parameters.DEFAULT_HOST_BBOARD, Parameters.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
 			if ( response != null && response.length > 0) {				
 				System.out.println("Received data from bulletin board:\n0x" + Utilities.byteArrayToHexString(response));
 			} else {

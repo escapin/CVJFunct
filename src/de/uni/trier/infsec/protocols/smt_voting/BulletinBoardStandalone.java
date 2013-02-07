@@ -29,13 +29,13 @@ public class BulletinBoardStandalone {
 			
 			bb = new BulletinBoard(proxy);
 			
-			NetworkServer.listenForRequests(Identifiers.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
+			NetworkServer.listenForRequests(Parameters.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
 			
 			while (true) {							
 				bb.onPost();
 				
 				try {					
-					byte[] req = NetworkServer.nextRequest(Identifiers.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
+					byte[] req = NetworkServer.nextRequest(Parameters.DEFAULT_LISTEN_PORT_BBOARD_REQUEST);
 					if (req == null || req.length == 0) {
 						NetworkServer.response(bb.onRequestContent());
 					}

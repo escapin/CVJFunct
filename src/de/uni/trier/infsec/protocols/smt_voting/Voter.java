@@ -15,7 +15,7 @@ public class Voter {
 	public Voter(byte vote, SMT.AgentProxy voter_proxy) throws SMTError, PKIError, NetworkError  {
 		this.vote = vote;
 		// create secure channel to the server
-		this.channel_to_server = voter_proxy.channelTo(Identifiers.SERVER_ID, Identifiers.DEFAULT_HOST_SERVER, Identifiers.DEFAULT_LISTEN_PORT_SERVER_SMT);
+		this.channel_to_server = voter_proxy.channelTo(Identifiers.SERVER_ID, Parameters.DEFAULT_HOST_SERVER, Parameters.DEFAULT_LISTEN_PORT_SERVER_SMT);
 	}
 
 	/*
