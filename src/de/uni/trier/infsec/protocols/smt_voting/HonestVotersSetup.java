@@ -53,7 +53,7 @@ public class HonestVotersSetup {
 
 	static private boolean secret;  // SECRET INPUT
 
-	static private final Voter[] voters = new Voter[Server.NumberOfVoters];
+	static private Voter[] voters;
 	static private Server server;
 	static private BulletinBoard BB;
 
@@ -131,7 +131,8 @@ public class HonestVotersSetup {
 	 * Register and create the voters.
 	 */
 	private static void registerAndCreateVoters(byte[] voterChoices) throws SMTError, PKIError, NetworkError {
-		for( int i=0; i<Server.NumberOfVoters; ++i ) {
+		voters = new Voter[Server.NumberOfVoters];
+                for( int i=0; i<Server.NumberOfVoters; ++i ) {
 			SMT.AgentProxy voter_proxy = SMT.register(i);
 			voters[i] = new Voter(voterChoices[i], voter_proxy);
 		}
@@ -155,6 +156,13 @@ public class HonestVotersSetup {
 		BB = new BulletinBoard(BB_proxy);
 	}
 
+        private static void onVote() throws SMTError {
+                int voter_id = Environment.untrustedInput();
+                if (voter_id>=0 && voter_id<Server.NumberOfVoters) {
+                        voters[voter_id].onSendBallot();
+                }
+        }
+
 	/**
 	 * Run the main loop of the setup.
 	 *
@@ -169,10 +177,7 @@ public class HonestVotersSetup {
 			int decision = Environment.untrustedInput();
 			switch (decision) {
 			case 0:	// a voter (determined by the adversary) votes according to voterChoices
-					int voter_id = Environment.untrustedInput();
-					if (voter_id>=0 && voter_id<Server.NumberOfVoters) {
-						voters[voter_id].onSendBallot();
-					}
+					onVote();
 					break;
 
 			case 1: // server reads a message (possibly a ballot) from a secure channel

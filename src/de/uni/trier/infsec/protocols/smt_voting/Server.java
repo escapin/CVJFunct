@@ -16,17 +16,18 @@ import de.uni.trier.infsec.lib.network.NetworkError;
 public class Server {
 
 	public static final int NumberOfVoters = 50;
-	private final boolean[] ballotCast = new boolean[NumberOfVoters];  // ballotCast[i]==true iff the i-th voter has already cast her ballot
-	private int votesForA = 0;
-	private int votesForB = 0;
+	private final boolean[] ballotCast;  // ballotCast[i]==true iff the i-th voter has already cast her ballot
+	private int votesForA;
+	private int votesForB;
 	private final SMT.AgentProxy samt_proxy;
 	private final AMT.Channel channel_to_BB;
 
 	public Server(SMT.AgentProxy samt_proxy, AMT.AgentProxy amt_proxy) throws AMTError, PKIError, NetworkError {
-		this.samt_proxy = samt_proxy;
+		votesForA = 0;
+                votesForB = 0;
+                this.samt_proxy = samt_proxy;
 		channel_to_BB = amt_proxy.channelTo(Identifiers.BULLETIN_BOARD_ID, Parameters.DEFAULT_HOST_BBOARD, Parameters.DEFAULT_LISTEN_PORT_BBOARD_AMT);
-		for( int i=0; i<NumberOfVoters; ++i)
-			ballotCast[i] = false; // initially no voter has cast her ballot
+                ballotCast = new boolean[NumberOfVoters]; // initially no voter has cast her ballot
 	}
 
 	/*

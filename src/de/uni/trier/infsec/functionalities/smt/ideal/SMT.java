@@ -39,8 +39,8 @@ public class SMT {
 	 * Objects of this class are returned when an agent reads a message from its queue.
 	 */
 	static public class AuthenticatedMessage {
-		public byte[] message;
-		public int sender_id;
+		public final byte[] message;
+		public final int sender_id;
 		public AuthenticatedMessage(byte[] message, int sender) {
 			this.sender_id = sender;  this.message = message;
 		}
