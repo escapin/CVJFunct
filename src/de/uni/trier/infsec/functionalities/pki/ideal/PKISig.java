@@ -1,6 +1,8 @@
 package de.uni.trier.infsec.functionalities.pki.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
+import de.uni.trier.infsec.environment.Environment;
+import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.utils.MessageTools;
@@ -79,10 +81,10 @@ public class PKISig {
 		public byte[] sign(byte[] message) {
 			byte[] signature = CryptoLib.sign(copyOf(message), copyOf(signKey)); // note usage of the real crypto lib here
 			// we make sure that the signing has not failed
-			if (signature == null) return null; // FIXME: it should return something
+			if (signature == null) return null;
 			// and that the signature is correct
 			if( !CryptoLib.verify(copyOf(message), copyOf(signature), copyOf(verifKey)) )
-				return null; // FIXME: it should return something
+				return null;
 			// now we log the message (only!) as signed and return the signature
 			log.add(copyOf(message));
 			return copyOf(copyOf(signature));
@@ -93,16 +95,19 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id, byte[] smt_domain) {
-		if( registeredAgents.fetch(id) != null ) return null; // a party with this id has already registered
+	public static Signer register(int id, byte[] smt_domain) throws PKIError {
+		if( registeredAgents.fetch(id) != null ) throw new PKIError(); // a party with this id has already registered
 		Signer signer = new Signer(id);
 		Verifier verifier = signer.getVerifier();
 		registeredAgents.add(verifier);
 		return signer;
 	}
 
-	public static Verifier getVerifier(int id, byte[] smt_domain) {
-		return registeredAgents.fetch(id);
+	public static Verifier getVerifier(int id, byte[] smt_domain) throws NetworkError, PKIError {
+		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
+		Verifier ver = registeredAgents.fetch(id);
+		if (ver == null) throw new PKIError(); // there is no registered agent with this id
+		return ver;
 	}
 
 
