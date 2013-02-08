@@ -45,6 +45,7 @@ public class PKIServer {
 	}
 	
 	public void run() throws Exception {
+		echo("PKI server is running...");
 		// Busy waiting - not a nice solution at all, but should be ok for now.
 		NetworkServer.listenForRequests(LISTEN_PORT);
 		while(true) {
