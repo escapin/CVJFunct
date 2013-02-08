@@ -17,13 +17,14 @@ public class AMTEnv {
 		return Environment.untrustedInput()==0;
 	}
 
-	public static void send(byte[] message, int sender_id, int recipient_id, String server, int port) {
+	public static byte[] send(byte[] message, int sender_id, int recipient_id, String server, int port) {
 		Environment.untrustedOutput(7803);
 		Environment.untrustedOutputMessage(message);
 		Environment.untrustedOutput(sender_id);
 		Environment.untrustedOutput(recipient_id);
 		Environment.untrustedOutputString(server);
 		Environment.untrustedOutput(port);
+		return Environment.untrustedInputMessage();
 	}
 
 	public static int getMessage(int id, int port) {

@@ -2,6 +2,7 @@ package de.uni.trier.infsec.functionalities.amt.ideal;
 
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
+import de.uni.trier.infsec.environment.network.NetworkClient;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.environment.amt.AMTEnv;
 
@@ -111,8 +112,11 @@ public class AMT {
 		}		
 		
 		public void send(byte[] message) {
-			AMTEnv.send(message, sender.ID, recipient.ID, server, port);
+			byte[] output_message = AMTEnv.send(message, sender.ID, recipient.ID, server, port);
 			recipient.queue.add(MessageTools.copyOf(message), sender.ID);
+			try {
+				NetworkClient.send(output_message, server, port);
+			} catch (NetworkError e) {}
 		}
 	}
 	
