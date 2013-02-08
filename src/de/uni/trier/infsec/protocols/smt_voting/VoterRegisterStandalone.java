@@ -8,7 +8,7 @@ import de.uni.trier.infsec.functionalities.smt.real.SMT;
 
 public class VoterRegisterStandalone {
 
-	public static final String PATH = System.getProperty("java.io.tmpdir") + "smtvote" + File.separator + "agent%%%%.smt";
+	public static final String PATH = System.getProperty("java.io.tmpdir") + File.separator + "smtvote" + File.separator + "agent%%%%.smt";
 	
 	public static void main(String[] args) throws IOException {
 		System.setProperty("remotemode", Boolean.toString(true));
@@ -21,7 +21,7 @@ public class VoterRegisterStandalone {
 				byte[] serialized = SMT.agentToBytes(voter_proxy);
 				storeAsFile(serialized, PATH.replaceAll("%%%%", "" + id));
 			} catch (Exception e) {
-				System.out.println("Something is wrong with arguments.!\nExpected: VoterStandalone <vote [1 byte hex]> <voter_id [int]>\nExample: VoterStandalone 42");
+				System.out.println("Something is wrong with arguments.!\nExpected: VoterStandalone <voter_id [int]>\nExample: VoterStandalone 42");
 				e.printStackTrace();
 			}
 		}
