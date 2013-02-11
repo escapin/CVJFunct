@@ -33,7 +33,7 @@ public class AMT {
 		public byte[] message;
 		public int sender_id;
 
-		private AuthenticatedMessage(byte[] message, int sender, byte[] raw_input) {
+		private AuthenticatedMessage(byte[] message, int sender) {
 			this.sender_id = sender;  this.message = message;
 		}
 	}
@@ -73,7 +73,7 @@ public class AMT {
 				if( recipient_id != ID )
 					return null; // message not intended for me
 				byte[] message = MessageTools.second(message_with_recipient_id);
-				return new AuthenticatedMessage(message, sender_id, inputMessage);
+				return new AuthenticatedMessage(message, sender_id);
 			}
 			catch (NetworkError | PKIError e) {
 				return null;

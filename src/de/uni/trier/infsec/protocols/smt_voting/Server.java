@@ -1,12 +1,12 @@
 package de.uni.trier.infsec.protocols.smt_voting;
 
-import de.uni.trier.infsec.functionalities.amt.real.AMT;
-import de.uni.trier.infsec.functionalities.amt.real.AMT.AMTError;
+import de.uni.trier.infsec.lib.network.NetworkClient;
+import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.smt.real.SMT;
 import de.uni.trier.infsec.functionalities.smt.real.SMT.SMTError;
-import de.uni.trier.infsec.lib.network.NetworkClient;
-import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.functionalities.amt.real.AMT;
+import de.uni.trier.infsec.functionalities.amt.real.AMT.AMTError;
 
 /*
  * The server of TrivVoting. Collects votes send to it directly (via method call).
