@@ -84,7 +84,7 @@ public class SMT {
 				// return new AuthenticatedMessage(message, sender_id);
 				return inputMessage;
 			}
-			catch (NetworkError e) {
+			catch (NetworkError | PKIError e) {
 				return null;
 			}
 		}
