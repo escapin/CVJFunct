@@ -4,6 +4,8 @@ import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
+import static de.uni.trier.infsec.utils.MessageTools.intToByteArray;
+import static de.uni.trier.infsec.utils.MessageTools.byteArrayToInt;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.network.NetworkError;
@@ -14,7 +16,8 @@ import de.uni.trier.infsec.lib.network.NetworkError;
  * For intended usage, see functionalities.pki.ideal
  * 	
  * The serialization methods (decryptorToBytes, decryptorFromBytes)
- * can be used to store/restore a decryptor.
+ * can be used to store/restore a decryptor. These methods are not
+ * in the ideal functionality.
  *
  * In order to use remote PKI, simply start an instance of PKIServer 
  * and set Java Property -Dremotemode=true which will enable remote procedure 
@@ -31,9 +34,11 @@ public class PKIEnc {
 	 *  This key can be accessed directly of indirectly via method encrypt.  
 	 */
 	static public class Encryptor {
+		public final int ID;
 		private byte[] publicKey;
 		
-		private Encryptor(byte[] publicKey) {
+		public Encryptor(int id, byte[] publicKey) {
+			this.ID = id;
 			this.publicKey = publicKey;
 		}
 		
@@ -48,10 +53,12 @@ public class PKIEnc {
 	
 	/** An object encapsulating the private and public keys of some party. */
 	static public class Decryptor {
+		public final int ID;
 		private byte[] publicKey;
 		private byte[] privateKey;
 		
-		private Decryptor(byte[] publicKey, byte[] privateKey) {
+		private Decryptor(int id, byte[] publicKey, byte[] privateKey) {
+			this.ID = id;
 			this.publicKey = publicKey;
 			this.privateKey = privateKey;
 		}
@@ -63,7 +70,7 @@ public class PKIEnc {
 		
 		/** Returns a new encryptor object with the same public key. */
 		public Encryptor getEncryptor() {
-			return new Encryptor(copyOf(publicKey));
+			return new Encryptor(ID, copyOf(publicKey));
 		}
 	}
 		
@@ -78,46 +85,35 @@ public class PKIEnc {
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
 		byte[] privateKey = copyOf(keypair.privateKey);
 		byte[] publicKey = copyOf(keypair.publicKey);
-		
-		pki_server.register(id, copyOf(domain), copyOf(publicKey));
-		
-		return new Decryptor(publicKey, privateKey);
+		Decryptor decryptor = new Decryptor(id, publicKey, privateKey);
+		Encryptor encryptor = decryptor.getEncryptor();
+		PKIForEnc.register(encryptor, domain);
+		return decryptor;
 	}
 	
 	public static Encryptor getEncryptor(int id, byte[] domain) throws PKIError, NetworkError {
-		byte[] publKey = pki_server.getKey(id, domain);
-		
-		return new Encryptor(publKey);
+		return PKIForEnc.getEncryptor(id, domain);
 	}
 		
 
 /// Extended interface (not in the ideal functionality): serialization/deserialization of decryptors ///
 	
 	public static byte[] decryptorToBytes(Decryptor decryptor) {
+		byte[] id = intToByteArray(decryptor.ID);
 		byte[] priv = decryptor.privateKey;
 		byte[] publ = decryptor.publicKey;
 		
-		byte[] out = concatenate(priv, publ);
+		byte[] out = concatenate(id, concatenate(priv, publ));
 		return out; 
 	}
 	
 	public static Decryptor decryptorFromBytes(byte[] bytes) {
-		byte[] priv = first(bytes);
-		byte[] publ = second(bytes);
+		int id = byteArrayToInt(first(bytes));
+		byte[] rest = second(bytes);
+		byte[] priv = first(rest);
+		byte[] publ = second(rest);
 		
-		Decryptor decryptor = new Decryptor(publ, priv);
+		Decryptor decryptor = new Decryptor(id, publ, priv);
 		return decryptor; 
-	}
-	
-	private static boolean remoteMode = Boolean.parseBoolean(System.getProperty("remotemode"));
-	private static PKIServerInterface pki_server = null;
-	static {
-		if(remoteMode) {
-			pki_server = new RemotePKIServer();
-			System.out.println("Working in remote mode");
-		} else {
-			pki_server = new PKIServerCore();
-			System.out.println("Working in local mode");
-		}
 	}
 }

@@ -4,7 +4,6 @@ import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import de.uni.trier.infsec.functionalities.pki.ideal.PKIEnc;
 import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
 import de.uni.trier.infsec.functionalities.pki.ideal.PKISig;
-import de.uni.trier.infsec.environment.network.NetworkClient;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.environment.network.NetworkServer;
 import de.uni.trier.infsec.utils.MessageTools;
@@ -80,7 +79,7 @@ public class SMT {
 				int recipient_id = MessageTools.byteArrayToInt(recipient_id_as_bytes);
 				if( recipient_id != ID )
 					return null; // message not intended for this proxy
-				byte[] message = MessageTools.second(message_with_recipient_id);
+				// byte[] message = MessageTools.second(message_with_recipient_id);
 				// return new AuthenticatedMessage(message, sender_id);
 				return inputMessage;
 			}
@@ -108,8 +107,8 @@ public class SMT {
 		private final int recipient_id;
 		private final PKISig.Signer sender_signer;
 		private final PKIEnc.Encryptor recipient_encryptor;
-		private final String server;
-		private final int port;
+		// private final String server;
+		// private final int port;
 
 		private Channel(int sender_id, int recipient_id,
 						PKISig.Signer sender_signer, PKIEnc.Encryptor recipient_encryptor,
@@ -118,8 +117,8 @@ public class SMT {
 			this.recipient_id = recipient_id;
 			this.sender_signer = sender_signer;
 			this.recipient_encryptor = recipient_encryptor;
-			this.server = server;
-			this.port = port;
+			// this.server = server;
+			// this.port = port;
 		}		
 
 		public byte[] send(byte[] message) {
@@ -153,6 +152,9 @@ public class SMT {
 			PKISig.Signer signer = PKISig.register(id, DOMAIN_SMT_VERIFICATION);
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
+		}
+		catch (NetworkError err) {
+			throw new SMTError();
 		}
 		catch (PKIError err) {
 			registrationInProgress = false;

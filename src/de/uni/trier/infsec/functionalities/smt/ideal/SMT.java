@@ -31,6 +31,7 @@ public class SMT {
 	
 	//// The public interface ////
 
+	@SuppressWarnings("serial")
 	static public class SMTError extends Exception {}
 
 	/** 

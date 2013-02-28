@@ -29,6 +29,7 @@ public class AMT {
 
 	//// The public interface ////
 
+	@SuppressWarnings("serial")
 	static public class AMTError extends Exception {}
 
 	/** 

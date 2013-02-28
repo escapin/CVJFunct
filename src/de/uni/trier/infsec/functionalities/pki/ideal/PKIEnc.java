@@ -41,11 +41,11 @@ public class PKIEnc {
 	 *  for decryption.    
 	 */
 	static public class Encryptor {
-		private int ID;	
+		public int ID;	
 		private byte[] publicKey;
 		private EncryptionLog log;
 
-		private Encryptor(int id, byte[] publicKey, EncryptionLog log) {
+		Encryptor(int id, byte[] publicKey, EncryptionLog log) {
 			this.ID = id;
 			this.publicKey = publicKey;
 			this.log = log;
@@ -102,20 +102,21 @@ public class PKIEnc {
 	 * We assume that the registration process is not blocked (no network problems).
 	 * @param domainSmtEncryption 
 	 */
-	public static Decryptor register(int id, byte[] smt_domain) throws PKIError {
+	public static Decryptor register(int id, byte[] pki_domain) throws PKIError, NetworkError {
 		Environment.untrustedOutput(id);
-		if( registeredAgents.fetch(id) != null ) throw new PKIError(); // a party with this id has already registered
 		Decryptor decryptor = new Decryptor(id);
 		Encryptor encryptor = decryptor.getEncryptor();
-		registeredAgents.add(encryptor);
+		try {
+			PKIForEnc.register(encryptor, pki_domain);
+		} catch (NetworkError e) {
+			throw new PKIError();
+		}
 		return decryptor;
 	}
 	
-	public static Encryptor getEncryptor(int id, byte[] smt_domain) throws NetworkError, PKIError {
+	public static Encryptor getEncryptor(int id, byte[] pki_domain) throws NetworkError, PKIError {
 		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
-		Encryptor enc = registeredAgents.fetch(id);
-		if (enc == null) throw new PKIError(); // there is no registered agent with this id
-		return enc;
+		return PKIForEnc.getEncryptor(id, pki_domain);
 	}
 	
 	
@@ -152,32 +153,4 @@ public class PKIEnc {
 	    	return lookup(ciphertext) != null;
 	    }    
 	}
-
-
-	private static class RegisteredAgents {
-		private static class EncryptorList {
-			Encryptor encryptor;
-			EncryptorList  next;
-			EncryptorList(Encryptor encryptor, EncryptorList next) {
-				this.encryptor= encryptor;
-				this.next = next;
-			}
-		}
-
-		private EncryptorList first = null;
-		
-		public void add(Encryptor encr) {
-			first = new EncryptorList(encr, first);
-		}
-		
-		Encryptor fetch(int ID) {
-			for( EncryptorList node = first;  node != null;  node = node.next ) {
-				if( ID == node.encryptor.ID )
-					return node.encryptor;
-			}
-			return null;
-		}
-	}
-
-	private static RegisteredAgents registeredAgents = new RegisteredAgents();	
 }

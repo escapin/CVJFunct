@@ -88,7 +88,7 @@ public class TestSMTVoting extends TestCase {
 			p6.start();
 			Thread.sleep(10000);
 			
-			String bb = readFileAsString(PATH + "BB.log"); // Received Message: 
+			// String bb = readFileAsString(PATH + "BB.log"); // Received Message: 
 			String server = readFileAsString(PATH + "server.log"); // Server successfully collected all votes. Terminating.
 			
 			assertTrue("Server did not terminate correctly!", server.contains("Server successfully collected all votes. Terminating."));
