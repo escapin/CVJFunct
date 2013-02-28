@@ -5,7 +5,7 @@ import de.uni.trier.infsec.lib.network.NetworkError;
 public class PKIForEnc {
 
 	public static void register(PKIEnc.Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
-		pki_server.register(encryptor.ID, pki_domain, encryptor.getPublicKey());
+		pki_server.register(encryptor.id, pki_domain, encryptor.getPublicKey());
 	}
 	
 	public static boolean isRegistered(int id, byte[] pki_domain) throws NetworkError {

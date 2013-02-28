@@ -2,10 +2,8 @@ package de.uni.trier.infsec.functionalities.pki.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
-import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
@@ -41,12 +39,12 @@ public class PKIEnc {
 	 *  for decryption.    
 	 */
 	static public class Encryptor {
-		public int ID;	
+		public final int id;	
 		private byte[] publicKey;
 		private EncryptionLog log;
 
 		Encryptor(int id, byte[] publicKey, EncryptionLog log) {
-			this.ID = id;
+			this.id = id;
 			this.publicKey = publicKey;
 			this.log = log;
 		}
@@ -68,16 +66,16 @@ public class PKIEnc {
 	
 	/** An object encapsulating the private and public keys of some party. */
 	static public class Decryptor {
-		private int ID;
+		public final int id;
 		private byte[] publicKey;
 		private byte[] privateKey;
 		private EncryptionLog log;
 
-		private Decryptor(int id) {
+		public Decryptor(int id) {
 			KeyPair keypair = CryptoLib.pke_generateKeyPair();
 			this.privateKey = copyOf(keypair.privateKey);
 			this.publicKey = copyOf(keypair.publicKey);
-			this.ID = id;
+			this.id = id;
 			this.log = new EncryptionLog();
 		}		
 		
@@ -94,27 +92,17 @@ public class PKIEnc {
 		
 		/** Returns a new encryptor object sharing the same public key, ID, and log. */
 		public Encryptor getEncryptor() {
-			return new Encryptor(ID, publicKey, log);
+			return new Encryptor(id, publicKey, log);
 		}	
 	}
 
-	/**
-	 * We assume that the registration process is not blocked (no network problems).
-	 * @param domainSmtEncryption 
-	 */
-	public static Decryptor register(int id, byte[] pki_domain) throws PKIError, NetworkError {
-		Environment.untrustedOutput(id);
-		Decryptor decryptor = new Decryptor(id);
-		Encryptor encryptor = decryptor.getEncryptor();
+	static public void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
 		PKIForEnc.register(encryptor, pki_domain);
-		return decryptor;
 	}
-	
-	public static Encryptor getEncryptor(int id, byte[] pki_domain) throws NetworkError, PKIError {
-		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
+
+	static public Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
 		return PKIForEnc.getEncryptor(id, pki_domain);
-	}
-	
+	}	
 	
 /// Implementation ///
 

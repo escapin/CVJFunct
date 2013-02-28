@@ -13,7 +13,7 @@ public class PKIForEnc {
 
 	public static void register(PKIEnc.Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		if( isRegistered(encryptor.ID, pki_domain) )
+		if( isRegistered(encryptor.id, pki_domain) )
 			throw new PKIError();
 		registeredAgents.add(encryptor);
 	}
@@ -51,7 +51,7 @@ public class PKIForEnc {
 		
 		PKIEnc.Encryptor fetch(int ID) {
 			for( EncryptorList node = first;  node != null;  node = node.next ) {
-				if( ID == node.encryptor.ID )
+				if( ID == node.encryptor.id )
 					return node.encryptor;
 			}
 			return null;

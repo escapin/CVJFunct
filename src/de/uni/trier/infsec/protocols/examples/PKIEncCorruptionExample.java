@@ -1,9 +1,8 @@
 package de.uni.trier.infsec.protocols.examples;
 
-import de.uni.trier.infsec.environment.Environment;
-import de.uni.trier.infsec.lib.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.realcor.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.realcor.PKIError;
+import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
 
 public class PKIEncCorruptionExample {
 	
@@ -27,7 +26,7 @@ public class PKIEncCorruptionExample {
 		catch (NetworkError e) {} // or we have not got any answer
 		
 		// For a corrupted party B, we do this:
-		byte [] pubk = Environment.untrustedInputMessage();
+		byte [] pubk = {0x12,0x78,0x78};
 		PKIEnc.Encryptor enc_b = new PKIEnc.Encryptor(ID_A, pubk);
 		try {
 			PKIEnc.register(enc_b, PKI_DOMAIN);
@@ -58,8 +57,8 @@ public class PKIEncCorruptionExample {
 			// which will make it easier for the tools, we can do the following (only possible
 			// for the ideal functionality).
 
-			// PKIEnc.UncorruptedEncryptor uncorrupted_encryptor_of_a = (PKIEnc.UncorruptedEncryptor) encryptor_of_a;
-			// uncorrupted_encryptor_of_a.encrypt(message3);
+			PKIEnc.UncorruptedEncryptor uncorrupted_encryptor_of_a = (PKIEnc.UncorruptedEncryptor) encryptor_of_a;
+			uncorrupted_encryptor_of_a.encrypt(message3);
 
 			// now, we know that the code of the uncorrupted version of an encryptor is used, 
 			// and so we get the guarantees of the ideal functionality.
