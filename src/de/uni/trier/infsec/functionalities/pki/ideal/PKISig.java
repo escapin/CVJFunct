@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.pki.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
@@ -35,7 +34,7 @@ public class PKISig {
 	 * pair message/signature has been registered in the log.
 	 */
 	static public class Verifier {
-		private int ID;
+		public final int ID;
 		private byte[] verifKey;
 		private Log log;
 
@@ -65,7 +64,7 @@ public class PKISig {
 	 * is stores in the log.
 	 */
 	static public class Signer {
-		private int ID;
+		public final int ID;
 		private byte[] verifKey;
 		private byte[] signKey;
 		private Log log;
@@ -95,50 +94,20 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id, byte[] smt_domain) throws PKIError {
-		if( registeredAgents.fetch(id) != null ) throw new PKIError(); // a party with this id has already registered
+	public static Signer register(int id, byte[] pki_domain) throws PKIError, NetworkError {
+		if( PKIForSig.isRegistered(id, pki_domain) ) throw new PKIError(); // a party with this id has already registered
 		Signer signer = new Signer(id);
 		Verifier verifier = signer.getVerifier();
-		registeredAgents.add(verifier);
+		PKIForSig.register(verifier, pki_domain);
 		return signer;
 	}
 
-	public static Verifier getVerifier(int id, byte[] smt_domain) throws NetworkError, PKIError {
-		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
-		Verifier ver = registeredAgents.fetch(id);
-		if (ver == null) throw new PKIError(); // there is no registered agent with this id
-		return ver;
+	public static Verifier getVerifier(int id, byte[] pki_domain) throws NetworkError, PKIError {
+		return PKIForSig.getVerifier(id, pki_domain);
 	}
 
 
 	/// IMPLEMENTATION ///
-
-	private static class RegisteredAgents {
-		private static class VerifierList {
-			Verifier verifier;
-			VerifierList  next;
-			VerifierList(Verifier verifier, VerifierList next) {
-				this.verifier= verifier;
-				this.next = next;
-			}
-		}
-
-		private VerifierList first = null;
-
-		public void add(Verifier ver) {
-			first = new VerifierList(ver, first);
-		}
-
-		Verifier fetch(int ID) {
-			for( VerifierList node = first;  node != null;  node = node.next ) {
-				if( ID == node.verifier.ID )
-					return node.verifier;
-			}
-			return null;
-		}
-	}
-
-	private static RegisteredAgents registeredAgents = new RegisteredAgents();
 
 	private static class Log {
 
