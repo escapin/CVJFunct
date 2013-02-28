@@ -106,11 +106,7 @@ public class PKIEnc {
 		Environment.untrustedOutput(id);
 		Decryptor decryptor = new Decryptor(id);
 		Encryptor encryptor = decryptor.getEncryptor();
-		try {
-			PKIForEnc.register(encryptor, pki_domain);
-		} catch (NetworkError e) {
-			throw new PKIError();
-		}
+		PKIForEnc.register(encryptor, pki_domain);
 		return decryptor;
 	}
 	

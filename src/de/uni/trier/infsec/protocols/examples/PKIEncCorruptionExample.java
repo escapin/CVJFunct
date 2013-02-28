@@ -1,9 +1,9 @@
 package de.uni.trier.infsec.protocols.examples;
 
 import de.uni.trier.infsec.environment.Environment;
-import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
+import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pki.realcor.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.realcor.PKIError;
 
 public class PKIEncCorruptionExample {
 	
@@ -23,7 +23,8 @@ public class PKIEncCorruptionExample {
 		try {
 			PKIEnc.register(enc_a, PKI_DOMAIN);
 		}
-		catch (PKIError e) {} // registration failed: the identifier has been already claimed.
+		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
+		catch (NetworkError e) {} // or we have not got any answer
 		
 		// For a corrupted party B, we do this:
 		byte [] pubk = Environment.untrustedInputMessage();
@@ -31,10 +32,10 @@ public class PKIEncCorruptionExample {
 		try {
 			PKIEnc.register(enc_b, PKI_DOMAIN);
 		}
-		catch (PKIError e) {} // registration failed: the identifier has been already claimed.
-		
+		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
+		catch (NetworkError e) {} // or we have not got any answer
 
-		// Now, somebody encrypts something to the corrupted party B:
+		// Now, somebody encrypts something for the corrupted party B:
 		try {
 			PKIEnc.Encryptor encryptor_of_b = PKIEnc.getEncryptor(ID_B, PKI_DOMAIN);
 			encryptor_of_b.encrypt(message1);
@@ -54,9 +55,12 @@ public class PKIEncCorruptionExample {
 			// of this type and not of type CorruptedEncryptor).
 
 			// To make the fact (assumption) that A is uncorrupted explicit in the code, 
-			// which will make it easier for the tools, we can do the following.
-			PKIEnc.UncorruptedEncryptor uncorrupted_encryptor_of_a = (PKIEnc.UncorruptedEncryptor) encryptor_of_a;
-			uncorrupted_encryptor_of_a.encrypt(message3);
+			// which will make it easier for the tools, we can do the following (only possible
+			// for the ideal functionality).
+
+			// PKIEnc.UncorruptedEncryptor uncorrupted_encryptor_of_a = (PKIEnc.UncorruptedEncryptor) encryptor_of_a;
+			// uncorrupted_encryptor_of_a.encrypt(message3);
+
 			// now, we know that the code of the uncorrupted version of an encryptor is used, 
 			// and so we get the guarantees of the ideal functionality.
 			// Note that if the encryptor of A actually was corrupted, the cast would result in an 
@@ -65,7 +69,6 @@ public class PKIEncCorruptionExample {
 		}
 		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here
 		catch(NetworkError e) {} // or here, if there has been no (or wrong) answer from PKI
-	
 	}
 
 }
