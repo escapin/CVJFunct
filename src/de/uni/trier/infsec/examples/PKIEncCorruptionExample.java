@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.protocols.examples;
+package de.uni.trier.infsec.examples;
 
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
