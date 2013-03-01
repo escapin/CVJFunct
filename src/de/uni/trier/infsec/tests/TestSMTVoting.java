@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.lib.test;
+package de.uni.trier.infsec.tests;
 
 import java.io.BufferedReader;
 import java.io.File;
