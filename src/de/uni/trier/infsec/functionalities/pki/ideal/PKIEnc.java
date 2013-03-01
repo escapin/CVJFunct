@@ -2,6 +2,7 @@ package de.uni.trier.infsec.functionalities.pki.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
+import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
 import de.uni.trier.infsec.environment.network.NetworkError;
@@ -96,18 +97,53 @@ public class PKIEnc {
 		}	
 	}
 
-	static public void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
-		PKIForEnc.register(encryptor, pki_domain);
+	// FIXME: pki_domain is ignored in the methods below
+	public static void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
+		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
+		if( registeredAgents.fetch(encryptor.id) != null ) // encryptor.id is registered?
+			throw new PKIError();
+		registeredAgents.add(encryptor);
 	}
 
-	static public Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
-		return PKIForEnc.getEncryptor(id, pki_domain);
-	}	
-	
-/// Implementation ///
+	public static Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
+		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
+		PKIEnc.Encryptor enc = registeredAgents.fetch(id);
+		if (enc == null)
+			throw new PKIError();
+		return enc;
+	}
+
+	/// IMPLEMENTATION ///
+
+	private static class RegisteredAgents {
+		private static class EncryptorList {
+			PKIEnc.Encryptor encryptor;
+			EncryptorList  next;
+			EncryptorList(PKIEnc.Encryptor encryptor, EncryptorList next) {
+				this.encryptor= encryptor;
+				this.next = next;
+			}
+		}
+
+		private EncryptorList first = null;
+
+		public void add(PKIEnc.Encryptor encr) {
+			first = new EncryptorList(encr, first);
+		}
+
+		PKIEnc.Encryptor fetch(int ID) {
+			for( EncryptorList node = first;  node != null;  node = node.next ) {
+				if( ID == node.encryptor.id )
+					return node.encryptor;
+			}
+			return null;
+		}
+	}
+
+	private static RegisteredAgents registeredAgents = new RegisteredAgents();
 
 	private static class EncryptionLog {
-		
+
 		private static class MessagePairList {
 			byte[] ciphertext;
 			byte[] plaintext;
@@ -120,21 +156,21 @@ public class PKIEnc {
 		}
 
 		private MessagePairList first = null;
-		
+
 		public void add(byte[] plaintext, byte[] ciphertext) {
 			first = new MessagePairList(ciphertext, plaintext, first);
 		}
 
-	    byte[] lookup(byte[] ciphertext) {	    	
-	    	for( MessagePairList node = first;  node != null;  node = node.next ) {
-	            if( MessageTools.equal(node.ciphertext, ciphertext) )
-	                return node.plaintext;	    		
-	    	}
-	        return null;
-	    }
-	    
-	    boolean containsCiphertext(byte[] ciphertext) {
-	    	return lookup(ciphertext) != null;
-	    }    
+		byte[] lookup(byte[] ciphertext) {
+			for( MessagePairList node = first;  node != null;  node = node.next ) {
+				if( MessageTools.equal(node.ciphertext, ciphertext) )
+					return node.plaintext;
+			}
+			return null;
+		}
+
+		boolean containsCiphertext(byte[] ciphertext) {
+			return lookup(ciphertext) != null;
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package de.uni.trier.infsec.functionalities.pki.idealcor;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
+import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
@@ -99,16 +100,50 @@ public class PKISig {
 		}
 	}
 
+	// FIXME: pki_domain is ignored in the methods below
 	public static void register(Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
-		PKIForSig.register(verifier, pki_domain);
+		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
+		if( registeredAgents.fetch(verifier.id) != null ) // verified.ID is registered?
+			throw new PKIError();
+		registeredAgents.add(verifier);
 	}
 
-	public static Verifier getVerifier(int id, byte[] pki_domain) throws NetworkError, PKIError {
-		return PKIForSig.getVerifier(id, pki_domain);
+	public static Verifier getVerifier(int id, byte[] pki_domain) throws PKIError, NetworkError {
+		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
+		Verifier verif = registeredAgents.fetch(id);
+		if (verif == null)
+			throw new PKIError();
+		return verif;
 	}
-
 
 	/// IMPLEMENTATION ///
+
+	private static class RegisteredAgents {
+		private static class VerifierList {
+			PKISig.Verifier verifier;
+			VerifierList  next;
+			VerifierList(PKISig.Verifier verifier, VerifierList next) {
+				this.verifier = verifier;
+				this.next = next;
+			}
+		}
+
+		private VerifierList first = null;
+
+		public void add(PKISig.Verifier verif) {
+			first = new VerifierList(verif, first);
+		}
+
+		PKISig.Verifier fetch(int ID) {
+			for( VerifierList node = first;  node != null;  node = node.next ) {
+				if( ID == node.verifier.id )
+					return node.verifier;
+			}
+			return null;
+		}
+	}
+
+	private static RegisteredAgents registeredAgents = new RegisteredAgents();
 
 	private static class Log {
 
