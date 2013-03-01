@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.pki.idealcor;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
@@ -29,33 +28,38 @@ import de.uni.trier.infsec.utils.MessageTools;
  */
 public class PKISig {
 
-	/**
-	 * An object encapsulating a verification key and allowing a user to verify
-	 * signatures. In this ideal implementation, verification check whether the given
-	 * pair message/signature has been registered in the log.
-	 */
 	static public class Verifier {
-		private int ID;
-		private byte[] verifKey;
-		private Log log;
+		public final int id;
+		protected byte[] verifKey;
 
-		private Verifier(int id, byte[] verifKey, Log log) {
-			this.ID = id;
+		public Verifier(int id, byte[] verifKey) {
+			this.id = id;
 			this.verifKey = verifKey;
-			this.log = log;
 		}
 
 		public boolean verify(byte[] signature, byte[] message) {
-			// verify the signature using the (real) verification algorithm
-			if( !CryptoLib.verify(message, signature, verifKey) )
-				return false;
-			// and check that the message has been logged as signed
-			return log.contains(message);
+			return CryptoLib.verify(message, signature, verifKey);
 		}
 
 		public byte[] getVerifKey() {
 			return copyOf(verifKey);
 		}
+	}
+	
+	static public final class UncorruptedVerifier extends Verifier {
+		private Log log;
+		
+		private UncorruptedVerifier(int id, byte[] verifKey, Log log) {
+			super(id,verifKey);
+			this.log = log;
+		}
+		
+		public boolean verify(byte[] signature, byte[] message) {
+			// verify both that the signature is correc (using the real verification 
+			// algorithm) and that the message has been logged as signed
+			return CryptoLib.verify(message, signature, verifKey) && log.contains(message);
+		}
+
 	}
 
 	/**
@@ -64,20 +68,20 @@ public class PKISig {
 	 * is created (by an algorithm provided in lib.crypto) an the pair message/signature
 	 * is stores in the log.
 	 */
-	static public class Signer {
-		private int ID;
+	static final public class Signer {
+		public final int id;
 		private byte[] verifKey;
 		private byte[] signKey;
 		private Log log;
 
-		private Signer(int id) {
+		public Signer(int id) {
 			KeyPair keypair = CryptoLib.generateSignatureKeyPair(); // note usage of the real cryto lib here
 			this.signKey = copyOf(keypair.privateKey);
 			this.verifKey = copyOf(keypair.publicKey);
-			this.ID = id;
+			this.id = id;
 			this.log = new Log();
 		}
-
+		
 		public byte[] sign(byte[] message) {
 			byte[] signature = CryptoLib.sign(copyOf(message), copyOf(signKey)); // note usage of the real crypto lib here
 			// we make sure that the signing has not failed
@@ -91,54 +95,20 @@ public class PKISig {
 		}
 
 		public Verifier getVerifier() {
-			return new Verifier(ID, verifKey, log);
+			return new UncorruptedVerifier(id, verifKey, log);
 		}
 	}
 
-	public static Signer register(int id, byte[] smt_domain) throws PKIError {
-		if( registeredAgents.fetch(id) != null ) throw new PKIError(); // a party with this id has already registered
-		Signer signer = new Signer(id);
-		Verifier verifier = signer.getVerifier();
-		registeredAgents.add(verifier);
-		return signer;
+	public static void register(Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
+		PKIForSig.register(verifier, pki_domain);
 	}
 
-	public static Verifier getVerifier(int id, byte[] smt_domain) throws NetworkError, PKIError {
-		if( Environment.untrustedInput() == 0 )  throw new NetworkError();
-		Verifier ver = registeredAgents.fetch(id);
-		if (ver == null) throw new PKIError(); // there is no registered agent with this id
-		return ver;
+	public static Verifier getVerifier(int id, byte[] pki_domain) throws NetworkError, PKIError {
+		return PKIForSig.getVerifier(id, pki_domain);
 	}
 
 
 	/// IMPLEMENTATION ///
-
-	private static class RegisteredAgents {
-		private static class VerifierList {
-			Verifier verifier;
-			VerifierList  next;
-			VerifierList(Verifier verifier, VerifierList next) {
-				this.verifier= verifier;
-				this.next = next;
-			}
-		}
-
-		private VerifierList first = null;
-
-		public void add(Verifier ver) {
-			first = new VerifierList(ver, first);
-		}
-
-		Verifier fetch(int ID) {
-			for( VerifierList node = first;  node != null;  node = node.next ) {
-				if( ID == node.verifier.ID )
-					return node.verifier;
-			}
-			return null;
-		}
-	}
-
-	private static RegisteredAgents registeredAgents = new RegisteredAgents();
 
 	private static class Log {
 

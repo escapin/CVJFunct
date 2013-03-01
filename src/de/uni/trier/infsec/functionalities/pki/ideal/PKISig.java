@@ -33,7 +33,7 @@ public class PKISig {
 	 * signatures. In this ideal implementation, verification check whether the given
 	 * pair message/signature has been registered in the log.
 	 */
-	static public class Verifier {
+	static public final class Verifier {
 		public final int ID;
 		private byte[] verifKey;
 		private Log log;
@@ -45,11 +45,9 @@ public class PKISig {
 		}
 
 		public boolean verify(byte[] signature, byte[] message) {
-			// verify the signature using the (real) verification algorithm
-			if( !CryptoLib.verify(message, signature, verifKey) )
-				return false;
-			// and check that the message has been logged as signed
-			return log.contains(message);
+			// verify both that the signature is correc (using the real verification 
+			// algorithm) and that the message has been logged as signed			
+			return CryptoLib.verify(message, signature, verifKey) && log.contains(message);
 		}
 
 		public byte[] getVerifKey() {
@@ -69,7 +67,7 @@ public class PKISig {
 		private byte[] signKey;
 		private Log log;
 
-		private Signer(int id) {
+		public Signer(int id) {
 			KeyPair keypair = CryptoLib.generateSignatureKeyPair(); // note usage of the real cryto lib here
 			this.signKey = copyOf(keypair.privateKey);
 			this.verifKey = copyOf(keypair.publicKey);
@@ -94,12 +92,8 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id, byte[] pki_domain) throws PKIError, NetworkError {
-		if( PKIForSig.isRegistered(id, pki_domain) ) throw new PKIError(); // a party with this id has already registered
-		Signer signer = new Signer(id);
-		Verifier verifier = signer.getVerifier();
+	public static void register(Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
 		PKIForSig.register(verifier, pki_domain);
-		return signer;
 	}
 
 	public static Verifier getVerifier(int id, byte[] pki_domain) throws NetworkError, PKIError {

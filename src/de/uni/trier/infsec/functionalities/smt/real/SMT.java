@@ -153,7 +153,8 @@ public class SMT {
 		try {
 			PKIEnc.Decryptor decryptor = new PKIEnc.Decryptor(id);
 			PKIEnc.register(decryptor.getEncryptor(), DOMAIN_SMT_ENCRYPTION);
-			PKISig.Signer signer = PKISig.register(id, DOMAIN_SMT_VERIFICATION);
+			PKISig.Signer signer = new PKISig.Signer(id);
+			PKISig.register(signer.getVerifier(), DOMAIN_SMT_VERIFICATION);
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
 		}

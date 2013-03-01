@@ -28,7 +28,7 @@ public class PKISig {
 		public final int ID;
 		private byte[] verifKey;
 
-		Verifier(int id, byte[] verifKey) {
+		public Verifier(int id, byte[] verifKey) {
 			this.ID = id;
 			this.verifKey = verifKey;
 		}
@@ -51,7 +51,14 @@ public class PKISig {
 		private byte[] verifKey;
 		private byte[] signKey;
 
-		private Signer(int id, byte[] verifKey, byte[] signKey) {
+		public Signer(int id) {
+			this.ID = id;
+			KeyPair keypair = CryptoLib.generateSignatureKeyPair();
+			this.signKey = copyOf(keypair.privateKey);
+			this.verifKey = copyOf(keypair.publicKey);
+		}
+
+		private Signer(int id, byte[] verifKey, byte[] signKey ) {
 			this.ID = id;
 			this.verifKey = verifKey;
 			this.signKey = signKey;
@@ -67,20 +74,14 @@ public class PKISig {
 		}
 	}
 
-	public static Signer register(int id, byte[] domain) throws NetworkError, PKIError {		
-		KeyPair keypair = CryptoLib.generateSignatureKeyPair();
-		byte[] signKey = copyOf(keypair.privateKey);
-		byte[] verifKey = copyOf(keypair.publicKey);
-		Signer signer = new Signer(id, verifKey, signKey);
-		Verifier verifier = signer.getVerifier();
-		PKIForSig.register(verifier, domain);		
-		return signer;
+	public static void register(Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
+		PKIForSig.register(verifier, pki_domain);
 	}
 
-	public static Verifier getVerifier(int id, byte[] domain) throws NetworkError, PKIError {
-		return PKIForSig.getVerifier(id, domain);
+	public static Verifier getVerifier(int id, byte[] pki_domain) throws NetworkError, PKIError {
+		return PKIForSig.getVerifier(id, pki_domain);
 	}
-		
+
 	public static byte[] signerToBytes(Signer signer) {
 		byte[] id = intToByteArray(signer.ID);
         byte[] sign = signer.signKey;
