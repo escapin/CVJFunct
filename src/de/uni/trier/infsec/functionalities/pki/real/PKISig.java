@@ -74,28 +74,29 @@ public class PKISig {
 		}
 	}
 
-	public static void register(Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
-		PKIForSig.register(verifier, pki_domain);
+	public static void register(PKISig.Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
+		PKI.register(verifier.ID, pki_domain, verifier.getVerifKey());
 	}
 
-	public static Verifier getVerifier(int id, byte[] pki_domain) throws NetworkError, PKIError {
-		return PKIForSig.getVerifier(id, pki_domain);
+	public static PKISig.Verifier getVerifier(int id, byte[] pki_domain) throws PKIError, NetworkError {
+		byte[] key = PKI.getKey(id, pki_domain);
+		return new PKISig.Verifier(id,key);
 	}
 
 	public static byte[] signerToBytes(Signer signer) {
 		byte[] id = intToByteArray(signer.ID);
-        byte[] sign = signer.signKey;
-        byte[] verify = signer.verifKey;
+		byte[] sign = signer.signKey;
+		byte[] verify = signer.verifKey;
 
-        byte[] out = concatenate(id, concatenate(sign, verify));
-        return out;
+		byte[] out = concatenate(id, concatenate(sign, verify));
+		return out;
 	}
-	
+
 	public static Signer signerFromBytes(byte[] bytes) {
 		int id = byteArrayToInt(first(bytes));
 		byte[] rest = second(bytes);
-        byte[] sign_key = first(rest);
-        byte[] verif_key = second(rest);
-        return new Signer(id, verif_key, sign_key);
-	}		
+		byte[] sign_key = first(rest);
+		byte[] verif_key = second(rest);
+		return new Signer(id, verif_key, sign_key);
+	}
 }

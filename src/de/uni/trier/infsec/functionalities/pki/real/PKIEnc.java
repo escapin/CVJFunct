@@ -82,12 +82,13 @@ public class PKIEnc {
 		}
 	}
 
-	static public void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
-		PKIForEnc.register(encryptor, pki_domain);
+	public static void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
+		PKI.register(encryptor.id, pki_domain, encryptor.getPublicKey());
 	}
 
-	static public Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
-		return PKIForEnc.getEncryptor(id, pki_domain);
+	public static PKIEnc.Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
+		byte[] key = PKI.getKey(id, pki_domain);
+		return new PKIEnc.Encryptor(id,key);
 	}
 
 
