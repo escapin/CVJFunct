@@ -34,7 +34,7 @@ public class PKIEnc {
 	/** An object encapsulating the public key of some party.
 	 *  
 	 *  This key can be accessed directly of indirectly via method encrypt.
-	 *  Method 'encrypt' realizes the "ideal" encryption, where a string of 
+	 *  Method encrypt realizes the "ideal" encryption, where a string of 
 	 *  zeros is encrypted instead of the original message and the pair 
 	 *  (plaintext, ciphertest) is stored in a log which can be then used
 	 *  for decryption.    
@@ -44,6 +44,7 @@ public class PKIEnc {
 		private byte[] publicKey;
 		private EncryptionLog log;
 
+		// note that the constructor is not public; encryptors are only created from decryptors
 		Encryptor(int id, byte[] publicKey, EncryptionLog log) {
 			this.id = id;
 			this.publicKey = publicKey;
@@ -97,7 +98,7 @@ public class PKIEnc {
 		}	
 	}
 
-	// FIXME: pki_domain is ignored in the methods below
+	// TODO: pki_domain is ignored in the methods below
 	public static void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
 		if( registeredAgents.fetch(encryptor.id) != null ) // encryptor.id is registered?

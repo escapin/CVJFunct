@@ -4,6 +4,8 @@ import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 
+// THIS FUNCTIONALITY IS OBSOLETE. USE PKI INSTEAD.
+
 /**
  * Ideal functionality for public-key encryption: Encryptor
  */

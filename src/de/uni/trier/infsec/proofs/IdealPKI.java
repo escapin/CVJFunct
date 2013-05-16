@@ -1,11 +1,16 @@
-package de.uni.trier.infsec.aux;
+package de.uni.trier.infsec.proofs;
 
 import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
+/*
+ * This class is used only in the realization proof for PKI.
+ */
+
 public class IdealPKI {
+
 	static void register(int id, byte[] domain, byte[] key) throws PKIError, NetworkError {
 		if (Environment.untrustedInput()==0) throw new NetworkError();
 		if (registered(id, domain)) throw new PKIError();
@@ -22,6 +27,7 @@ public class IdealPKI {
 	static private boolean registered(int id, byte[] domain) {
 		return entries.getKey(id, domain) != null;
 	}
+
 	/// IMPLEMENTATION ///
 
 	private static class Entry {

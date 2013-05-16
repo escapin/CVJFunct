@@ -112,6 +112,4 @@ public class PKIServerRemote implements PKIServer {
 		//		if (!Boolean.parseBoolean(System.getProperty("DEBUG"))) return;
 		System.out.println("[" + this.getClass().getSimpleName() + "] " + txt);
 	}
-
-
 }

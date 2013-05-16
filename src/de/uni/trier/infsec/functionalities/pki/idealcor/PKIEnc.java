@@ -16,6 +16,8 @@ public class PKIEnc {
 
 	/// The public interface ///
 
+	/** Encryptor encapsulating possibly corrupted public key.
+	 */
 	static public class Encryptor {
 		public final int id;
 		protected byte[] publicKey;
@@ -34,7 +36,13 @@ public class PKIEnc {
 		}
 	}
 
-	// This class is not in the public interface of the corresponding real functionality
+	/**
+	 * Uncorrupted encryptor.
+	 * 
+	 * The only way to obtain such an encryptor is through a decryptor.
+	 * 
+	 * This class is not in the public interface of the corresponding real functionality.
+	 */
 	static public final class UncorruptedEncryptor extends Encryptor {
 		private EncryptionLog log;
 
@@ -54,8 +62,9 @@ public class PKIEnc {
 		}
 	}
 
+	/** An object encapsulating the private and public keys of some party. */
 	static public class Decryptor {
-		public int ID;
+		public final int id;
 		private byte[] publicKey;
 		private byte[] privateKey;
 		private EncryptionLog log;
@@ -64,10 +73,12 @@ public class PKIEnc {
 			KeyPair keypair = CryptoLib.pke_generateKeyPair();
 			this.privateKey = copyOf(keypair.privateKey);
 			this.publicKey = copyOf(keypair.publicKey);
-			this.ID = id;
+			this.id = id;
 			this.log = new EncryptionLog();
 		}
 
+		/** "Decrypts" a message by, first trying to find in in the log (and returning
+		 *   the related plaintext) and, only if this fails, by using real decryption. */
 		public byte[] decrypt(byte[] message) {
 			byte[] messageCopy = copyOf(message);
 			if (!log.containsCiphertext(messageCopy)) {
@@ -77,13 +88,13 @@ public class PKIEnc {
 			}
 		}
 
-		// Returns a new uncorrupted encryptor object sharing the same public key, ID, and log.
+		/** Returns a new uncorrupted encryptor object sharing the same public key, ID, and log. */
 		public Encryptor getEncryptor() {
-			return new UncorruptedEncryptor(ID, publicKey, log);
+			return new UncorruptedEncryptor(id, publicKey, log);
 		}
 	}
 
-	// FIXME: pki_domain is ignored in the methods below
+	// TODO: pki_domain is ignored in the methods below
 	public static void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
 		if( registeredAgents.fetch(encryptor.id) != null ) // encryptor.id is registered?

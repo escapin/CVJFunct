@@ -1,10 +1,10 @@
-package de.uni.trier.infsec.environment.smt_simulator;
+package de.uni.trier.infsec.proofs.smt_simulator;
 
 import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
 import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.proofs.smt_simulator.SMT.AgentProxy;
+import de.uni.trier.infsec.proofs.smt_simulator.SMT.Channel;
 import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.environment.smt_simulator.SMT.AgentProxy;
-import de.uni.trier.infsec.environment.smt_simulator.SMT.Channel;
 
 /**
  * Simulator for ideal SAMT.

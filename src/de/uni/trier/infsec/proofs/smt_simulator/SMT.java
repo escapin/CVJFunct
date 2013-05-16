@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.environment.smt_simulator;
+package de.uni.trier.infsec.proofs.smt_simulator;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import de.uni.trier.infsec.functionalities.pki.ideal.PKIEnc;

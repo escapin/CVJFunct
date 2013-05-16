@@ -59,10 +59,10 @@ public class PKISigCorruptionExample {
 			PKISig.UncorruptedVerifier uncorrupted_verif_of_a = (PKISig.UncorruptedVerifier) verif_of_a;
 			uncorrupted_verif_of_a.verify(signature3, message3);
 
-			// now, we know that the code of the uncorrupted version of an encryptor is used, 
+			// now, we know that the code of the uncorrupted version of an verifier is used,
 			// and so we get the guarantees of the ideal functionality.
-			// Note that if the encryptor of A actually was corrupted, the cast would result in an 
-			// exception and the message would not been sent (and thus, its secrecy would be preserved).
+			// Note that if the verifier of A actually was corrupted, the cast would result in an
+			// exception.
 			
 		}
 		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here

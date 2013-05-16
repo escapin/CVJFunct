@@ -2,6 +2,8 @@ package de.uni.trier.infsec.functionalities.pkenc.ideal;
 
 import de.uni.trier.infsec.utils.MessageTools;
 
+//THIS FUNCTIONALITY IS OBSOLETE. USE PKI INSTEAD.
+
 public class MessagePairList {
 	
 	static class MessagePair {

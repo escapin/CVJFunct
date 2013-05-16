@@ -3,6 +3,8 @@ package de.uni.trier.infsec.functionalities.pkenc.real;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
+//THIS FUNCTIONALITY IS OBSOLETE. USE PKI INSTEAD.
+
 /**
  * Real functionality for public-key encryption: Decryptor
  */

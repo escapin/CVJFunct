@@ -38,7 +38,7 @@ public class PKIEncCorruptionExample {
 		try {
 			PKIEnc.Encryptor encryptor_of_b = PKIEnc.getEncryptor(ID_B, PKI_DOMAIN);
 			encryptor_of_b.encrypt(message1);
-			// as the encryptor of B is corrupted (in not uncorrupted), we cannot have any guarantees 
+			// as the encryptor of B is corrupted (is not uncorrupted), we cannot have any guarantees 
 			// for what happens to message1
 		}
 		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here

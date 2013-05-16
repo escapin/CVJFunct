@@ -28,6 +28,7 @@ public class PKIServerCore implements PKIServer {
 	
 	@Override
 	public void register(int id, byte[] domain, byte[] key) throws PKIError, NetworkError {
+		// FIXME: we should not restrict domains (the same goes for method getKey. 
 		if (arrayEqual(domain, AMT.DOMAIN_AMT) || 
 				arrayEqual(domain, SMT.DOMAIN_SMT_VERIFICATION) || 
 				arrayEqual(domain, PKISig.DOMAIN_VERIFICATION) ||
@@ -67,7 +68,7 @@ public class PKIServerCore implements PKIServer {
 		} catch (SqlJetException e) {
 			e.printStackTrace();
 			throw new NetworkError(); // Something went wrong 
-			// TODO: change this (later) for some other exception
+			// TODO: change this to some other exception
 		}
 	}
 
@@ -91,7 +92,7 @@ public class PKIServerCore implements PKIServer {
 		} catch (SqlJetException e) {
 			e.printStackTrace();
 			throw new NetworkError(); // Something went wrong
-			// TODO: change this (later) for some other exception
+			// TODO: change this to some other exception
 		}
 	}
 	
@@ -103,7 +104,7 @@ public class PKIServerCore implements PKIServer {
 		try {
 			File dbFile = new File(DEFAULT_DATABASE);
 			if (!dbFile.exists()) {
-				// We need to init a completely new Database
+				// We need to initialize a completely new Database
 				db = SqlJetDb.open(dbFile, true);
 				db.createTable(DB_TABLE_CREATE_PKE);
 				db.commit();
