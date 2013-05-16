@@ -22,5 +22,5 @@ public class PKI {
 			pki = new PKIServerCore();
 			System.out.println("Working in local mode");
 		}
-	}	
+	}
 }

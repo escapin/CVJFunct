@@ -46,15 +46,15 @@ public class PKISig {
 			return copyOf(verifKey);
 		}
 	}
-	
+
 	static public final class UncorruptedVerifier extends Verifier {
 		private Log log;
-		
+
 		private UncorruptedVerifier(int id, byte[] verifKey, Log log) {
 			super(id,verifKey);
 			this.log = log;
 		}
-		
+
 		public boolean verify(byte[] signature, byte[] message) {
 			// verify both that the signature is correc (using the real verification 
 			// algorithm) and that the message has been logged as signed
@@ -82,7 +82,7 @@ public class PKISig {
 			this.id = id;
 			this.log = new Log();
 		}
-		
+
 		public byte[] sign(byte[] message) {
 			byte[] signature = CryptoLib.sign(copyOf(message), copyOf(signKey)); // note usage of the real crypto lib here
 			// we make sure that the signing has not failed
@@ -164,10 +164,10 @@ public class PKISig {
 
 		boolean contains(byte[] message) {
 			for( MessageList node = first;  node != null;  node = node.next ) {
-	            if( MessageTools.equal(node.message, message) )
-	                return true;
+				if( MessageTools.equal(node.message, message) )
+					return true;
 			}
-	        return false;
-	    }
+			return false;
+		}
 	}
 }

@@ -31,7 +31,7 @@ public class PKIEnc {
 
 		public byte[] getPublicKey() {
 			return copyOf(publicKey);
-		}		
+		}
 	}
 
 	// This class is not in the public interface of the corresponding real functionality
@@ -67,7 +67,7 @@ public class PKIEnc {
 			this.ID = id;
 			this.log = new EncryptionLog();
 		}
-		
+
 		public byte[] decrypt(byte[] message) {
 			byte[] messageCopy = copyOf(message);
 			if (!log.containsCiphertext(messageCopy)) {
@@ -82,7 +82,7 @@ public class PKIEnc {
 			return new UncorruptedEncryptor(ID, publicKey, log);
 		}
 	}
-	
+
 	// FIXME: pki_domain is ignored in the methods below
 	public static void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();

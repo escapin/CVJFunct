@@ -23,40 +23,40 @@ public class PKIServerRemote implements PKIServer {
 		request.nonce = CryptoLib.generateNonce();
 		request.domain = domain;
 		request.payload = concatenate(intToByteArray(id), pubKey);
-		
+
 		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServerApp.HOSTNAME, PKIServerApp.PORT);
 		PKIMessage responseMsg = PKIMessage.fromBytes(response);
-		
+
 		// Verify Signature first!
 		if (!CryptoLib.verify(responseMsg.bytesForSign(), responseMsg.signature, Utilities.hexStringToByteArray(PKIServerApp.VerificationKey))) {
 			echo("Signature verification failed!");
 			throw new NetworkError();
 		}
-		
+
 		// Verify Nonce
 		if (!Utilities.arrayEqual(responseMsg.nonce, request.nonce)) {
 			echo("Nonce verification failed!");
 			throw new NetworkError();
 		}
-		
+
 		if (Utilities.arrayEqual(responseMsg.payload, PKIServerApp.MSG_ERROR_PKI)) {
 			echo("Server responded with PKI error");
 			throw new PKIError();
 		}
-		
+
 		if (Utilities.arrayEqual(responseMsg.payload, PKIServerApp.MSG_ERROR_NETWORK)) {
 			echo("Server responded with Network error");
 			throw new NetworkError();
 		}
-		
+
 		int id_from_data = byteArrayToInt(first(responseMsg.payload));
 		byte[] pk_from_data = second(responseMsg.payload);
-		
+
 		if (id != id_from_data) {
 			echo("ID in response message is not equal to expected id: \nReceived: " +  id + "\nExpected: " + id_from_data);
 			throw new NetworkError();
 		}
-		
+
 		if (!arrayEqual(pk_from_data, pubKey)) {
 			echo("PK in response message is not equal to expected id: \nReceived: " + Utilities.byteArrayToHexString(pk_from_data) + "\nExpected: " + Utilities.byteArrayToHexString(pubKey));
 			throw new NetworkError();
@@ -70,22 +70,22 @@ public class PKIServerRemote implements PKIServer {
 		request.nonce = CryptoLib.generateNonce();
 		request.domain = domain;
 		request.payload = MessageTools.intToByteArray(id);
-		
+
 		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServerApp.HOSTNAME, PKIServerApp.PORT);
 		PKIMessage responseMsg = PKIMessage.fromBytes(response);
-	
+
 		// Verify Signature
 		if(!CryptoLib.verify(responseMsg.bytesForSign(), responseMsg.signature, Utilities.hexStringToByteArray(PKIServerApp.VerificationKey))) {
 			echo("Signature verification failed!");
 			throw new NetworkError();
 		}
-		
+
 		// Verify Nonce
 		if (!Utilities.arrayEqual(responseMsg.nonce, request.nonce)) {
 			echo("Nonce verification failed!");
 			throw new NetworkError();
 		}
-		
+
 		if (Utilities.arrayEqual(responseMsg.payload, PKIServerApp.MSG_ERROR_PKI)) {
 			echo("Server responded with PKI error");
 			throw new PKIError();
@@ -95,10 +95,10 @@ public class PKIServerRemote implements PKIServer {
 			echo("Server responded with Network error");
 			throw new NetworkError();
 		}
-		
+
 		int id_from_data = byteArrayToInt(first(responseMsg.payload));
 		byte[] publKey = second(responseMsg.payload);
-		
+
 		// Verify that the response message contains the correct id
 		if (id != id_from_data) {
 			echo("ID in response message is not equal to expected id: \nReceived: " + id + "\nExpected: " + id_from_data);
@@ -107,9 +107,9 @@ public class PKIServerRemote implements PKIServer {
 
 		return publKey;
 	}
-	
+
 	void echo(String txt) {
-//		if (!Boolean.parseBoolean(System.getProperty("DEBUG"))) return;
+		//		if (!Boolean.parseBoolean(System.getProperty("DEBUG"))) return;
 		System.out.println("[" + this.getClass().getSimpleName() + "] " + txt);
 	}
 
