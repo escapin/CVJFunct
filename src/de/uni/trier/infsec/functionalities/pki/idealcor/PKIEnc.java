@@ -9,8 +9,42 @@ import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
- * Ideal functionality for public-key encryption with PKI (Public Key Infrastructure)
- * and with static corruption.
+ * Ideal functionality for public-key encryption with PKI (Public Key Infrastructure).
+ * 
+ * The intended usage is as follows.
+ * 
+ * An honest party A creates her decryptor, encryptor and registers in the following way:
+ *
+ *		PKIEnc.Decryptor dec_a = new PKIEnc.Decryptor(ID_A);
+ *		PKIEnc.Encryptor enc_a = dec_a.getEncryptor(); // enc_a is an uncorrupted encryptor 
+ *		try {
+ *			PKIEnc.register(enc_a, PKI_DOMAIN);
+ *		}
+ *		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
+ *		catch (NetworkError e) {} // or we have not got any answer
+ *
+ * A decryptor can be used to decrypt messages (encrypted for A).
+ * 
+ * For a corrupted party B, we do this:
+ * 
+ *		PKIEnc.Encryptor enc_b = new PKIEnc.Encryptor(ID_A, pubk);
+ *		// register encryptor as above
+ *
+ * To encrypt something for A, one does the following:
+ * 
+ *		try {
+ *			PKIEnc.Encryptor encryptor_of_a = PKIEnc.getEncryptor(ID_A, PKI_DOMAIN);
+ *			encryptor_of_a.encrypt(message1);
+ *		}
+ *		catch(PKIError e) {} // if ID_A has not been successfully registered, we land here
+ *		catch(NetworkError e) {} // or here, if there has been no (or wrong) answer from PKI
+ *
+ * The fact (assumption) that the encryptor of A is uncorrupted can be made explicit in 
+ * the code by casting to UncorruptedEncryptor (only possible for the ideal functionality):
+ * 
+ *		PKIEnc.UncorruptedEncryptor uncorrupted_encryptor_of_a = (PKIEnc.UncorruptedEncryptor) encryptor_of_a;
+ *
+ * Note that an exception is thrown if this assumption is false.
  */
 public class PKIEnc {
 

@@ -11,21 +11,28 @@ import de.uni.trier.infsec.utils.MessageTools;
 /**
  * Ideal functionality for public-key encryption with PKI (Public Key Infrastructure).
  * 
- * The intended usage is as follows. An agent who wants to use this functionality to
- * receive (decrypt) messages must first register herself to obtain its, so called, 
- * decryptor: 
+ * The intended usage is as follows.
  * 
- *     PKIEnc.Decryptor decryptor_of_A = PKIEnc.register(ID_OF_A);
- *        
- * Another agent can encrypt messages for A as follows:
- *  
- *     PKIEnc.Encryptor encryptor_for_A = getEncryptor(ID_OF_A);
- *     byte[] ciphertext1 = encryptor_for_A.encrypt(message1);
- *     byte[] ciphertext2 = encryptor_for_A.encrypt(message2);
- *     
- * A can decrypt such messages using her decryptor:
+ * An honest party A creates her decryptor, encryptor and registers in the following way:
+ *
+ *		PKIEnc.Decryptor dec_a = new PKIEnc.Decryptor(ID_A);
+ *		PKIEnc.Encryptor enc_a = dec_a.getEncryptor(); // enc_a is an uncorrupted encryptor 
+ *		try {
+ *			PKIEnc.register(enc_a, PKI_DOMAIN);
+ *		}
+ *		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
+ *		catch (NetworkError e) {} // or we have not got any answer
+ *
+ * A decryptor can be used to decrypt messages (encrypted for A).
  * 
- *     byte[] message = decryptor_of_A.decrypt(ciphertext);
+ * To encrypt something for A, one does the following:
+ * 
+ *		try {
+ *			PKIEnc.Encryptor encryptor_of_a = PKIEnc.getEncryptor(ID_A, PKI_DOMAIN);
+ *			encryptor_of_a.encrypt(message1);
+ *		}
+ *		catch(PKIError e) {} // if ID_A has not been successfully registered, we land here
+ *		catch(NetworkError e) {} // or here, if there has been no (or wrong) answer from PKI
  */
 public class PKIEnc {
 	
