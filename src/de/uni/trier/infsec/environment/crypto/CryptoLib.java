@@ -4,6 +4,32 @@ import de.uni.trier.infsec.environment.Environment;
 
 public class CryptoLib {
 
+	public static byte[] symkey_generateKey() {
+		// input
+		Environment.untrustedOutput(0x91);
+		// output
+		return Environment.untrustedInputMessage();
+	}
+
+	public static byte[] symkey_encrypt(byte[] key, byte[] msg) {
+		// input
+		Environment.untrustedOutput(0x92);
+		Environment.untrustedOutputMessage(msg);
+		Environment.untrustedOutputMessage(key);
+		// output
+		return Environment.untrustedInputMessage();
+	}
+
+	public static byte[] symkey_decrypt(byte[] key, byte[] msg) {
+		// input
+		Environment.untrustedOutput(0x93);
+		Environment.untrustedOutputMessage(msg);
+		Environment.untrustedOutputMessage(key);
+		// output
+		return Environment.untrustedInputMessage();
+	}
+
+
 	public static byte[] pke_encrypt(byte[] message, byte[] publKey) {
 		// input
 		Environment.untrustedOutput(0x66); // Function code for pke_encrypt

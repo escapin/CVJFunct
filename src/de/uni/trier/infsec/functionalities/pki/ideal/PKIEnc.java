@@ -63,6 +63,7 @@ public class PKIEnc {
 			// keep asking the environment for the ciphertext, until a fresh one is given:
 			while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
 				randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publicKey)));
+				// TODO: make sure that the order of arguments (to encrypt) is correct
 			}
 			log.add(copyOf(message), randomCipher);
 			return copyOf(randomCipher);
@@ -94,6 +95,7 @@ public class PKIEnc {
 			byte[] messageCopy = copyOf(message); 
 			if (!log.containsCiphertext(messageCopy)) {
 				return copyOf( CryptoLib.pke_decrypt(copyOf(privateKey), messageCopy) );
+				// TODO: make sure that the order of arguments is correct
 			} else {
 				return copyOf( log.lookup(messageCopy) );
 			}			
