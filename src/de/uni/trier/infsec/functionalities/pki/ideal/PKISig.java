@@ -3,8 +3,8 @@ package de.uni.trier.infsec.functionalities.pki.ideal;
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.lib.crypto.CryptoLib;
-import de.uni.trier.infsec.lib.crypto.KeyPair;
+import de.uni.trier.infsec.environment.crypto.CryptoLib;
+import de.uni.trier.infsec.environment.crypto.KeyPair;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
