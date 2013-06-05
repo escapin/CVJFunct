@@ -27,6 +27,11 @@ public class MessageTools {
 		return zeroVector;
 	}	
 	
+	/**
+	 * Concatenates messages in a way that makes it possible to unambiguously
+	 * split the message into the original messages (it adds length of the
+	 * first message at the beginning of the returned message).
+	 */
 	public static byte[] concatenate(byte[] m1, byte[] m2) {
 		// Concatenated Message --> byte[0-3] = Integer, Length of Message 1
 		byte[] out = new byte[m1.length + m2.length + 4];
@@ -41,6 +46,18 @@ public class MessageTools {
 		for( int i=0; i<m2.length;  ++i ) out[j++] = m2[i];
 
 		return out;
+	}
+
+	/**
+	 * Simply concatenates the messages (without adding any information for
+	 * de-concatenation).
+	 */
+	public static byte[] raw_concatenate(byte[] a, byte[] b) {
+		byte[] result = new byte[a.length + b.length];
+		int j = 0;
+		for( int i=0; i<a.length; ++i ) result[j++] = a[i];
+		for( int i=0; i<b.length; ++i ) result[j++] = b[i];
+		return result;
 	}
 
 	/**
