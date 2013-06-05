@@ -1,10 +1,18 @@
-package de.uni.trier.infsec.functionalities.symenc;
+package de.uni.trier.infsec.functionalities.symenc.ideal;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.utils.MessageTools;
 
+/**
+ * Ideal functionality for private symmetric key encrytpion. 
+ * 
+ * This functionality is meant to be used, if a user wants to generate
+ * a symmetric key to be used solely by her. The functionality provides
+ * no means to share the key. The key is generated in the constructor
+ * and never leaves the object.
+ */
 public class SymEnc {
 
 	private byte[] key;
