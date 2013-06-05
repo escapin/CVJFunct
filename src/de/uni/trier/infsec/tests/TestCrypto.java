@@ -1,17 +1,40 @@
 package de.uni.trier.infsec.tests;
 
 import java.util.Arrays;
-
 import junit.framework.TestCase;
-
 import org.junit.Test;
-
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 
 public class TestCrypto extends TestCase {
 	
 	public static byte[] TEST_DATA = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+
+	
+	@Test
+	public void testSymEnc() {
+		// Key generation is not deterministic:
+		byte[] key  =  CryptoLib.symkey_generateKey();
+		byte[] key2 =  CryptoLib.symkey_generateKey();
+		assertFalse( Arrays.equals(key, key2) );
+		
+		// Encryption + Decryption returns the original message:
+		byte[] ciphertext = CryptoLib.symkey_encrypt(key, TEST_DATA);
+		byte[] plaintext = CryptoLib.symkey_decrypt(key, ciphertext);
+		assertTrue(Arrays.equals(TEST_DATA, plaintext));
+		
+		// Encryption is not deterministic:
+		byte[] ciphertext2 = CryptoLib.symkey_encrypt(key, TEST_DATA);
+		assertFalse( "Encryption is deterministic",  
+				     Arrays.equals(ciphertext, ciphertext2) );
+		
+		// Decryption+Encryption also works for big data:
+		byte[] big_message = new byte[100000];
+		for(int i=0; i<100000; ++i) big_message[i] = (byte)(i%256);
+		byte[] big_ciphertext = CryptoLib.symkey_encrypt(key, big_message);
+		byte[] big_plaintext  = CryptoLib.symkey_decrypt(key, big_ciphertext);
+		assertTrue(Arrays.equals(big_message, big_plaintext));
+	}
 	
 	@Test
 	public void testPKEnc() {

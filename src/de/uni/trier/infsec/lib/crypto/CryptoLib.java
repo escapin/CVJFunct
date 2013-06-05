@@ -3,6 +3,10 @@ package de.uni.trier.infsec.lib.crypto;
 import java.security.KeyException;
 import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.IvParameterSpec;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -14,10 +18,12 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-
 import javax.crypto.Cipher;
-
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import de.uni.trier.infsec.utils.MessageTools;
+
+// TODO: check how exceptions/errors are handled
 
 /**
  * Real implementation of same interface as environment.crypto.CryptoLib
@@ -32,6 +38,62 @@ public class CryptoLib {
 		Security.addProvider(new BouncyCastleProvider());
 	}
 
+	public static byte[] symkey_generateKey() {
+		try {
+			KeyGenerator kgen = KeyGenerator.getInstance("AES", "BC");
+			kgen.init(256);
+			SecretKey seckey = kgen.generateKey();
+			return seckey.getEncoded();
+
+		} catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static byte[] symkey_encrypt(byte[] key, byte[] plaintext) {
+		// wrap the key
+		SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+		// generate a random iv
+		byte[] iv_bytes = new byte[16];
+		SecureRandom rnd = new SecureRandom();
+		rnd.nextBytes(iv_bytes);
+		IvParameterSpec iv = new IvParameterSpec(iv_bytes);
+		try {
+			// encrypt and add the iv
+			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
+	        c.init(Cipher.ENCRYPT_MODE, keySpec, iv);
+			byte[] encrypted =  c.doFinal(plaintext);
+			return MessageTools.raw_concatenate(iv_bytes, encrypted);
+		} catch (Exception e) { // (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException |  e)			
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static byte[] symkey_decrypt(byte[] key, byte[] ciphertext) {
+		// wrap the key
+		final SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+		// recover the iv (first 16 bytes of the ciphertext)
+		if (ciphertext.length < 16) return null;
+		IvParameterSpec iv = new IvParameterSpec(ciphertext, 0, 16); // parameters: bytes, offset, length
+		try {
+			// decrypt
+			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
+			c.init(Cipher.DECRYPT_MODE, keySpec, iv);
+			return c.doFinal(ciphertext, 16, ciphertext.length-16);  // param: bytes, offset, length
+		} catch (Exception e) { // (NoSuchAlgorithmException | NoSuchProviderException	| NoSuchPaddingException |  e) {			
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+	/**
+	 * Public key encryption (of message with the key publicKey), using RSA with PKCS#1 padding.
+	 *
+	 * (Note there is a limit on the message length -- this is no hybrid encryption.)
+	 */
 	public static byte[] pke_encrypt(byte[] message, byte[] publicKey) {
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
