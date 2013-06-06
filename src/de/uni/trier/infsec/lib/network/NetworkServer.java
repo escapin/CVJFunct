@@ -14,8 +14,6 @@ public class NetworkServer {
 	// Now we have one Thread listening for connections and one Thread for each connection (reading the message).
 	// The Messages get cached within a queue and every call to nextRequest returns the next element.
 	
-	public static final int LISTEN_PORT = 7070; // Default listening port. After connection is established, there will be another port used for communication!
-	
 	private static Socket current = null; // Socket of the current message. Needed to answer the last request which has been processed
 	private static Hashtable<Integer, Thread> listenThreads = new Hashtable<>();
 	private static Hashtable<Integer, Hashtable<Socket, byte[]>> queues = new Hashtable<>();
@@ -148,11 +146,7 @@ public class NetworkServer {
 		public ListenThread(int port) {
 			this.thePort = port;
 		}
-		
-		public ListenThread() {
-			thePort = LISTEN_PORT;
-		}
-		
+				
 		@Override
 		public void run() {
 			// If not already done: Init server

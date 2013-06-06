@@ -24,7 +24,7 @@ public class PKIServerRemote implements PKIServer {
 		request.domain = domain;
 		request.payload = concatenate(intToByteArray(id), pubKey);
 
-		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServerApp.HOSTNAME, PKIServerApp.PORT);
+		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServerApp.HOSTNAME, PKIServerApp.LISTEN_PORT);
 		PKIMessage responseMsg = PKIMessage.fromBytes(response);
 
 		// Verify Signature first!
@@ -71,7 +71,7 @@ public class PKIServerRemote implements PKIServer {
 		request.domain = domain;
 		request.payload = MessageTools.intToByteArray(id);
 
-		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServerApp.HOSTNAME, PKIServerApp.PORT);
+		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServerApp.HOSTNAME, PKIServerApp.LISTEN_PORT);
 		PKIMessage responseMsg = PKIMessage.fromBytes(response);
 
 		// Verify Signature
