@@ -27,13 +27,12 @@ public class TestPKI extends TestCase {
 	public static int TEST_ID2  = 43434343;
 	public static byte[] TEST_DATA = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
 	
-	
 	@Test
 	public void testRealPKIRemote() throws PKIError, NetworkError, IOException {
 		Process pr = null;
 		try {
 			String cmd = "java";
-			ProcessBuilder p = new ProcessBuilder(cmd, "-cp", System.getProperties().getProperty("java.class.path", null), "de.uni.trier.infsec.functionalities.pki.real.PKIServer");
+			ProcessBuilder p = new ProcessBuilder(cmd, "-cp", System.getProperties().getProperty("java.class.path", null), "de.uni.trier.infsec.functionalities.pki.real.PKIServerApp");
 			p.redirectErrorStream(true);
 			p.redirectOutput(Redirect.INHERIT);
 			pr = p.start();
