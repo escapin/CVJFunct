@@ -9,6 +9,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import de.uni.trier.infsec.functionalities.pki.real.PKI;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc.Decryptor;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc.Encryptor;
@@ -37,7 +38,7 @@ public class TestPKI extends TestCase {
 			p.redirectOutput(Redirect.INHERIT);
 			pr = p.start();
 
-			System.setProperty("remotemode", Boolean.toString(true));
+			PKI.useRemoteMode();
 
 			Decryptor d1 = new PKIEnc.Decryptor(TEST_ID1);
 			PKIEnc.register(d1.getEncryptor(), PKIEnc.DOMAIN_ENCRYPTION);

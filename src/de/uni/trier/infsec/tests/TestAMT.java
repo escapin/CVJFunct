@@ -11,6 +11,7 @@ import de.uni.trier.infsec.functionalities.amt.real.AMT.AMTError;
 import de.uni.trier.infsec.functionalities.amt.real.AMT.AgentProxy;
 import de.uni.trier.infsec.functionalities.amt.real.AMT.AuthenticatedMessage;
 import de.uni.trier.infsec.functionalities.amt.real.AMT.Channel;
+import de.uni.trier.infsec.functionalities.pki.real.PKI;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.pki.real.PKIServerCore;
 import de.uni.trier.infsec.lib.network.NetworkError;
@@ -24,38 +25,31 @@ public class TestAMT extends TestCase {
 
 	@Test
 	public void testAMT() throws PKIError, NetworkError, Exception, AMTError {
-		Process pr = null;
-		try {
-			System.setProperty("remotemode", Boolean.toString(false));
+		PKI.useLocalMode();
 
-			AgentProxy p1 = AMT.register(TEST_ID1);
-			AgentProxy p2 = AMT.register(TEST_ID2);
-			
-			p2 = AMT.agentFromBytes(AMT.agentToBytes(p2));
-			p1 = AMT.agentFromBytes(AMT.agentToBytes(p1));
-			
-			p2.getMessage(7777); // Starts listening for messages
-			
-			Channel c1 = p1.channelTo(TEST_ID2, "localhost", 7777);
-			c1.send(TEST_DATA);
-			Thread.sleep(5000);
-			AuthenticatedMessage msg = p2.getMessage(7777);
-			
-			System.out.println("REC " + Utilities.byteArrayToHexString(msg.message));
-			assertTrue("Received data is not equal to sent data", Utilities.arrayEqual(TEST_DATA, msg.message));
-			
-			boolean error = false;
-			try {
-				AMT.register(TEST_ID2);
-			} catch (PKIError e) {
-				error = true;
-			}
-			assertTrue("Duplicate registration did not lead to an error", error);
-		} finally {
-			if (pr != null) {
-				pr.destroy();
-			}
+		AgentProxy p1 = AMT.register(TEST_ID1);
+		AgentProxy p2 = AMT.register(TEST_ID2);
+		
+		p2 = AMT.agentFromBytes(AMT.agentToBytes(p2));
+		p1 = AMT.agentFromBytes(AMT.agentToBytes(p1));
+		
+		p2.getMessage(7777); // Starts listening for messages
+		
+		Channel c1 = p1.channelTo(TEST_ID2, "localhost", 7777);
+		c1.send(TEST_DATA);
+		Thread.sleep(5000);
+		AuthenticatedMessage msg = p2.getMessage(7777);
+		
+		System.out.println("REC " + Utilities.byteArrayToHexString(msg.message));
+		assertTrue("Received data is not equal to sent data", Utilities.arrayEqual(TEST_DATA, msg.message));
+		
+		boolean error = false;
+		try {
+			AMT.register(TEST_ID2);
+		} catch (PKIError e) {
+			error = true;
 		}
+		assertTrue("Duplicate registration did not lead to an error", error);
 	}
 
 	@Override

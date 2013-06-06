@@ -6,6 +6,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import de.uni.trier.infsec.functionalities.pki.real.PKI;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.pki.real.PKIServerCore;
 import de.uni.trier.infsec.functionalities.smt.real.SMT;
@@ -26,7 +27,7 @@ public class TestSMT extends TestCase {
 	public void testSMT() throws PKIError, NetworkError, Exception, SMTError {
 		Process pr = null;
 		try {
-			System.setProperty("remotemode", Boolean.toString(false));
+			PKI.useLocalMode();
 
 			AgentProxy p1 = SMT.register(TEST_ID1);
 			AgentProxy p2 = SMT.register(TEST_ID2);
