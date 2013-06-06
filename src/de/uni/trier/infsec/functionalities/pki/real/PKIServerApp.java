@@ -3,9 +3,6 @@ package de.uni.trier.infsec.functionalities.pki.real;
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
-import static de.uni.trier.infsec.utils.Utilities.arrayEqual;
-import de.uni.trier.infsec.functionalities.amt.real.AMT;
-import de.uni.trier.infsec.functionalities.smt.real.SMT;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
@@ -62,113 +59,56 @@ public class PKIServerApp {
 	
 	private PKIMessage handleRequest(PKIMessage request) {
 		if (Utilities.arrayEqual(request.request, MSG_GET_KEY)) {
-			echo("Request is: Get Key");
-			if (arrayEqual(request.domain, SMT.DOMAIN_SMT_ENCRYPTION) || arrayEqual(request.domain, PKIEnc.DOMAIN_ENCRYPTION)) {
-				byte[] pubKey;
-				try {
-					pubKey = PKIServerCore.pki_getKey(MessageTools.byteArrayToInt(request.payload), request.domain);
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MessageTools.concatenate(request.payload, pubKey);
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				} catch (PKIError e) {
-					echo("Public key has not been registered!");
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MSG_ERROR_PKI;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				} catch (NetworkError e) {
-					echo("Error while trying to find public key!");
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MSG_ERROR_NETWORK;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				}
-			} else if (arrayEqual(request.domain, AMT.DOMAIN_AMT) || arrayEqual(request.domain, SMT.DOMAIN_SMT_VERIFICATION) || arrayEqual(request.domain, PKISig.DOMAIN_VERIFICATION)) {
-				echo("Request is: Get verification Key");
-				byte[] verKey;
-				try {
-					verKey = PKIServerCore.pki_getKey(MessageTools.byteArrayToInt(request.payload), request.domain);
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MessageTools.concatenate(request.payload, verKey);
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				} catch (PKIError e) {
-					echo("Verification key has not been registered!");
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MSG_ERROR_PKI;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				} catch (NetworkError e) {
-					echo("Error while trying to find verification key!");
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MSG_ERROR_NETWORK;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				}
+			echo("Request is: Get Key");			
+			byte[] key;
+			try {
+				key = PKIServerCore.pki_getKey(MessageTools.byteArrayToInt(request.payload), request.domain);
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MessageTools.concatenate(request.payload, key);
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (PKIError e) {
+				echo("Key has not been registered!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_PKI;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (NetworkError e) {
+				echo("Error while trying to find a key!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_NETWORK;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
 			}
 		} else if (Utilities.arrayEqual(request.request, MSG_REGISTER)) {
-			echo("Request is: Register");
-			if (arrayEqual(request.domain, SMT.DOMAIN_SMT_ENCRYPTION) || arrayEqual(request.domain, PKIEnc.DOMAIN_ENCRYPTION)) {
-				byte[] id  = MessageTools.first(request.payload);
-				byte[] pubKey = MessageTools.second(request.payload);
-				
-				try {
-					PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), request.domain, pubKey);
-					PKIMessage out = new PKIMessage();
-					out.payload = MessageTools.concatenate(id, pubKey);
-					out.nonce = request.nonce;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				} catch (PKIError p) {
-					echo("Public key has already been claimed!");
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MSG_ERROR_PKI;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				} catch (NetworkError n) {
-					echo("Error while trying to register public key!");
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MSG_ERROR_NETWORK;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				}
-			} else if (arrayEqual(request.domain, AMT.DOMAIN_AMT) || arrayEqual(request.domain, SMT.DOMAIN_SMT_VERIFICATION) || arrayEqual(request.domain, PKISig.DOMAIN_VERIFICATION)) {
-				echo("Request is: Register verification key");
-				byte[] id  = MessageTools.first(request.payload);
-				byte[] verKey = MessageTools.second(request.payload);
-				
-				try {
-					PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), request.domain, verKey);
-					PKIMessage out = new PKIMessage();
-					out.payload = MessageTools.concatenate(id, verKey);
-					out.nonce = request.nonce;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				} catch (PKIError p) {
-					echo("Verification key has already been claimed!");
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MSG_ERROR_PKI;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				} catch (NetworkError n) {
-					echo("Error while trying to register verification key!");
-					PKIMessage out = new PKIMessage();
-					out.nonce = request.nonce;
-					out.payload = MSG_ERROR_NETWORK;
-					out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
-					return out;
-				}
-			}
+			echo("Request is: Register");		
+			byte[] id  = MessageTools.first(request.payload);
+			byte[] key = MessageTools.second(request.payload);
+			try {
+				PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), request.domain, key);
+				PKIMessage out = new PKIMessage();
+				out.payload = MessageTools.concatenate(id, key);
+				out.nonce = request.nonce;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (PKIError p) {
+				echo("Key has already been claimed!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_PKI;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			} catch (NetworkError n) {
+				echo("Error while trying to register a key!");
+				PKIMessage out = new PKIMessage();
+				out.nonce = request.nonce;
+				out.payload = MSG_ERROR_NETWORK;
+				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
+				return out;
+			}				
 		}
 		echo("Request unknown. Returning empty message");
 		return new PKIMessage(); 

@@ -1,17 +1,11 @@
 package de.uni.trier.infsec.functionalities.pki.real;
 
-import static de.uni.trier.infsec.utils.Utilities.arrayEqual;
-
 import java.io.File;
-
 import org.tmatesoft.sqljet.core.SqlJetException;
 import org.tmatesoft.sqljet.core.SqlJetTransactionMode;
 import org.tmatesoft.sqljet.core.table.ISqlJetCursor;
 import org.tmatesoft.sqljet.core.table.ISqlJetTable;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
-
-import de.uni.trier.infsec.functionalities.amt.real.AMT;
-import de.uni.trier.infsec.functionalities.smt.real.SMT;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
 
@@ -28,26 +22,12 @@ public class PKIServerCore implements PKIServer {
 	
 	@Override
 	public void register(int id, byte[] domain, byte[] key) throws PKIError, NetworkError {
-		// FIXME: we should not restrict domains (the same goes for method getKey. 
-		if (arrayEqual(domain, AMT.DOMAIN_AMT) || 
-				arrayEqual(domain, SMT.DOMAIN_SMT_VERIFICATION) || 
-				arrayEqual(domain, PKISig.DOMAIN_VERIFICATION) ||
-				arrayEqual(domain, SMT.DOMAIN_SMT_ENCRYPTION) ||
-				arrayEqual(domain, PKIEnc.DOMAIN_ENCRYPTION)) {
-			pki_register(id, domain, key);
-		}
+		pki_register(id, domain, key);
 	}
 
 	@Override
 	public byte[] getKey(int id, byte[] domain) throws PKIError, NetworkError {
-		if (arrayEqual(domain, AMT.DOMAIN_AMT) || 
-				arrayEqual(domain, SMT.DOMAIN_SMT_VERIFICATION) || 
-				arrayEqual(domain, PKISig.DOMAIN_VERIFICATION) ||
-				arrayEqual(domain, SMT.DOMAIN_SMT_ENCRYPTION) ||
-				arrayEqual(domain, PKIEnc.DOMAIN_ENCRYPTION)) {
-			return pki_getKey(id, domain);
-		}
-		return null;
+		return pki_getKey(id, domain);
 	}
 
 	/**
@@ -116,5 +96,4 @@ public class PKIServerCore implements PKIServer {
 			e.printStackTrace();
 		}
 	}
-
 }
