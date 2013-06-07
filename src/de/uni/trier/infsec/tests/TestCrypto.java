@@ -38,15 +38,14 @@ public class TestCrypto extends TestCase {
 	
 	@Test
 	public void testPKEnc() {
-		
 		KeyPair kp = CryptoLib.pke_generateKeyPair();
 		byte[] pubKey = kp.publicKey;
 		byte[] privKey = kp.privateKey;
-		
-		byte[] enc = CryptoLib.pke_encrypt(TEST_DATA, pubKey);
-		byte[] dec = CryptoLib.pke_decrypt(enc, privKey);
-		
-		assertTrue(Arrays.equals(TEST_DATA, dec));
+		byte[] big_message = new byte[100000];
+		for(int i=0; i<100000; ++i) big_message[i] = (byte)(i%256);
+		byte[] big_ciphertext = CryptoLib.pke_encrypt(big_message, pubKey);
+		byte[] big_plaintext  = CryptoLib.pke_decrypt(big_ciphertext, privKey);
+		assertTrue(Arrays.equals(big_message, big_plaintext));
 	}
 	
 	@Test

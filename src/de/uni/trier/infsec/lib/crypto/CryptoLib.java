@@ -94,7 +94,7 @@ public class CryptoLib {
 	 *
 	 * (Note there is a limit on the message length -- this is no hybrid encryption.)
 	 */
-	public static byte[] pke_encrypt(byte[] message, byte[] publicKey) {
+	private static byte[] just_pke_encrypt(byte[] message, byte[] publicKey) {
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
 			// for private keys use PKCS8EncodedKeySpec; for public keys use
@@ -113,7 +113,7 @@ public class CryptoLib {
 		return null;
 	}
 
-	public static byte[] pke_decrypt(byte[] message, byte[] privKey) {
+	private static byte[] just_pke_decrypt(byte[] message, byte[] privKey) {
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
 			// for private keys use PKCS8EncodedKeySpec; for public keys use
@@ -128,6 +128,28 @@ public class CryptoLib {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	// Hybrid encryption
+	public static byte[] pke_encrypt(byte[] message, byte[] publicKey) {
+		// generate an auxiliary random symmetric key
+		byte[] aux_key = symkey_generateKey();
+		// encrypt it using the public key
+		byte[] encrypted_aux_key = just_pke_encrypt(aux_key, publicKey);
+		// encrypt the message using the auxiliary key
+		byte[] encrypted_message = symkey_encrypt(aux_key, message);
+		// the result ciphertext is the concatenation of the above
+		return MessageTools.concatenate(encrypted_aux_key, encrypted_message);
+	}
+
+	public static byte[] pke_decrypt(byte[] ciphertext, byte[] privKey) {
+		// split the input message into parts
+		byte[] encrypted_aux_key = MessageTools.first(ciphertext);
+		byte[] encrypted_message =  MessageTools.second(ciphertext);
+		// retrieve the auxiliary key
+		byte[] aux_key = just_pke_decrypt(encrypted_aux_key, privKey);
+		// decrypt and return the message
+		return symkey_decrypt(aux_key, encrypted_message);
 	}
 
 	public static KeyPair pke_generateKeyPair() {
