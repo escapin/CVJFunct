@@ -4,6 +4,13 @@ import de.uni.trier.infsec.environment.Environment;
 
 public class CryptoLib {
 
+	public static byte[] nextNonce() {
+		// input
+		Environment.untrustedOutput(0x100);
+		// output
+		return Environment.untrustedInputMessage();
+	}
+
 	public static byte[] symkey_generateKey() {
 		// input
 		Environment.untrustedOutput(0x91);
