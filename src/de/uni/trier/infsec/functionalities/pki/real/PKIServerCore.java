@@ -11,7 +11,7 @@ import de.uni.trier.infsec.utils.Utilities;
 
 public class PKIServerCore implements PKIServer {
 	
-	public static final String DEFAULT_DATABASE = System.getProperty("java.io.tmpdir") + File.separator + "evoting_server.db";
+	public static final String DEFAULT_DATABASE = System.getProperty("java.io.tmpdir") + File.separator + "PKI_server.db";
 	private static final String DB_TABLE_NAME_PKE = "PKI";
 	private static final String DB_COLUMN_NAME_KEY = "KEY";
 	// Table PKI stores ID and corresponding Public Key in hex-representation
