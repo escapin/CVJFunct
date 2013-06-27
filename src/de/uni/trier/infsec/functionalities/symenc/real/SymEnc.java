@@ -25,4 +25,14 @@ public class SymEnc {
 	public byte[] decrypt(byte[] ciphertext) {
 		return CryptoLib.symkey_decrypt(copyOf(key), copyOf(ciphertext));
 	}
+	
+	/// Extended interface (not in the ideal functionality): serialization/deserialization of SymEnc ///
+	
+	public SymEnc(byte[] key){
+		this.key=key;
+	}
+	
+	public byte[] getKey(){
+		return key;
+	}
 }
