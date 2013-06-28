@@ -34,6 +34,12 @@ public class TestCrypto extends TestCase {
 		byte[] big_ciphertext = CryptoLib.symkey_encrypt(key, big_message);
 		byte[] big_plaintext  = CryptoLib.symkey_decrypt(key, big_ciphertext);
 		assertTrue(Arrays.equals(big_message, big_plaintext));
+		
+		// Authenticated encryption should not accept a changed ciphertext:
+		int len = ciphertext.length;
+		ciphertext[len-2] += 1; // modify one byte of the ciphertext
+		byte[] result = CryptoLib.symkey_decrypt(key, ciphertext);
+		assertTrue(result == null);
 	}
 	
 	@Test

@@ -38,6 +38,11 @@ public class CryptoLib {
 		Security.addProvider(new BouncyCastleProvider());
 	}
 
+	/**
+	 * Key generation for symmetric encryption.
+	 * 
+	 * TODO: not authenticated yet!
+	 */
 	public static byte[] symkey_generateKey() {
 		try {
 			KeyGenerator kgen = KeyGenerator.getInstance("AES", "BC");
@@ -51,18 +56,23 @@ public class CryptoLib {
 		}
 	}
 
+	/**
+	 *  Authenticated encryption.
+	 * 
+	 *  GCM mode of encryption with AES and random 96-bit IV. 
+	 */
 	public static byte[] symkey_encrypt(byte[] key, byte[] plaintext) {
 		// wrap the key
 		SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
 		// generate a random iv
-		byte[] iv_bytes = new byte[16];
+		byte[] iv_bytes = new byte[12]; // 96-bit IV gives best performance for GCM 
 		SecureRandom rnd = new SecureRandom();
 		rnd.nextBytes(iv_bytes);
 		IvParameterSpec iv = new IvParameterSpec(iv_bytes);
 		try {
 			// encrypt and add the iv
-			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
-	        c.init(Cipher.ENCRYPT_MODE, keySpec, iv);
+			Cipher c = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+			c.init(Cipher.ENCRYPT_MODE, keySpec, iv);
 			byte[] encrypted =  c.doFinal(plaintext);
 			return MessageTools.raw_concatenate(iv_bytes, encrypted);
 		} catch (Exception e) { // (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException |  e)			
@@ -71,17 +81,24 @@ public class CryptoLib {
 		}
 	}
 
+	/**
+	 * Authenticated dectyprion. If decription fails (integrity test fails), this method returns null;
+	 * 
+	 * (See symkey_encrypt for chosen cryptographic implementation)
+	 */
 	public static byte[] symkey_decrypt(byte[] key, byte[] ciphertext) {
 		// wrap the key
 		final SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
-		// recover the iv (first 16 bytes of the ciphertext)
-		if (ciphertext.length < 16) return null;
-		IvParameterSpec iv = new IvParameterSpec(ciphertext, 0, 16); // parameters: bytes, offset, length
+		// recover the iv (first 12 bytes of the ciphertext)
+		if (ciphertext.length < 12) return null;
+		IvParameterSpec iv = new IvParameterSpec(ciphertext, 0, 12); // parameters: bytes, offset, length
 		try {
 			// decrypt
-			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
+			Cipher c = Cipher.getInstance("AES/GCM/NoPadding", "BC");
 			c.init(Cipher.DECRYPT_MODE, keySpec, iv);
-			return c.doFinal(ciphertext, 16, ciphertext.length-16);  // param: bytes, offset, length
+			return c.doFinal(ciphertext, 12, ciphertext.length-12);  // param: bytes, offset, length
+		} catch (javax.crypto.BadPaddingException e) {
+			return null;  // mac check in GCM failed --- return bottom
 		} catch (Exception e) { // (NoSuchAlgorithmException | NoSuchProviderException	| NoSuchPaddingException |  e) {			
 			e.printStackTrace();
 			return null;
