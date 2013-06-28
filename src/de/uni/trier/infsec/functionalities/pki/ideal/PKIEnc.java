@@ -72,6 +72,10 @@ public class PKIEnc {
 		public byte[] getPublicKey() {
 			return copyOf(publicKey);
 		}
+
+		private Encryptor copy() {
+			return new Encryptor(id, publicKey, log);
+		}
 	}
 	
 	/** An object encapsulating the private and public keys of some party. */
@@ -120,7 +124,7 @@ public class PKIEnc {
 		PKIEnc.Encryptor enc = registeredAgents.fetch(id);
 		if (enc == null)
 			throw new PKIError();
-		return enc;
+		return enc.copy();
 	}
 
 	/// IMPLEMENTATION ///

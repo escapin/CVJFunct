@@ -68,6 +68,10 @@ public class PKIEnc {
 		public byte[] getPublicKey() {
 			return copyOf(publicKey);
 		}
+
+		protected Encryptor copy() {
+			return new Encryptor(id, publicKey);
+		}
 	}
 
 	/**
@@ -93,6 +97,10 @@ public class PKIEnc {
 			}
 			log.add(copyOf(message), randomCipher);
 			return copyOf(randomCipher);
+		}
+
+		protected Encryptor copy() {
+			return new UncorruptedEncryptor(id, publicKey, log);
 		}
 	}
 
@@ -141,7 +149,7 @@ public class PKIEnc {
 		PKIEnc.Encryptor enc = registeredAgents.fetch(id);
 		if (enc == null)
 			throw new PKIError();
-		return enc;
+		return enc.copy();
 	}
 
 	/// IMPLEMENTATION ///

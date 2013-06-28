@@ -61,6 +61,10 @@ public class PKISig {
 		public byte[] getVerifKey() {
 			return copyOf(verifKey);
 		}
+
+		private Verifier copy() {
+			return new Verifier(id, verifKey, log);
+		}
 	}
 
 	/**
@@ -113,7 +117,7 @@ public class PKISig {
 		Verifier verif = registeredAgents.fetch(id);
 		if (verif == null)
 			throw new PKIError();
-		return verif;
+		return verif.copy();
 	}
 
 	/// IMPLEMENTATION ///

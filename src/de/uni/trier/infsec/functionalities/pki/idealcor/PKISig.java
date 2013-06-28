@@ -64,6 +64,10 @@ public class PKISig {
 		public byte[] getVerifKey() {
 			return copyOf(verifKey);
 		}
+
+		protected Verifier copy() {
+			return new Verifier(id, verifKey);
+		}
 	}
 
 	static public final class UncorruptedVerifier extends Verifier {
@@ -80,6 +84,9 @@ public class PKISig {
 			return CryptoLib.verify(message, signature, verifKey) && log.contains(message);
 		}
 
+		protected Verifier copy() {
+			return new UncorruptedVerifier(id, verifKey, log);
+		}
 	}
 
 	/**
@@ -132,7 +139,7 @@ public class PKISig {
 		Verifier verif = registeredAgents.fetch(id);
 		if (verif == null)
 			throw new PKIError();
-		return verif;
+		return verif.copy();
 	}
 
 	/// IMPLEMENTATION ///
