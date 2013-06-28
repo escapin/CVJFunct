@@ -40,8 +40,6 @@ public class CryptoLib {
 
 	/**
 	 * Key generation for symmetric encryption.
-	 * 
-	 * TODO: not authenticated yet!
 	 */
 	public static byte[] symkey_generateKey() {
 		try {
