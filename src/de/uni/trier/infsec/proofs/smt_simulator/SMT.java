@@ -148,10 +148,10 @@ public class SMT {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		try {
-			PKIEnc.Decryptor decryptor = new PKIEnc.Decryptor(id);
-			PKIEnc.register(decryptor.getEncryptor(), DOMAIN_SMT_ENCRYPTION);
-			PKISig.Signer signer = new PKISig.Signer(id);
-			PKISig.register(signer.getVerifier(), DOMAIN_SMT_VERIFICATION);
+			PKIEnc.Decryptor decryptor = new PKIEnc.Decryptor();
+			PKIEnc.registerEncryptor(decryptor.getEncryptor(), id, DOMAIN_SMT_ENCRYPTION);
+			PKISig.Signer signer = new PKISig.Signer();
+			PKISig.registerVerifier(signer.getVerifier(), id, DOMAIN_SMT_VERIFICATION);
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
 		}

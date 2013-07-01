@@ -16,20 +16,20 @@ public class PKIEncCorruptionExample {
 	public static void main(String args) {
 
 		// An honest party A can register in the following way:
-		PKIEnc.Decryptor dec_a = new PKIEnc.Decryptor(ID_A);
+		PKIEnc.Decryptor dec_a = new PKIEnc.Decryptor();
 		PKIEnc.Encryptor enc_a = dec_a.getEncryptor(); // enc_a is an uncorrupted encryptor
 		// (Calling Decryptor.getEncryptor is the only way to obtain an uncorrupted encryptor) 
 		try {
-			PKIEnc.register(enc_a, PKI_DOMAIN);
+			PKIEnc.registerEncryptor(enc_a, ID_A, PKI_DOMAIN);
 		}
 		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
 
 		// For a corrupted party B, we do this:
 		byte [] pubk = {0x12,0x78,0x78};
-		PKIEnc.Encryptor enc_b = new PKIEnc.Encryptor(ID_A, pubk);
+		PKIEnc.Encryptor enc_b = new PKIEnc.Encryptor(pubk);
 		try {
-			PKIEnc.register(enc_b, PKI_DOMAIN);
+			PKIEnc.registerEncryptor(enc_b, ID_B, PKI_DOMAIN);
 		}
 		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer

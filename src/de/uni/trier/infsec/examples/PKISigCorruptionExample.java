@@ -18,20 +18,20 @@ public class PKISigCorruptionExample {
 	public static void main(String args) {
 		
 		// An honest party A can register in the following way:
-		PKISig.Signer sig_a = new PKISig.Signer(ID_A);
+		PKISig.Signer sig_a = new PKISig.Signer();
 		PKISig.Verifier verif_a = sig_a.getVerifier(); // verif_a is an uncorrupted verifier
 		// (this is the only way to obtain an uncorrupted verifier) 
 		try {
-			PKISig.register(verif_a, PKI_DOMAIN);
+			PKISig.registerVerifier(verif_a, ID_A, PKI_DOMAIN);
 		}
 		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
 		
 		// For a corrupted party B, we do this:
 		byte [] verif_key = {0x12,0x78,0x78};
-		PKISig.Verifier verif_b = new PKISig.Verifier(ID_A, verif_key);
+		PKISig.Verifier verif_b = new PKISig.Verifier(verif_key);
 		try {
-			PKISig.register(verif_b, PKI_DOMAIN);
+			PKISig.registerVerifier(verif_b, ID_B, PKI_DOMAIN);
 		}
 		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
