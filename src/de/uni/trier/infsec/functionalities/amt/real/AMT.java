@@ -132,8 +132,8 @@ public class AMT {
 		if (registrationInProgress) throw new AMTError();
 		registrationInProgress = true;
 		try {
-			PKISig.Signer signer = new PKISig.Signer(id);
-			PKISig.register(signer.getVerifier(), DOMAIN_AMT);
+			PKISig.Signer signer = new PKISig.Signer();
+			PKISig.registerVerifier(signer.getVerifier(), id, DOMAIN_AMT);
 			registrationInProgress = false;
 			return new AgentProxy(id, signer);
 		}

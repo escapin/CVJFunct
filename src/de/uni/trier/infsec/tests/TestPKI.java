@@ -40,10 +40,10 @@ public class TestPKI extends TestCase {
 
 			PKI.useRemoteMode();
 
-			Decryptor d1 = new PKIEnc.Decryptor(TEST_ID1);
-			PKIEnc.register(d1.getEncryptor(), PKIEnc.DOMAIN_ENCRYPTION);
-			Decryptor d2 = new PKIEnc.Decryptor(TEST_ID2);
-			PKIEnc.register(d2.getEncryptor(), PKIEnc.DOMAIN_ENCRYPTION);
+			Decryptor d1 = new PKIEnc.Decryptor();
+			PKIEnc.registerEncryptor(d1.getEncryptor(), TEST_ID1, PKIEnc.DOMAIN_ENCRYPTION);
+			Decryptor d2 = new PKIEnc.Decryptor();
+			PKIEnc.registerEncryptor(d2.getEncryptor(), TEST_ID2, PKIEnc.DOMAIN_ENCRYPTION);
 
 			Encryptor e1 = PKIEnc.getEncryptor(TEST_ID1, PKIEnc.DOMAIN_ENCRYPTION);
 			Encryptor e2 = PKIEnc.getEncryptor(TEST_ID2, PKIEnc.DOMAIN_ENCRYPTION);
@@ -64,8 +64,8 @@ public class TestPKI extends TestCase {
 
 			boolean error = false;
 			try {
-				PKIEnc.Decryptor d = new PKIEnc.Decryptor(TEST_ID1);
-				PKIEnc.register(d.getEncryptor(), PKIEnc.DOMAIN_ENCRYPTION);
+				PKIEnc.Decryptor d = new PKIEnc.Decryptor();
+				PKIEnc.registerEncryptor(d.getEncryptor(), TEST_ID1,PKIEnc.DOMAIN_ENCRYPTION);
 			} catch (PKIError e) {
 				error = true;
 			}
@@ -86,10 +86,10 @@ public class TestPKI extends TestCase {
 			}
 			assertTrue("Unknown Wrong domain did not lead to an error!", error);
 			
-			Signer s1 = new Signer(TEST_ID1);
-			PKISig.register(s1.getVerifier(), PKISig.DOMAIN_VERIFICATION);
-			Signer s2 = new Signer(TEST_ID2);
-			PKISig.register(s2.getVerifier(), PKISig.DOMAIN_VERIFICATION);
+			Signer s1 = new Signer();
+			PKISig.registerVerifier(s1.getVerifier(), TEST_ID1, PKISig.DOMAIN_VERIFICATION);
+			Signer s2 = new Signer();
+			PKISig.registerVerifier(s2.getVerifier(), TEST_ID2, PKISig.DOMAIN_VERIFICATION);
 			
 			byte[] sig1 = s1.sign(TEST_DATA);
 			byte[] sig2 = s2.sign(TEST_DATA);
@@ -104,8 +104,8 @@ public class TestPKI extends TestCase {
 			
 			error = false;
 			try {
-				Signer s = new Signer(TEST_ID1);
-				PKISig.register(s.getVerifier(), PKISig.DOMAIN_VERIFICATION);
+				Signer s = new Signer();
+				PKISig.registerVerifier(s.getVerifier(), TEST_ID1, PKISig.DOMAIN_VERIFICATION);
 			} catch (PKIError e) {
 				error = true;
 			}
