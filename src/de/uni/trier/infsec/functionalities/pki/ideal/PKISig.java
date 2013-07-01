@@ -42,12 +42,10 @@ public class PKISig {
 	 * pair message/signature has been registered in the log.
 	 */
 	static public final class Verifier {
-		public final int id;
 		private byte[] verifKey;
 		private Log log;
 
-		private Verifier(int id, byte[] verifKey, Log log) {
-			this.id = id;
+		private Verifier(byte[] verifKey, Log log) {
 			this.verifKey = verifKey;
 			this.log = log;
 		}
@@ -63,7 +61,7 @@ public class PKISig {
 		}
 
 		private Verifier copy() {
-			return new Verifier(id, verifKey, log);
+			return new Verifier(verifKey, log);
 		}
 	}
 
@@ -74,16 +72,14 @@ public class PKISig {
 	 * is stores in the log.
 	 */
 	static public class Signer {
-		public final int ID;
 		private byte[] verifKey;
 		private byte[] signKey;
 		private Log log;
 
-		public Signer(int id) {
+		public Signer() {
 			KeyPair keypair = CryptoLib.generateSignatureKeyPair(); // note usage of the real cryto lib here
 			this.signKey = copyOf(keypair.privateKey);
 			this.verifKey = copyOf(keypair.publicKey);
-			this.ID = id;
 			this.log = new Log();
 		}
 
@@ -100,21 +96,20 @@ public class PKISig {
 		}
 
 		public Verifier getVerifier() {
-			return new Verifier(ID, verifKey, log);
+			return new Verifier(verifKey, log);
 		}
 	}
 
-	// FIXME: pki_domain is ignored in the methods below
-	public static void register(Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
+	public static void registerVerifier(Verifier verifier, int id, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		if( registeredAgents.fetch(verifier.id) != null ) // verified.ID is registered?
+		if( registeredAgents.fetch(id, pki_domain) != null ) // verified.ID is registered?
 			throw new PKIError();
-		registeredAgents.add(verifier);
+		registeredAgents.add(id, pki_domain, verifier);
 	}
 
 	public static Verifier getVerifier(int id, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		Verifier verif = registeredAgents.fetch(id);
+		Verifier verif = registeredAgents.fetch(id, pki_domain);
 		if (verif == null)
 			throw new PKIError();
 		return verif.copy();
@@ -124,9 +119,13 @@ public class PKISig {
 
 	private static class RegisteredAgents {
 		private static class VerifierList {
+			final int id;
+			byte[] domain;			
 			PKISig.Verifier verifier;
 			VerifierList  next;
-			VerifierList(PKISig.Verifier verifier, VerifierList next) {
+			VerifierList(int id, byte[] domain,  Verifier verifier, VerifierList next) {
+				this.id = id;
+				this.domain = domain;
 				this.verifier = verifier;
 				this.next = next;
 			}
@@ -134,13 +133,13 @@ public class PKISig {
 
 		private VerifierList first = null;
 
-		public void add(PKISig.Verifier verif) {
-			first = new VerifierList(verif, first);
+		public void add(int id, byte[] domain, PKISig.Verifier verif) {
+			first = new VerifierList(id, domain, verif, first);
 		}
 
-		PKISig.Verifier fetch(int ID) {
+		PKISig.Verifier fetch(int ID, byte[] domain) {
 			for( VerifierList node = first;  node != null;  node = node.next ) {
-				if( ID == node.verifier.id )
+				if( ID == node.id && MessageTools.equal(domain, node.domain) )
 					return node.verifier;
 			}
 			return null;

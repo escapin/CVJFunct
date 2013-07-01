@@ -47,13 +47,11 @@ public class PKIEnc {
 	 *  for decryption.    
 	 */
 	static public class Encryptor {
-		public final int id;	
 		private byte[] publicKey;
 		private EncryptionLog log;
 
 		// note that the constructor is not public; encryptors are only created from decryptors
-		Encryptor(int id, byte[] publicKey, EncryptionLog log) {
-			this.id = id;
+		Encryptor(byte[] publicKey, EncryptionLog log) {
 			this.publicKey = publicKey;
 			this.log = log;
 		}
@@ -74,22 +72,20 @@ public class PKIEnc {
 		}
 
 		private Encryptor copy() {
-			return new Encryptor(id, publicKey, log);
+			return new Encryptor(publicKey, log);
 		}
 	}
 	
 	/** An object encapsulating the private and public keys of some party. */
 	static public class Decryptor {
-		public final int id;
 		private byte[] publicKey;
 		private byte[] privateKey;
 		private EncryptionLog log;
 
-		public Decryptor(int id) {
+		public Decryptor() {
 			KeyPair keypair = CryptoLib.pke_generateKeyPair();
 			this.privateKey = copyOf(keypair.privateKey);
 			this.publicKey = copyOf(keypair.publicKey);
-			this.id = id;
 			this.log = new EncryptionLog();
 		}		
 		
@@ -107,21 +103,20 @@ public class PKIEnc {
 		
 		/** Returns a new encryptor object sharing the same public key, ID, and log. */
 		public Encryptor getEncryptor() {
-			return new Encryptor(id, publicKey, log);
+			return new Encryptor(publicKey, log);
 		}	
 	}
 
-	// TODO: pki_domain is ignored in the methods below
-	public static void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
+	public static void registerEncryptor(Encryptor encryptor, int id, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		if( registeredAgents.fetch(encryptor.id) != null ) // encryptor.id is registered?
+		if( registeredAgents.fetch(id, pki_domain) != null ) // encryptor.id is registered?
 			throw new PKIError();
-		registeredAgents.add(encryptor);
+		registeredAgents.add(id, pki_domain, encryptor);
 	}
 
 	public static Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		PKIEnc.Encryptor enc = registeredAgents.fetch(id);
+		PKIEnc.Encryptor enc = registeredAgents.fetch(id, pki_domain);
 		if (enc == null)
 			throw new PKIError();
 		return enc.copy();
@@ -131,9 +126,13 @@ public class PKIEnc {
 
 	private static class RegisteredAgents {
 		private static class EncryptorList {
+			final int id;
+			byte[] domain;
 			PKIEnc.Encryptor encryptor;
-			EncryptorList  next;
-			EncryptorList(PKIEnc.Encryptor encryptor, EncryptorList next) {
+			EncryptorList next;
+			EncryptorList(int id, byte[] domain, PKIEnc.Encryptor encryptor, EncryptorList next) {
+				this.id = id;
+				this.domain = domain;
 				this.encryptor= encryptor;
 				this.next = next;
 			}
@@ -141,13 +140,13 @@ public class PKIEnc {
 
 		private EncryptorList first = null;
 
-		public void add(PKIEnc.Encryptor encr) {
-			first = new EncryptorList(encr, first);
+		public void add(int id, byte[] domain, PKIEnc.Encryptor encr) {
+			first = new EncryptorList(id, domain, encr, first);
 		}
 
-		PKIEnc.Encryptor fetch(int ID) {
+		PKIEnc.Encryptor fetch(int ID, byte[] domain) {
 			for( EncryptorList node = first;  node != null;  node = node.next ) {
-				if( ID == node.encryptor.id )
+				if( ID == node.id && MessageTools.equal(domain, node.domain) )
 					return node.encryptor;
 			}
 			return null;
