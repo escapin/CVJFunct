@@ -4,8 +4,6 @@ import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
-import static de.uni.trier.infsec.utils.MessageTools.intToByteArray;
-import static de.uni.trier.infsec.utils.MessageTools.byteArrayToInt;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.network.NetworkError;
@@ -25,11 +23,9 @@ public class PKISig {
 	 * a signature.
 	 */
 	static public class Verifier {
-		public final int ID;
 		private byte[] verifKey;
 
-		public Verifier(int id, byte[] verifKey) {
-			this.ID = id;
+		public Verifier(byte[] verifKey) {
 			this.verifKey = verifKey;
 		}
 
@@ -47,19 +43,16 @@ public class PKISig {
 	 * create signatures.
 	 */
 	static public class Signer {
-		public final int ID;
 		private byte[] verifKey;
 		private byte[] signKey;
 
-		public Signer(int id) {
-			this.ID = id;
+		public Signer() {
 			KeyPair keypair = CryptoLib.generateSignatureKeyPair();
 			this.signKey = copyOf(keypair.privateKey);
 			this.verifKey = copyOf(keypair.publicKey);
 		}
 
-		private Signer(int id, byte[] verifKey, byte[] signKey ) {
-			this.ID = id;
+		private Signer(byte[] verifKey, byte[] signKey ) {
 			this.verifKey = verifKey;
 			this.signKey = signKey;
 		}
@@ -70,33 +63,27 @@ public class PKISig {
 		}
 
 		public Verifier getVerifier() {
-			return new Verifier(ID, verifKey);
+			return new Verifier(verifKey);
 		}
 	}
 
-	public static void register(PKISig.Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
-		PKI.register(verifier.ID, pki_domain, verifier.getVerifKey());
+	public static void registerVerifier(PKISig.Verifier verifier, int id, byte[] pki_domain) throws PKIError, NetworkError {
+		PKI.register(id, pki_domain, verifier.getVerifKey());
 	}
 
 	public static PKISig.Verifier getVerifier(int id, byte[] pki_domain) throws PKIError, NetworkError {
 		byte[] key = PKI.getKey(id, pki_domain);
-		return new PKISig.Verifier(id,key);
+		return new PKISig.Verifier(key);
 	}
 
 	public static byte[] signerToBytes(Signer signer) {
-		byte[] id = intToByteArray(signer.ID);
-		byte[] sign = signer.signKey;
-		byte[] verify = signer.verifKey;
-
-		byte[] out = concatenate(id, concatenate(sign, verify));
+		byte[] out = concatenate(signer.signKey, signer.verifKey);
 		return out;
 	}
 
 	public static Signer signerFromBytes(byte[] bytes) {
-		int id = byteArrayToInt(first(bytes));
-		byte[] rest = second(bytes);
-		byte[] sign_key = first(rest);
-		byte[] verif_key = second(rest);
-		return new Signer(id, verif_key, sign_key);
+		byte[] sign_key = first(bytes);
+		byte[] verif_key = second(bytes);
+		return new Signer(verif_key, sign_key);
 	}
 }
