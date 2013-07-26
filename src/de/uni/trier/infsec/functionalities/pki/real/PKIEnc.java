@@ -21,6 +21,9 @@ import de.uni.trier.infsec.lib.crypto.KeyPair;
  * and set Java Property -Dremotemode=true which will enable remote procedure 
  * calls to be used automatically. Server Authentication is done by signing and 
  * validating each message using an built-in keypair (see PKIServer).
+ * 
+ * This functionality realizes both pki.ideal and pki.idealcor (with respect 
+ * to two different interfaces).
  */
 public class PKIEnc {
 
@@ -34,6 +37,7 @@ public class PKIEnc {
 	static public class Encryptor {
 		private byte[] publicKey;
 
+		
 		public Encryptor(byte[] publicKey) {
 			this.publicKey = publicKey;
 		}

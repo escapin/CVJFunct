@@ -51,7 +51,7 @@ public class PKISig {
 		}
 
 		public boolean verify(byte[] signature, byte[] message) {
-			// verify both that the signature is correc (using the real verification
+			// verify both that the signature is correct (using the real verification
 			// algorithm) and that the message has been logged as signed
 			return CryptoLib.verify(message, signature, verifKey) && log.contains(message);
 		}
