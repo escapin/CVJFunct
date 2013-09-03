@@ -1,9 +1,9 @@
-package de.uni.trier.infsec.functionalities.smt.ideal;
+package de.uni.trier.infsec.functionalities.smt;
 
 import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
-import de.uni.trier.infsec.environment.network.NetworkClient;
-import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pki_nocorrupt.PKIError;
+import de.uni.trier.infsec.lib.network.NetworkClient;
+import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.environment.smt.SMTEnv;
 
 /**

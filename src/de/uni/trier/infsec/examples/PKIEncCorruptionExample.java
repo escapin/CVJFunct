@@ -1,8 +1,8 @@
 package de.uni.trier.infsec.examples;
 
-import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
+import de.uni.trier.infsec.functionalities.pki.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.PKIError;
+import de.uni.trier.infsec.lib.network.NetworkError;
 
 public class PKIEncCorruptionExample {
 

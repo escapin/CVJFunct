@@ -1,7 +1,7 @@
-package de.uni.trier.infsec.functionalities.pkenc.ideal;
+package de.uni.trier.infsec.functionalities.pkenc;
 
-import de.uni.trier.infsec.environment.crypto.CryptoLib;
-import de.uni.trier.infsec.environment.crypto.KeyPair;
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
+import de.uni.trier.infsec.lib.crypto.KeyPair;
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 
 // THIS FUNCTIONALITY IS OBSOLETE. USE PKI INSTEAD.

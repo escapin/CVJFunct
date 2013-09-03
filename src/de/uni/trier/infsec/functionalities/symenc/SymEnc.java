@@ -1,8 +1,8 @@
-package de.uni.trier.infsec.functionalities.symenc.ideal;
+package de.uni.trier.infsec.functionalities.symenc;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
-import de.uni.trier.infsec.environment.crypto.CryptoLib;
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**

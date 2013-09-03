@@ -1,11 +1,11 @@
 package de.uni.trier.infsec.proofs.smt_simulator;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
-import de.uni.trier.infsec.functionalities.pki.ideal.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
-import de.uni.trier.infsec.functionalities.pki.ideal.PKISig;
-import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.environment.network.NetworkServer;
+import de.uni.trier.infsec.functionalities.pki_nocorrupt.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki_nocorrupt.PKIError;
+import de.uni.trier.infsec.functionalities.pki_nocorrupt.PKISig;
+import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.lib.network.NetworkServer;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**

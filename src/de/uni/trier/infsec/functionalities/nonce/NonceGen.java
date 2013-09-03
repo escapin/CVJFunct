@@ -1,7 +1,7 @@
-package de.uni.trier.infsec.functionalities.nonce.ideal;
+package de.uni.trier.infsec.functionalities.nonce;
 
 import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.environment.crypto.CryptoLib;
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
 /**
  * Ideal functionality for nonce generation. Nonces are supposed to be unuque
