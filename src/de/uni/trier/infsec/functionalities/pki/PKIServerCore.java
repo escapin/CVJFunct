@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.pki.real;
+package de.uni.trier.infsec.functionalities.pki;
 
 import java.io.File;
 import org.tmatesoft.sqljet.core.SqlJetException;

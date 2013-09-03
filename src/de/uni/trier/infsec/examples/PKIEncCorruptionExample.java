@@ -1,8 +1,8 @@
 package de.uni.trier.infsec.examples;
 
-import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
+import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pki.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.PKIError;
 
 public class PKIEncCorruptionExample {
 
@@ -48,23 +48,6 @@ public class PKIEncCorruptionExample {
 		try {
 			PKIEnc.Encryptor encryptor_of_a = PKIEnc.getEncryptor(ID_A, PKI_DOMAIN);
 			encryptor_of_a.encrypt(message2);
-			// Ecryptor_of_a, as we know, is actually of type UncorruptedEncryptor. So, 
-			// in principle, we can obtain guarantees of secrecy of sent messages. This, 
-			// however, may be difficult for tools (a tool have to see that this encryptor is
-			// of this type and not of type CorruptedEncryptor).
-
-			// To make the fact (assumption) that A is uncorrupted explicit in the code, 
-			// which will make it easier for the tools, we can do the following (only possible
-			// for the ideal functionality).
-
-			PKIEnc.UncorruptedEncryptor uncorrupted_encryptor_of_a = (PKIEnc.UncorruptedEncryptor) encryptor_of_a;
-			uncorrupted_encryptor_of_a.encrypt(message3);
-
-			// now, we know that the code of the uncorrupted version of an encryptor is used, 
-			// and so we get the guarantees of the ideal functionality.
-			// Note that if the encryptor of A actually was corrupted, the cast would result in an 
-			// exception and the message would not been sent (and thus, its secrecy would be preserved).
-
 		}
 		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here
 		catch(NetworkError e) {} // or here, if there has been no (or wrong) answer from PKI

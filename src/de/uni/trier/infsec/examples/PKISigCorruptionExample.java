@@ -1,8 +1,8 @@
 package de.uni.trier.infsec.examples;
 
-import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
+import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pki.PKIError;
+import de.uni.trier.infsec.functionalities.pki.PKISig;
 
 public class PKISigCorruptionExample {
 	static int ID_A = 1;
@@ -48,22 +48,6 @@ public class PKISigCorruptionExample {
 		try {
 			PKISig.Verifier verif_of_a = PKISig.getVerifier(ID_A, PKI_DOMAIN);
 			verif_of_a.verify(signature2, message2);
-			// Verifier, as we know, is actually of type UncorruptedVerifier. So, 
-			// in principle, we can obtain appropriate guarantees. This, 
-			// however, may be difficult for tools.
-
-			// To make the fact (assumption) that the verifier is uncorrupted explicit 
-			// in the code, which will make it easier for the tools, we can do the following 
-			// (only possible for the ideal functionality).
-
-			PKISig.UncorruptedVerifier uncorrupted_verif_of_a = (PKISig.UncorruptedVerifier) verif_of_a;
-			uncorrupted_verif_of_a.verify(signature3, message3);
-
-			// now, we know that the code of the uncorrupted version of an verifier is used,
-			// and so we get the guarantees of the ideal functionality.
-			// Note that if the verifier of A actually was corrupted, the cast would result in an
-			// exception.
-			
 		}
 		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here
 		catch(NetworkError e) {} // or here, if there has been no (or wrong) answer from PKI

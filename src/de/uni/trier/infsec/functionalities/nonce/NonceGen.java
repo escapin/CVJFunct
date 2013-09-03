@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.nonce.real;
+package de.uni.trier.infsec.functionalities.nonce;
 
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 

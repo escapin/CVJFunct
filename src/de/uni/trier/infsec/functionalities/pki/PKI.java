@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.pki.real;
+package de.uni.trier.infsec.functionalities.pki;
 
 import de.uni.trier.infsec.lib.network.NetworkError;
 

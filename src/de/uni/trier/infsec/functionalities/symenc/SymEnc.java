@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.symenc.real;
+package de.uni.trier.infsec.functionalities.symenc;
 
 import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;

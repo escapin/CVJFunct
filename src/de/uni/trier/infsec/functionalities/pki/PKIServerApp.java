@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.pki.real;
+package de.uni.trier.infsec.functionalities.pki;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;

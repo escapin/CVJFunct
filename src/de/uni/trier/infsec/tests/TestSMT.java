@@ -6,14 +6,14 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import de.uni.trier.infsec.functionalities.pki.real.PKI;
-import de.uni.trier.infsec.functionalities.pki.real.PKIError;
-import de.uni.trier.infsec.functionalities.pki.real.PKIServerCore;
-import de.uni.trier.infsec.functionalities.smt.real.SMT;
-import de.uni.trier.infsec.functionalities.smt.real.SMT.AgentProxy;
-import de.uni.trier.infsec.functionalities.smt.real.SMT.AuthenticatedMessage;
-import de.uni.trier.infsec.functionalities.smt.real.SMT.Channel;
-import de.uni.trier.infsec.functionalities.smt.real.SMT.SMTError;
+import de.uni.trier.infsec.functionalities.pki.PKI;
+import de.uni.trier.infsec.functionalities.pki.PKIError;
+import de.uni.trier.infsec.functionalities.pki.PKIServerCore;
+import de.uni.trier.infsec.functionalities.smt.SMT;
+import de.uni.trier.infsec.functionalities.smt.SMT.AgentProxy;
+import de.uni.trier.infsec.functionalities.smt.SMT.AuthenticatedMessage;
+import de.uni.trier.infsec.functionalities.smt.SMT.Channel;
+import de.uni.trier.infsec.functionalities.smt.SMT.SMTError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
 

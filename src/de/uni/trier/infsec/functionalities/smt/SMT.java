@@ -1,11 +1,16 @@
-package de.uni.trier.infsec.proofs.smt_simulator;
+package de.uni.trier.infsec.functionalities.smt;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
-import de.uni.trier.infsec.functionalities.pki.ideal.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.ideal.PKIError;
-import de.uni.trier.infsec.functionalities.pki.ideal.PKISig;
-import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.environment.network.NetworkServer;
+import static de.uni.trier.infsec.utils.MessageTools.first;
+import static de.uni.trier.infsec.utils.MessageTools.second;
+import de.uni.trier.infsec.functionalities.pki.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.PKIError;
+import de.uni.trier.infsec.functionalities.pki.PKISig;
+import de.uni.trier.infsec.functionalities.pki.PKIEnc.Decryptor;
+import de.uni.trier.infsec.functionalities.pki.PKISig.Signer;
+import de.uni.trier.infsec.lib.network.NetworkClient;
+import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.lib.network.NetworkServer;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
@@ -56,7 +61,7 @@ public class SMT {
 			this.signer = signer;	
 		}
 
-		public byte[] getMessage(int port) throws SMTError {
+		public AuthenticatedMessage getMessage(int port) throws SMTError {
 			if (registrationInProgress) throw new SMTError();
 			try {
 				byte[] inputMessage = NetworkServer.read(port);
@@ -79,9 +84,8 @@ public class SMT {
 				int recipient_id = MessageTools.byteArrayToInt(recipient_id_as_bytes);
 				if( recipient_id != ID )
 					return null; // message not intended for this proxy
-				// byte[] message = MessageTools.second(message_with_recipient_id);
-				// return new AuthenticatedMessage(message, sender_id);
-				return inputMessage;
+				byte[] message = MessageTools.second(message_with_recipient_id);
+				return new AuthenticatedMessage(message, sender_id);
 			}
 			catch (NetworkError | PKIError e) {
 				return null;
@@ -107,8 +111,8 @@ public class SMT {
 		private final int recipient_id;
 		private final PKISig.Signer sender_signer;
 		private final PKIEnc.Encryptor recipient_encryptor;
-		// private final String server;
-		// private final int port;
+		private final String server;
+		private final int port;
 
 		private Channel(int sender_id, int recipient_id,
 						PKISig.Signer sender_signer, PKIEnc.Encryptor recipient_encryptor,
@@ -117,11 +121,11 @@ public class SMT {
 			this.recipient_id = recipient_id;
 			this.sender_signer = sender_signer;
 			this.recipient_encryptor = recipient_encryptor;
-			// this.server = server;
-			// this.port = port;
+			this.server = server;
+			this.port = port;
 		}		
 
-		public byte[] send(byte[] message) {
+		public void send(byte[] message) {
 			// sign and encrypt
 			byte[] recipient_id_as_bytes = MessageTools.intToByteArray(recipient_id);
 			byte[] message_with_recipient_id = concatenate(recipient_id_as_bytes, message);
@@ -130,10 +134,9 @@ public class SMT {
 			byte[] signedAndEncrypted = recipient_encryptor.encrypt(signed);
 			byte[] sender_id_as_bytes = MessageTools.intToByteArray(sender_id);
 			byte[] outputMessage = MessageTools.concatenate(sender_id_as_bytes, signedAndEncrypted);
-			// try {
-			//	NetworkClient.send(outputMessage, server, port);
-			// } catch (NetworkError e) {}
-			return outputMessage; // used by the simulator
+			try {
+				NetworkClient.send(outputMessage, server, port);
+			} catch (NetworkError e) {}
 		}
 	}
 
@@ -155,17 +158,44 @@ public class SMT {
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
 		}
-		catch (NetworkError err) {
-			throw new SMTError();
-		}
 		catch (PKIError err) {
 			registrationInProgress = false;
 			throw err;
 		}
+		catch (NetworkError err) {
+			throw new SMTError();
+		}
 	}
 
 	private static boolean registrationInProgress = false;
-		 
-	public static final byte[] DOMAIN_SMT_VERIFICATION  = new byte[] {0x02, 0x01};
-	public static final byte[] DOMAIN_SMT_ENCRYPTION  = new byte[] {0x02, 0x02};
+	
+	 /**
+	  * Method for serialization AMT AgentProxy -> Bytes
+	  */
+	 public static byte[] agentToBytes(AgentProxy agent) {
+	         byte[] id = MessageTools.intToByteArray(agent.ID);
+	         byte[] signer = PKISig.signerToBytes(agent.signer);
+	         byte[] decryptor = PKIEnc.decryptorToBytes(agent.decryptor);
+	         byte[] out = concatenate(id, concatenate(decryptor, signer));
+	         return out;
+	 }
+
+	 /**
+	  * Method for serialization AMT AgentProxy <- Bytes
+	  */
+	 public static AgentProxy agentFromBytes(byte[] bytes) {
+	         byte[] bId = first(bytes);
+	         int id = MessageTools.byteArrayToInt(bId);
+	         byte[] bDecryptor = first(second(bytes));
+	         byte[] bSigner = second(second(bytes));
+
+	         Signer signer = PKISig.signerFromBytes(bSigner);
+	         Decryptor dec = PKIEnc.decryptorFromBytes(bDecryptor);
+	         AgentProxy agent = new AgentProxy(id, dec, signer);
+
+	         return agent;
+	 }
+	 
+	 public static final byte[] DOMAIN_SMT_VERIFICATION  = new byte[] {0x02, 0x01};
+	 public static final byte[] DOMAIN_SMT_ENCRYPTION  = new byte[] {0x02, 0x02};
 }

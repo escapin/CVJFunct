@@ -3,7 +3,8 @@ package de.uni.trier.infsec.tests;
 import junit.framework.TestCase;
 import org.junit.Test;
 import java.util.Arrays;
-import de.uni.trier.infsec.functionalities.nonce.real.NonceGen;
+
+import de.uni.trier.infsec.functionalities.nonce.NonceGen;
 
 public class TestNonces extends TestCase {
 	@Test

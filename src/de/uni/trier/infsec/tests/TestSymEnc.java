@@ -2,7 +2,9 @@ package de.uni.trier.infsec.tests;
 
 import junit.framework.TestCase;
 import org.junit.Test;
-import de.uni.trier.infsec.functionalities.symenc.real.SymEnc;
+
+import de.uni.trier.infsec.functionalities.symenc.SymEnc;
+
 import java.util.Arrays;
 
 public class TestSymEnc extends TestCase {

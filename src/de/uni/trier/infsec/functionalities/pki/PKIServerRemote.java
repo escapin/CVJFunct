@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.pki.real;
+package de.uni.trier.infsec.functionalities.pki;
 
 import static de.uni.trier.infsec.utils.MessageTools.byteArrayToInt;
 import static de.uni.trier.infsec.utils.MessageTools.first;
@@ -6,7 +6,7 @@ import static de.uni.trier.infsec.utils.MessageTools.second;
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.intToByteArray;
 import static de.uni.trier.infsec.utils.Utilities.arrayEqual;
-import de.uni.trier.infsec.functionalities.pki.real.PKIServerApp.PKIMessage;
+import de.uni.trier.infsec.functionalities.pki.PKIServerApp.PKIMessage;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;

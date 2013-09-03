@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.pkenc.real;
+package de.uni.trier.infsec.functionalities.pkenc;
 
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;

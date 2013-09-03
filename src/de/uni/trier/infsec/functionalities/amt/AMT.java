@@ -1,11 +1,11 @@
-package de.uni.trier.infsec.functionalities.amt.real;
+package de.uni.trier.infsec.functionalities.amt;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
-import de.uni.trier.infsec.functionalities.pki.real.PKIError;
-import de.uni.trier.infsec.functionalities.pki.real.PKISig;
-import de.uni.trier.infsec.functionalities.pki.real.PKISig.Signer;
+import de.uni.trier.infsec.functionalities.pki.PKIError;
+import de.uni.trier.infsec.functionalities.pki.PKISig;
+import de.uni.trier.infsec.functionalities.pki.PKISig.Signer;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
