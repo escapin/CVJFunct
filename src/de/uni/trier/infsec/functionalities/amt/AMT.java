@@ -4,7 +4,7 @@ import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.functionalities.pki_nocorrupt.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
-import de.uni.trier.infsec.environment.amt.AMTEnv;
+import de.uni.trier.infsec.environment.AMTEnv;
 
 /**
  * Ideal functionality for AMT (Authenticated Message Transmission).

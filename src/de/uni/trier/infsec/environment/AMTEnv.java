@@ -1,11 +1,7 @@
-package de.uni.trier.infsec.environment.smt;
+package de.uni.trier.infsec.environment;
 
 
-import de.uni.trier.infsec.environment.Environment;
-
-
-public class SMTEnv {
-
+public class AMTEnv {
 	public static void register(int id)	{
 		Environment.untrustedOutput(7801);
 		Environment.untrustedOutput(id);
@@ -20,13 +16,13 @@ public class SMTEnv {
 		return Environment.untrustedInput()==0;
 	}
 
-	public static byte[] send(int message_length, int sender_id, int recipient_id, String server, int port) {
+	public static byte[] send(byte[] message, int sender_id, int recipient_id, String server, int port) {
 		Environment.untrustedOutput(7803);
-		Environment.untrustedOutput(message_length);
+		Environment.untrustedOutputMessage(message);
 		Environment.untrustedOutput(sender_id);
 		Environment.untrustedOutput(recipient_id);
 		Environment.untrustedOutputString(server);
-		Environment.untrustedOutput(port); 
+		Environment.untrustedOutput(port);
 		return Environment.untrustedInputMessage();
 	}
 

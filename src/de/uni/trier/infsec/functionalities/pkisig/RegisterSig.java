@@ -1,6 +1,6 @@
 package de.uni.trier.infsec.functionalities.pkisig;
 
-import de.uni.trier.infsec.environment.Environment;
+import de.uni.trier.infsec.environment.RegisterSigEnv;
 import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
@@ -8,14 +8,16 @@ import de.uni.trier.infsec.utils.MessageTools;
 public class RegisterSig {
 
 	public static void registerVerifier(Verifier verifier, int id, byte[] pki_domain) throws PKIError, NetworkError {
-		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
+		// tell the environment/simulator what is being registered and ask if the network allows it
+		if( RegisterSigEnv.register(id, pki_domain, verifier.getVerifKey()) ) throw new NetworkError();
 		if( registeredAgents.fetch(id, pki_domain) != null ) // verified.ID is registered?
 			throw new PKIError();
 		registeredAgents.add(id, pki_domain, verifier);
 	}
 
 	public static Verifier getVerifier(int id, byte[] pki_domain) throws PKIError, NetworkError {
-		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
+		// tell the environment/simulator what is being fetched and ask if the network allows it
+		if( RegisterSigEnv.getVerifier(id, pki_domain) ) throw new NetworkError();
 		Verifier verif = registeredAgents.fetch(id, pki_domain);
 		if (verif == null)
 			throw new PKIError();

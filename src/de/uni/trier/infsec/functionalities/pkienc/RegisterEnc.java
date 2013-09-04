@@ -1,20 +1,22 @@
 package de.uni.trier.infsec.functionalities.pkienc;
 
-import de.uni.trier.infsec.environment.Environment;
+import de.uni.trier.infsec.environment.RegisterEncEnv;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
 public class RegisterEnc {
 
 	public static void registerEncryptor(Encryptor encryptor, int id, byte[] pki_domain) throws PKIError, NetworkError {
-		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
+		// tell the environment/simulator what is being registered and ask if the network allows it
+		if( RegisterEncEnv.register(id, pki_domain, encryptor.getPublicKey()) ) throw new NetworkError();
 		if( registeredAgents.fetch(id, pki_domain) != null ) // encryptor.id is registered?
 			throw new PKIError();
 		registeredAgents.add(id, pki_domain, encryptor);
 	}
 
 	public static Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
-		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
+		// tell the environment/simulator what is being fetched and ask if the network allows it
+		if( RegisterEncEnv.getEncryptor(id, pki_domain) ) throw new NetworkError();
 		Encryptor enc = registeredAgents.fetch(id, pki_domain);
 		if (enc == null)
 			throw new PKIError();
