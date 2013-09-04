@@ -7,7 +7,6 @@ import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.intToByteArray;
 import static de.uni.trier.infsec.utils.Utilities.arrayEqual;
 import de.uni.trier.infsec.functionalities.pki.PKIServerApp.PKIMessage;
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
@@ -18,7 +17,7 @@ import de.uni.trier.infsec.utils.Utilities;
 public class PKIServerRemote implements PKIServer {
 
 	@Override
-	public void register(int id, byte[] domain, byte[] pubKey) throws PKIError, NetworkError {
+	public void register(int id, byte[] domain, byte[] pubKey) throws PKI.Error, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServerApp.MSG_REGISTER;
 		request.nonce = CryptoLib.generateNonce();
@@ -42,7 +41,7 @@ public class PKIServerRemote implements PKIServer {
 
 		if (Utilities.arrayEqual(responseMsg.payload, PKIServerApp.MSG_ERROR_PKI)) {
 			echo("Server responded with PKI error");
-			throw new PKIError();
+			throw new PKI.Error();
 		}
 
 		if (Utilities.arrayEqual(responseMsg.payload, PKIServerApp.MSG_ERROR_NETWORK)) {
@@ -65,7 +64,7 @@ public class PKIServerRemote implements PKIServer {
 	}
 
 	@Override
-	public byte[] getKey(int id, byte[] domain) throws PKIError, NetworkError {
+	public byte[] getKey(int id, byte[] domain) throws PKI.Error, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServerApp.MSG_GET_KEY;
 		request.nonce = CryptoLib.generateNonce();
@@ -89,7 +88,7 @@ public class PKIServerRemote implements PKIServer {
 
 		if (Utilities.arrayEqual(responseMsg.payload, PKIServerApp.MSG_ERROR_PKI)) {
 			echo("Server responded with PKI error");
-			throw new PKIError();
+			throw new PKI.Error();
 		}
 
 		if (Utilities.arrayEqual(responseMsg.payload, PKIServerApp.MSG_ERROR_NETWORK)) {

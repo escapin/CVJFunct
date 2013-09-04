@@ -7,7 +7,6 @@ import org.tmatesoft.sqljet.core.table.ISqlJetCursor;
 import org.tmatesoft.sqljet.core.table.ISqlJetTable;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
 
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
 
@@ -23,12 +22,12 @@ public class PKIServerCore implements PKIServer {
 	
 	
 	@Override
-	public void register(int id, byte[] domain, byte[] key) throws PKIError, NetworkError {
+	public void register(int id, byte[] domain, byte[] key) throws PKI.Error, NetworkError {
 		pki_register(id, domain, key);
 	}
 
 	@Override
-	public byte[] getKey(int id, byte[] domain) throws PKIError, NetworkError {
+	public byte[] getKey(int id, byte[] domain) throws PKI.Error, NetworkError {
 		return pki_getKey(id, domain);
 	}
 
@@ -37,13 +36,13 @@ public class PKIServerCore implements PKIServer {
 	 * True, if key was successfully stored,
 	 * False, in case key is already registered or an error occured. 
 	 */
-	protected static void pki_register(int id, byte[] domain, byte[] pubKey) throws PKIError, NetworkError {
+	protected static void pki_register(int id, byte[] domain, byte[] pubKey) throws PKI.Error, NetworkError {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.WRITE);
 			ISqlJetTable table = db.getTable(DB_TABLE_NAME_PKE);
 			ISqlJetCursor cursor = table.lookup(null, Utilities.byteArrayToHexString(domain) + "." + id);
-			if (cursor.first())	throw new PKIError(); // ID has been claimed
+			if (cursor.first())	throw new PKI.Error(); // ID has been claimed
 			
 			table.insert(Utilities.byteArrayToHexString(domain) + "." + id, Utilities.byteArrayToHexString(pubKey));
 			db.commit();
@@ -58,7 +57,7 @@ public class PKIServerCore implements PKIServer {
 	 * Reads the public key from a local database and returns it.
 	 * Returns null if no entry found. 
 	 */
-	protected static byte[] pki_getKey(int id, byte[] domain) throws PKIError, NetworkError {
+	protected static byte[] pki_getKey(int id, byte[] domain) throws PKI.Error, NetworkError {
 		if (!dbInitialized) initDB();
 		try {
 			db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
@@ -69,7 +68,7 @@ public class PKIServerCore implements PKIServer {
 				byte[] pubKey  = Utilities.hexStringToByteArray(sPubKey);
 				return pubKey;
 			} else {
-				throw new PKIError(); // ID not registered
+				throw new PKI.Error(); // ID not registered
 			}
 		} catch (SqlJetException e) {
 			e.printStackTrace();

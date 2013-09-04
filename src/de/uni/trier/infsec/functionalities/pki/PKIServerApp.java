@@ -3,7 +3,6 @@ package de.uni.trier.infsec.functionalities.pki;
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
@@ -68,7 +67,7 @@ public class PKIServerApp {
 				out.payload = MessageTools.concatenate(request.payload, key);
 				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
 				return out;
-			} catch (PKIError e) {
+			} catch (PKI.Error e) {
 				echo("Key has not been registered!");
 				PKIMessage out = new PKIMessage();
 				out.nonce = request.nonce;
@@ -94,7 +93,7 @@ public class PKIServerApp {
 				out.nonce = request.nonce;
 				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
 				return out;
-			} catch (PKIError p) {
+			} catch (PKI.Error p) {
 				echo("Key has already been claimed!");
 				PKIMessage out = new PKIMessage();
 				out.nonce = request.nonce;
