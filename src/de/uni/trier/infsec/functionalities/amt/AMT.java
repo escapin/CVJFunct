@@ -3,9 +3,10 @@ package de.uni.trier.infsec.functionalities.amt;
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
-import de.uni.trier.infsec.functionalities.pki.PKIError;
-import de.uni.trier.infsec.functionalities.pki.PKISig;
-import de.uni.trier.infsec.functionalities.pki.PKISig.Signer;
+import de.uni.trier.infsec.functionalities.pkienc.PKIError;
+import de.uni.trier.infsec.functionalities.pkisig.RegisterSig;
+import de.uni.trier.infsec.functionalities.pkisig.Signer;
+import de.uni.trier.infsec.functionalities.pkisig.Verifier;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
@@ -45,9 +46,9 @@ public class AMT {
 	static public class AgentProxy
 	{
 		public final int ID;
-		private PKISig.Signer signer;
+		private Signer signer;
 
-		private AgentProxy(int id, PKISig.Signer signer) {
+		private AgentProxy(int id, Signer signer) {
 			this.ID = id;
 			this.signer = signer;
 		}
@@ -60,7 +61,7 @@ public class AMT {
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
 				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
-				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id, DOMAIN_AMT);
+				Verifier sender_verifier = RegisterSig.getVerifier(sender_id, DOMAIN_AMT);
 				// retrieve the message and the signature
 				byte[] signed = MessageTools.second(inputMessage);
 				byte[] signature = MessageTools.first(signed);
@@ -96,11 +97,11 @@ public class AMT {
 	{
 		private final int sender_id;
 		private final int recipient_id;
-		private final PKISig.Signer sender_signer;
+		private final Signer sender_signer;
 		private final String server;
 		private final int port;
 
-		private Channel(int sender_id, PKISig.Signer sender_signer, int recipient_id, String server, int port) {
+		private Channel(int sender_id, Signer sender_signer, int recipient_id, String server, int port) {
 			this.sender_id = sender_id;
 			this.sender_signer = sender_signer;
 			this.recipient_id = recipient_id;
@@ -132,8 +133,8 @@ public class AMT {
 		if (registrationInProgress) throw new AMTError();
 		registrationInProgress = true;
 		try {
-			PKISig.Signer signer = new PKISig.Signer();
-			PKISig.registerVerifier(signer.getVerifier(), id, DOMAIN_AMT);
+			Signer signer = new Signer();
+			RegisterSig.registerVerifier(signer.getVerifier(), id, DOMAIN_AMT);
 			registrationInProgress = false;
 			return new AgentProxy(id, signer);
 		}
@@ -153,7 +154,7 @@ public class AMT {
 	 */
 	public static byte[] agentToBytes(AgentProxy agent) {
         byte[] id = MessageTools.intToByteArray(agent.ID);
-        byte[] signer = PKISig.signerToBytes(agent.signer);
+        byte[] signer = agent.signer.toBytes();
         byte[] out = concatenate(id, signer);
         return out;
 	}
@@ -166,7 +167,7 @@ public class AMT {
         int id = MessageTools.byteArrayToInt(bId);
         byte[] bSigner = second(bytes);
 
-        Signer signer = PKISig.signerFromBytes(bSigner);
+        Signer signer = Signer.fromBytes(bSigner);
         AgentProxy agent = new AgentProxy(id, signer);
 
         return agent;

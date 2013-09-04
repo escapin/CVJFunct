@@ -3,6 +3,7 @@ package de.uni.trier.infsec.functionalities.pki;
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
+import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
@@ -31,7 +32,7 @@ public class PKIServerApp {
 	public static final byte[] MSG_ERROR_PKI 			= new byte[]{0x06, 0x0F, 0x0D, 0x0E};
 	public static final byte[] MSG_ERROR_NETWORK		= new byte[]{0x05, 0x0F, 0x0D, 0x0E};
 	
-	public static final int LISTEN_PORT = 7071;
+	public static final int LISTEN_PORT = 7077;
 	
 	private PKIServerApp() {
 	}

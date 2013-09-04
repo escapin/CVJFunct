@@ -7,8 +7,8 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.uni.trier.infsec.functionalities.pki.PKI;
-import de.uni.trier.infsec.functionalities.pki.PKIError;
 import de.uni.trier.infsec.functionalities.pki.PKIServerCore;
+import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.functionalities.smt.SMT;
 import de.uni.trier.infsec.functionalities.smt.SMT.AgentProxy;
 import de.uni.trier.infsec.functionalities.smt.SMT.AuthenticatedMessage;

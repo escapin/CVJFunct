@@ -10,14 +10,14 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.uni.trier.infsec.functionalities.pki.PKI;
-import de.uni.trier.infsec.functionalities.pki.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.PKIError;
 import de.uni.trier.infsec.functionalities.pki.PKIServerCore;
-import de.uni.trier.infsec.functionalities.pki.PKISig;
-import de.uni.trier.infsec.functionalities.pki.PKIEnc.Decryptor;
-import de.uni.trier.infsec.functionalities.pki.PKIEnc.Encryptor;
-import de.uni.trier.infsec.functionalities.pki.PKISig.Signer;
-import de.uni.trier.infsec.functionalities.pki.PKISig.Verifier;
+import de.uni.trier.infsec.functionalities.pkienc.Decryptor;
+import de.uni.trier.infsec.functionalities.pkienc.Encryptor;
+import de.uni.trier.infsec.functionalities.pkienc.PKIError;
+import de.uni.trier.infsec.functionalities.pkienc.RegisterEnc;
+import de.uni.trier.infsec.functionalities.pkisig.Signer;
+import de.uni.trier.infsec.functionalities.pkisig.Verifier;
+import de.uni.trier.infsec.functionalities.pkisig.RegisterSig;
 import de.uni.trier.infsec.functionalities.smt.SMT;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
@@ -33,20 +33,20 @@ public class TestPKI extends TestCase {
 		Process pr = null;
 		try {
 			String cmd = "java";
-			ProcessBuilder p = new ProcessBuilder(cmd, "-cp", System.getProperties().getProperty("java.class.path", null), "de.uni.trier.infsec.functionalities.pki.real.PKIServerApp");
+			ProcessBuilder p = new ProcessBuilder(cmd, "-cp", System.getProperties().getProperty("java.class.path", null), "de.uni.trier.infsec.functionalities.pki.PKIServerApp");
 			p.redirectErrorStream(true);
 			p.redirectOutput(Redirect.INHERIT);
 			pr = p.start();
 
 			PKI.useRemoteMode();
 
-			Decryptor d1 = new PKIEnc.Decryptor();
-			PKIEnc.registerEncryptor(d1.getEncryptor(), TEST_ID1, PKIEnc.DOMAIN_ENCRYPTION);
-			Decryptor d2 = new PKIEnc.Decryptor();
-			PKIEnc.registerEncryptor(d2.getEncryptor(), TEST_ID2, PKIEnc.DOMAIN_ENCRYPTION);
+			Decryptor d1 = new Decryptor();
+			RegisterEnc.registerEncryptor(d1.getEncryptor(), TEST_ID1, RegisterEnc.DEFAULT_PKI_DOMAIN);
+			Decryptor d2 = new Decryptor();
+			RegisterEnc.registerEncryptor(d2.getEncryptor(), TEST_ID2, RegisterEnc.DEFAULT_PKI_DOMAIN);
 
-			Encryptor e1 = PKIEnc.getEncryptor(TEST_ID1, PKIEnc.DOMAIN_ENCRYPTION);
-			Encryptor e2 = PKIEnc.getEncryptor(TEST_ID2, PKIEnc.DOMAIN_ENCRYPTION);
+			Encryptor e1 = RegisterEnc.getEncryptor(TEST_ID1, RegisterEnc.DEFAULT_PKI_DOMAIN);
+			Encryptor e2 = RegisterEnc.getEncryptor(TEST_ID2, RegisterEnc.DEFAULT_PKI_DOMAIN);
 			
 			System.err.println("plaintxt: " + Utilities.byteArrayToHexString(TEST_DATA));
 			byte[] ctxt1 = e1.encrypt(TEST_DATA);
@@ -64,15 +64,15 @@ public class TestPKI extends TestCase {
 
 			boolean error = false;
 			try {
-				PKIEnc.Decryptor d = new PKIEnc.Decryptor();
-				PKIEnc.registerEncryptor(d.getEncryptor(), TEST_ID1,PKIEnc.DOMAIN_ENCRYPTION);
+				Decryptor d = new Decryptor();
+				RegisterEnc.registerEncryptor(d.getEncryptor(), TEST_ID1,RegisterEnc.DEFAULT_PKI_DOMAIN);
 			} catch (PKIError e) {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not throw an Error!", error);
 			error = false;
 			try {
-				PKIEnc.getEncryptor(99292, PKIEnc.DOMAIN_ENCRYPTION);
+				RegisterEnc.getEncryptor(99292, RegisterEnc.DEFAULT_PKI_DOMAIN);
 			} catch (PKIError e) {
 				error = true;
 			}
@@ -80,22 +80,22 @@ public class TestPKI extends TestCase {
 			
 			error = false;
 			try {
-				PKIEnc.getEncryptor(TEST_ID1, PKISig.DOMAIN_VERIFICATION);
+				RegisterEnc.getEncryptor(TEST_ID1, RegisterSig.DEFAULT_PKI_DOMAIN);
 			} catch (PKIError e) {
 				error = true;
 			}
 			assertTrue("Unknown Wrong domain did not lead to an error!", error);
 			
 			Signer s1 = new Signer();
-			PKISig.registerVerifier(s1.getVerifier(), TEST_ID1, PKISig.DOMAIN_VERIFICATION);
+			RegisterSig.registerVerifier(s1.getVerifier(), TEST_ID1, RegisterSig.DEFAULT_PKI_DOMAIN);
 			Signer s2 = new Signer();
-			PKISig.registerVerifier(s2.getVerifier(), TEST_ID2, PKISig.DOMAIN_VERIFICATION);
+			RegisterSig.registerVerifier(s2.getVerifier(), TEST_ID2, RegisterSig.DEFAULT_PKI_DOMAIN);
 			
 			byte[] sig1 = s1.sign(TEST_DATA);
 			byte[] sig2 = s2.sign(TEST_DATA);
 			
-			Verifier v1 = PKISig.getVerifier(TEST_ID1, PKISig.DOMAIN_VERIFICATION);
-			Verifier v2 = PKISig.getVerifier(TEST_ID2, PKISig.DOMAIN_VERIFICATION);
+			Verifier v1 = RegisterSig.getVerifier(TEST_ID1, RegisterSig.DEFAULT_PKI_DOMAIN);
+			Verifier v2 = RegisterSig.getVerifier(TEST_ID2, RegisterSig.DEFAULT_PKI_DOMAIN);
 			
 			assertTrue("Verification of correct signature failed", v1.verify(sig1, TEST_DATA));
 			assertTrue("Verification of correct signature failed", v2.verify(sig2, TEST_DATA));
@@ -105,14 +105,14 @@ public class TestPKI extends TestCase {
 			error = false;
 			try {
 				Signer s = new Signer();
-				PKISig.registerVerifier(s.getVerifier(), TEST_ID1, PKISig.DOMAIN_VERIFICATION);
+				RegisterSig.registerVerifier(s.getVerifier(), TEST_ID1, RegisterSig.DEFAULT_PKI_DOMAIN);
 			} catch (PKIError e) {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not throw an Error!", error);
 			error = false;
 			try {
-				PKISig.getVerifier(9292, PKISig.DOMAIN_VERIFICATION);
+				RegisterSig.getVerifier(9292, RegisterSig.DEFAULT_PKI_DOMAIN);
 			} catch (PKIError e) {
 				error = true;
 			}
@@ -120,7 +120,7 @@ public class TestPKI extends TestCase {
 			
 			error = false;
 			try {
-				PKISig.getVerifier(TEST_ID1, SMT.DOMAIN_SMT_ENCRYPTION);
+				RegisterSig.getVerifier(TEST_ID1, SMT.DOMAIN_SMT_ENCRYPTION);
 			} catch (PKIError e) {
 				error = true;
 			}

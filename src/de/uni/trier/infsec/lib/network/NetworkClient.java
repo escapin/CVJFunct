@@ -54,6 +54,7 @@ public class NetworkClient {
 			
 			return buffer.toByteArray(); // This will return the complete message that has been received
 		} catch (Exception e) {
+			System.out.println(port);
 			e.printStackTrace();
 			throw new NetworkError();
 		} finally {

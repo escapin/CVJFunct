@@ -1,5 +1,6 @@
 package de.uni.trier.infsec.functionalities.pki;
 
+import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 
 public interface PKIServer {

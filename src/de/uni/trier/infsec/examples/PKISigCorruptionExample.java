@@ -1,8 +1,10 @@
 package de.uni.trier.infsec.examples;
 
 import de.uni.trier.infsec.lib.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.PKIError;
-import de.uni.trier.infsec.functionalities.pki.PKISig;
+import de.uni.trier.infsec.functionalities.pkienc.PKIError;
+import de.uni.trier.infsec.functionalities.pkisig.RegisterSig;
+import de.uni.trier.infsec.functionalities.pkisig.Signer;
+import de.uni.trier.infsec.functionalities.pkisig.Verifier;
 
 public class PKISigCorruptionExample {
 	static int ID_A = 1;
@@ -18,27 +20,27 @@ public class PKISigCorruptionExample {
 	public static void main(String args) {
 		
 		// An honest party A can register in the following way:
-		PKISig.Signer sig_a = new PKISig.Signer();
-		PKISig.Verifier verif_a = sig_a.getVerifier(); // verif_a is an uncorrupted verifier
+		Signer sig_a = new Signer();
+		Verifier verif_a = sig_a.getVerifier(); // verif_a is an uncorrupted verifier
 		// (this is the only way to obtain an uncorrupted verifier) 
 		try {
-			PKISig.registerVerifier(verif_a, ID_A, PKI_DOMAIN);
+			RegisterSig.registerVerifier(verif_a, ID_A, PKI_DOMAIN);
 		}
 		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
 		
 		// For a corrupted party B, we do this:
 		byte [] verif_key = {0x12,0x78,0x78};
-		PKISig.Verifier verif_b = new PKISig.Verifier(verif_key);
+		Verifier verif_b = new Verifier(verif_key);
 		try {
-			PKISig.registerVerifier(verif_b, ID_B, PKI_DOMAIN);
+			RegisterSig.registerVerifier(verif_b, ID_B, PKI_DOMAIN);
 		}
 		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
 
 		// Now, somebody verifies something signed by the corrupted party B:
 		try {
-			PKISig.Verifier verif_of_b = PKISig.getVerifier(ID_B, PKI_DOMAIN);
+			Verifier verif_of_b = RegisterSig.getVerifier(ID_B, PKI_DOMAIN);
 			verif_of_b.verify(signature1, message1);
 		}
 		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here
@@ -46,7 +48,7 @@ public class PKISigCorruptionExample {
 
 		// And now, somebody verifies something signed by the uncorrupted party A:
 		try {
-			PKISig.Verifier verif_of_a = PKISig.getVerifier(ID_A, PKI_DOMAIN);
+			Verifier verif_of_a = RegisterSig.getVerifier(ID_A, PKI_DOMAIN);
 			verif_of_a.verify(signature2, message2);
 		}
 		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here

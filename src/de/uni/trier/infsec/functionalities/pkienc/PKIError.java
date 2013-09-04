@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.pki;
+package de.uni.trier.infsec.functionalities.pkienc;
 
 @SuppressWarnings("serial")
 public class PKIError extends Exception { }

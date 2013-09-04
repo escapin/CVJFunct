@@ -3,11 +3,13 @@ package de.uni.trier.infsec.functionalities.smt;
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
-import de.uni.trier.infsec.functionalities.pki.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.PKIError;
-import de.uni.trier.infsec.functionalities.pki.PKISig;
-import de.uni.trier.infsec.functionalities.pki.PKIEnc.Decryptor;
-import de.uni.trier.infsec.functionalities.pki.PKISig.Signer;
+import de.uni.trier.infsec.functionalities.pkienc.Decryptor;
+import de.uni.trier.infsec.functionalities.pkienc.Encryptor;
+import de.uni.trier.infsec.functionalities.pkienc.PKIError;
+import de.uni.trier.infsec.functionalities.pkienc.RegisterEnc;
+import de.uni.trier.infsec.functionalities.pkisig.Signer;
+import de.uni.trier.infsec.functionalities.pkisig.Verifier;
+import de.uni.trier.infsec.functionalities.pkisig.RegisterSig;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.lib.network.NetworkServer;
@@ -52,10 +54,10 @@ public class SMT {
 	static public class AgentProxy 
 	{
 		public final int ID;
-		private PKIEnc.Decryptor decryptor;
-		private PKISig.Signer signer;
+		private Decryptor decryptor;
+		private Signer signer;
 		
-		private AgentProxy(int id, PKIEnc.Decryptor decryptor, PKISig.Signer signer) {
+		private AgentProxy(int id, Decryptor decryptor, Signer signer) {
 			this.ID = id;
 			this.decryptor = decryptor;
 			this.signer = signer;	
@@ -70,7 +72,7 @@ public class SMT {
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
 				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
-				PKISig.Verifier sender_verifier = PKISig.getVerifier(sender_id, DOMAIN_SMT_VERIFICATION);
+				Verifier sender_verifier = RegisterSig.getVerifier(sender_id, DOMAIN_SMT_VERIFICATION);
 				// retrieve the message with the recipient id and the signature
 				byte[] signedAndEncrypted = MessageTools.second(inputMessage);
 				byte[] signed = decryptor.decrypt(signedAndEncrypted);
@@ -94,7 +96,7 @@ public class SMT {
 
 		public Channel channelTo(int recipient_id, String server, int port) throws SMTError, PKIError, NetworkError {
 			if (registrationInProgress) throw new SMTError();
-			PKIEnc.Encryptor recipient_encryptor = PKIEnc.getEncryptor(recipient_id, DOMAIN_SMT_ENCRYPTION);
+			Encryptor recipient_encryptor = RegisterEnc.getEncryptor(recipient_id, DOMAIN_SMT_ENCRYPTION);
 			return new Channel(this.ID, recipient_id, this.signer, recipient_encryptor, server, port);
 		}
 	}
@@ -109,13 +111,13 @@ public class SMT {
 	{
 		private final int sender_id;
 		private final int recipient_id;
-		private final PKISig.Signer sender_signer;
-		private final PKIEnc.Encryptor recipient_encryptor;
+		private final Signer sender_signer;
+		private final Encryptor recipient_encryptor;
 		private final String server;
 		private final int port;
 
 		private Channel(int sender_id, int recipient_id,
-						PKISig.Signer sender_signer, PKIEnc.Encryptor recipient_encryptor,
+						Signer sender_signer, Encryptor recipient_encryptor,
 						String server, int port) {
 			this.sender_id = sender_id;
 			this.recipient_id = recipient_id;
@@ -151,10 +153,10 @@ public class SMT {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		try {
-			PKIEnc.Decryptor decryptor = new PKIEnc.Decryptor();
-			PKIEnc.registerEncryptor(decryptor.getEncryptor(), id, DOMAIN_SMT_ENCRYPTION);
-			PKISig.Signer signer = new PKISig.Signer();
-			PKISig.registerVerifier(signer.getVerifier(), id, DOMAIN_SMT_VERIFICATION);
+			Decryptor decryptor = new Decryptor();
+			RegisterEnc.registerEncryptor(decryptor.getEncryptor(), id, DOMAIN_SMT_ENCRYPTION);
+			Signer signer = new Signer();
+			RegisterSig.registerVerifier(signer.getVerifier(), id, DOMAIN_SMT_VERIFICATION);
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
 		}
@@ -174,8 +176,8 @@ public class SMT {
 	  */
 	 public static byte[] agentToBytes(AgentProxy agent) {
 	         byte[] id = MessageTools.intToByteArray(agent.ID);
-	         byte[] signer = PKISig.signerToBytes(agent.signer);
-	         byte[] decryptor = PKIEnc.decryptorToBytes(agent.decryptor);
+	         byte[] signer = agent.signer.toBytes();
+	         byte[] decryptor = agent.decryptor.toBytes();
 	         byte[] out = concatenate(id, concatenate(decryptor, signer));
 	         return out;
 	 }
@@ -189,8 +191,8 @@ public class SMT {
 	         byte[] bDecryptor = first(second(bytes));
 	         byte[] bSigner = second(second(bytes));
 
-	         Signer signer = PKISig.signerFromBytes(bSigner);
-	         Decryptor dec = PKIEnc.decryptorFromBytes(bDecryptor);
+	         Signer signer = Signer.fromBytes(bSigner);
+	         Decryptor dec = Decryptor.fromBytes(bDecryptor);
 	         AgentProxy agent = new AgentProxy(id, dec, signer);
 
 	         return agent;
