@@ -1,7 +1,10 @@
 package de.uni.trier.infsec.examples;
 
-import de.uni.trier.infsec.functionalities.pki.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.PKIError;
+import de.uni.trier.infsec.functionalities.pkienc.RegisterEnc;
+import de.uni.trier.infsec.functionalities.pkienc.Encryptor;
+import de.uni.trier.infsec.functionalities.pkienc.UncorruptedEncryptor;
+import de.uni.trier.infsec.functionalities.pkienc.Decryptor;
+import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 
 public class PKIEncCorruptionExample {
@@ -16,27 +19,27 @@ public class PKIEncCorruptionExample {
 	public static void main(String args) {
 
 		// An honest party A can register in the following way:
-		PKIEnc.Decryptor dec_a = new PKIEnc.Decryptor();
-		PKIEnc.Encryptor enc_a = dec_a.getEncryptor(); // enc_a is an uncorrupted encryptor
+		Decryptor dec_a = new Decryptor();
+		Encryptor enc_a = dec_a.getEncryptor(); // enc_a is an uncorrupted encryptor
 		// (Calling Decryptor.getEncryptor is the only way to obtain an uncorrupted encryptor) 
 		try {
-			PKIEnc.registerEncryptor(enc_a, ID_A, PKI_DOMAIN);
+			RegisterEnc.registerEncryptor(enc_a, ID_A, PKI_DOMAIN);
 		}
 		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
 
 		// For a corrupted party B, we do this:
 		byte [] pubk = {0x12,0x78,0x78};
-		PKIEnc.Encryptor enc_b = new PKIEnc.Encryptor(pubk);
+		Encryptor enc_b = new Encryptor(pubk);
 		try {
-			PKIEnc.registerEncryptor(enc_b, ID_B, PKI_DOMAIN);
+			RegisterEnc.registerEncryptor(enc_b, ID_B, PKI_DOMAIN);
 		}
 		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
 
 		// Now, somebody encrypts something for the corrupted party B:
 		try {
-			PKIEnc.Encryptor encryptor_of_b = PKIEnc.getEncryptor(ID_B, PKI_DOMAIN);
+			Encryptor encryptor_of_b = RegisterEnc.getEncryptor(ID_B, PKI_DOMAIN);
 			encryptor_of_b.encrypt(message1);
 			// as the encryptor of B is corrupted (is not uncorrupted), we cannot have any guarantees 
 			// for what happens to message1
@@ -46,7 +49,7 @@ public class PKIEncCorruptionExample {
 
 		// And now, somebody encrypts something to the uncorrupted party A:
 		try {
-			PKIEnc.Encryptor encryptor_of_a = PKIEnc.getEncryptor(ID_A, PKI_DOMAIN);
+			Encryptor encryptor_of_a = RegisterEnc.getEncryptor(ID_A, PKI_DOMAIN);
 			encryptor_of_a.encrypt(message2);
 			// Ecryptor_of_a, as we know, is actually of type UncorruptedEncryptor. So, 
 			// in principle, we can obtain guarantees of secrecy of sent messages. This, 
@@ -57,7 +60,7 @@ public class PKIEncCorruptionExample {
 			// which will make it easier for the tools, we can do the following (only possible
 			// for the ideal functionality).
 
-			PKIEnc.UncorruptedEncryptor uncorrupted_encryptor_of_a = (PKIEnc.UncorruptedEncryptor) encryptor_of_a;
+			UncorruptedEncryptor uncorrupted_encryptor_of_a = (UncorruptedEncryptor) encryptor_of_a;
 			uncorrupted_encryptor_of_a.encrypt(message3);
 
 			// now, we know that the code of the uncorrupted version of an encryptor is used, 
