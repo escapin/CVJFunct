@@ -56,4 +56,6 @@ public class RegisterEnc {
 
 	private static RegisteredAgents registeredAgents = new RegisteredAgents();
 
+	@SuppressWarnings("serial")
+	public static class PKIError extends Exception { }
 }

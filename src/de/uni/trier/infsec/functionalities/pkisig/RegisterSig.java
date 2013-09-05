@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.pkisig;
 
 import de.uni.trier.infsec.environment.RegisterSigEnv;
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
@@ -56,4 +55,7 @@ public class RegisterSig {
 	}
 
 	private static RegisteredAgents registeredAgents = new RegisteredAgents();
+
+	@SuppressWarnings("serial")
+	public static class PKIError extends Exception { }
 }
