@@ -28,7 +28,7 @@ public final class UncorruptedEncryptor extends Encryptor {
 		return copyOf(randomCipher);
 	}
 
-	protected UncorruptedEncryptor copy() {
+	protected Encryptor copy() {
 		return new UncorruptedEncryptor(publicKey, log);
 	}
 }	

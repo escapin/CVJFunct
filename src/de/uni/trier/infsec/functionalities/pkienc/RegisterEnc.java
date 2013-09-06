@@ -1,6 +1,6 @@
 package de.uni.trier.infsec.functionalities.pkienc;
 
-import de.uni.trier.infsec.environment.RegisterEncEnv;
+import de.uni.trier.infsec.environment.RegisterEncSim;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
@@ -8,7 +8,7 @@ public class RegisterEnc {
 
 	public static void registerEncryptor(Encryptor encryptor, int id, byte[] pki_domain) throws PKIError, NetworkError {
 		// tell the environment/simulator what is being registered and ask if the network allows it
-		if( RegisterEncEnv.register(id, pki_domain, encryptor.getPublicKey()) ) throw new NetworkError();
+		if( RegisterEncSim.register(id, pki_domain, encryptor.getPublicKey()) ) throw new NetworkError();
 		if( registeredAgents.fetch(id, pki_domain) != null ) // encryptor.id is registered?
 			throw new PKIError();
 		registeredAgents.add(id, pki_domain, encryptor);
@@ -16,12 +16,14 @@ public class RegisterEnc {
 
 	public static Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
 		// tell the environment/simulator what is being fetched and ask if the network allows it
-		if( RegisterEncEnv.getEncryptor(id, pki_domain) ) throw new NetworkError();
+		if( RegisterEncSim.getEncryptor(id, pki_domain) ) throw new NetworkError();
 		Encryptor enc = registeredAgents.fetch(id, pki_domain);
 		if (enc == null)
 			throw new PKIError();
 		return enc.copy();
 	}
+
+	public static class PKIError extends Exception { }
 
 	/// IMPLEMENTATION 
 
@@ -55,6 +57,4 @@ public class RegisterEnc {
 	}
 
 	private static RegisteredAgents registeredAgents = new RegisteredAgents();
-
-	public static class PKIError extends Exception { }
 }

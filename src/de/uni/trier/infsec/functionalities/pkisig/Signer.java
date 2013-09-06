@@ -17,14 +17,14 @@ final public class Signer {
 	private Log log;
 
 	public Signer() {
-		KeyPair keypair = CryptoLib.generateSignatureKeyPair(); // note usage of the real cryto lib here
+		KeyPair keypair = CryptoLib.generateSignatureKeyPair();
 		this.signKey = copyOf(keypair.privateKey);
 		this.verifKey = copyOf(keypair.publicKey);
 		this.log = new Log();
 	}
 
 	public byte[] sign(byte[] message) {
-		byte[] signature = CryptoLib.sign(copyOf(message), copyOf(signKey)); // note usage of the real crypto lib here
+		byte[] signature = CryptoLib.sign(copyOf(message), copyOf(signKey));
 		// we make sure that the signing has not failed
 		if (signature == null) return null;
 		// and that the signature is correct
