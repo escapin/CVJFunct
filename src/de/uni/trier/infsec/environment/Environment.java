@@ -10,7 +10,6 @@ class Node {
 
 public class Environment {
 
-	@SuppressWarnings("unused")
 	private static boolean result; // the LOW variable
 	
 	private static Node list = null;
