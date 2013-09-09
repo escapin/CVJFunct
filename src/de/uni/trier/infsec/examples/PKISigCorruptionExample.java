@@ -1,6 +1,5 @@
 package de.uni.trier.infsec.examples;
 
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.functionalities.pkisig.Signer;
 import de.uni.trier.infsec.functionalities.pkisig.Verifier;
 import de.uni.trier.infsec.functionalities.pkisig.UncorruptedVerifier;
@@ -27,7 +26,7 @@ public class PKISigCorruptionExample {
 		try {
 			RegisterSig.registerVerifier(verif_a, ID_A, PKI_DOMAIN);
 		}
-		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
+		catch (RegisterSig.PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
 		
 		// For a corrupted party B, we do this:
@@ -36,7 +35,7 @@ public class PKISigCorruptionExample {
 		try {
 			RegisterSig.registerVerifier(verif_b, ID_B, PKI_DOMAIN);
 		}
-		catch (PKIError e) {}     // registration failed: the identifier has been already claimed.
+		catch (RegisterSig.PKIError e) {}     // registration failed: the identifier has been already claimed.
 		catch (NetworkError e) {} // or we have not got any answer
 
 		// Now, somebody verifies something signed by the corrupted party B:
@@ -44,7 +43,7 @@ public class PKISigCorruptionExample {
 			Verifier verif_of_b = RegisterSig.getVerifier(ID_B, PKI_DOMAIN);
 			verif_of_b.verify(signature1, message1);
 		}
-		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here
+		catch(RegisterSig.PKIError e) {} // if ID_B has not been successfully registered, we land here
 		catch(NetworkError e) {} // or here, if there has been no (or wrong) answer from PKI
 
 		// And now, somebody verifies something signed by the uncorrupted party A:
@@ -68,7 +67,7 @@ public class PKISigCorruptionExample {
 			// exception.
 			
 		}
-		catch(PKIError e) {} // if ID_B has not been successfully registered, we land here
+		catch(RegisterSig.PKIError e) {} // if ID_B has not been successfully registered, we land here
 		catch(NetworkError e) {} // or here, if there has been no (or wrong) answer from PKI
 	}
 }

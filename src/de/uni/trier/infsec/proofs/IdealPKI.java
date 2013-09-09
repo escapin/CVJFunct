@@ -1,7 +1,7 @@
 package de.uni.trier.infsec.proofs;
 
 import de.uni.trier.infsec.environment.Environment;
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
+import de.uni.trier.infsec.functionalities.pkienc.RegisterEnc.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
