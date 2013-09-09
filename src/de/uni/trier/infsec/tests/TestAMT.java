@@ -8,12 +8,12 @@ import org.junit.Test;
 
 import de.uni.trier.infsec.functionalities.amt.AMT;
 import de.uni.trier.infsec.functionalities.amt.AMT.AMTError;
+import de.uni.trier.infsec.functionalities.amt.AMT.PKIError;
 import de.uni.trier.infsec.functionalities.amt.AMT.AgentProxy;
 import de.uni.trier.infsec.functionalities.amt.AMT.AuthenticatedMessage;
 import de.uni.trier.infsec.functionalities.amt.AMT.Channel;
 import de.uni.trier.infsec.functionalities.pki.PKI;
 import de.uni.trier.infsec.functionalities.pki.PKIServerCore;
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
 

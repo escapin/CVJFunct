@@ -3,7 +3,6 @@ package de.uni.trier.infsec.functionalities.amt;
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.functionalities.pkisig.RegisterSig;
 import de.uni.trier.infsec.functionalities.pkisig.Signer;
 import de.uni.trier.infsec.functionalities.pkisig.Verifier;
@@ -24,6 +23,9 @@ public class AMT {
 
 	@SuppressWarnings("serial")
 	static public class AMTError extends Exception {}
+	
+	@SuppressWarnings("serial")
+	static public class PKIError extends Exception {}
 
 	/**
 	 * Pair message, sender_id.
@@ -76,12 +78,12 @@ public class AMT {
 				byte[] message = MessageTools.second(message_with_recipient_id);
 				return new AuthenticatedMessage(message, sender_id);
 			}
-			catch (NetworkError | PKIError e) {
+			catch (NetworkError | RegisterSig.PKIError e) {
 				return null;
 			}
 		}
 
-		public Channel channelTo(int recipient_id, String server, int port) throws AMTError, PKIError, NetworkError {
+		public Channel channelTo(int recipient_id, String server, int port) throws AMTError, NetworkError {
 			if (registrationInProgress) throw new AMTError();
 			return new Channel(this.ID, this.signer, recipient_id, server, port);
 		}
@@ -138,9 +140,9 @@ public class AMT {
 			registrationInProgress = false;
 			return new AgentProxy(id, signer);
 		}
-		catch (PKIError err) {
+		catch (RegisterSig.PKIError err) {
 			registrationInProgress = false;
-			throw err;
+			throw new PKIError();
 		}
 		catch (NetworkError err) {
 			throw new AMTError();

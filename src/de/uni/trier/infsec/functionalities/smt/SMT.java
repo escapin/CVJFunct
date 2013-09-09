@@ -5,7 +5,6 @@ import static de.uni.trier.infsec.utils.MessageTools.first;
 import static de.uni.trier.infsec.utils.MessageTools.second;
 import de.uni.trier.infsec.functionalities.pkienc.Decryptor;
 import de.uni.trier.infsec.functionalities.pkienc.Encryptor;
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.functionalities.pkienc.RegisterEnc;
 import de.uni.trier.infsec.functionalities.pkisig.Signer;
 import de.uni.trier.infsec.functionalities.pkisig.Verifier;
@@ -25,6 +24,9 @@ public class SMT {
 
 	@SuppressWarnings("serial")
 	static public class SMTError extends Exception {}
+
+	@SuppressWarnings("serial")
+	static public class PKIError extends Exception {}
 
 	/** 
 	 * Pair message, sender_id. 
@@ -89,15 +91,20 @@ public class SMT {
 				byte[] message = MessageTools.second(message_with_recipient_id);
 				return new AuthenticatedMessage(message, sender_id);
 			}
-			catch (NetworkError | PKIError e) {
+			catch (NetworkError | RegisterSig.PKIError e) {
 				return null;
 			}
 		}
 
 		public Channel channelTo(int recipient_id, String server, int port) throws SMTError, PKIError, NetworkError {
 			if (registrationInProgress) throw new SMTError();
-			Encryptor recipient_encryptor = RegisterEnc.getEncryptor(recipient_id, DOMAIN_SMT_ENCRYPTION);
-			return new Channel(this.ID, recipient_id, this.signer, recipient_encryptor, server, port);
+			try {
+				Encryptor recipient_encryptor = RegisterEnc.getEncryptor(recipient_id, DOMAIN_SMT_ENCRYPTION);
+				return new Channel(this.ID, recipient_id, this.signer, recipient_encryptor, server, port);
+			}
+			catch (RegisterEnc.PKIError e) {
+				throw new PKIError();
+			}
 		}
 	}
 
@@ -160,9 +167,9 @@ public class SMT {
 			registrationInProgress = false;
 			return new AgentProxy(id, decryptor, signer);
 		}
-		catch (PKIError err) {
+		catch (RegisterSig.PKIError | RegisterEnc.PKIError err) {
 			registrationInProgress = false;
-			throw err;
+			throw new PKIError();
 		}
 		catch (NetworkError err) {
 			throw new SMTError();

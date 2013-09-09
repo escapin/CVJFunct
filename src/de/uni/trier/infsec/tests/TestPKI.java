@@ -13,7 +13,6 @@ import de.uni.trier.infsec.functionalities.pki.PKI;
 import de.uni.trier.infsec.functionalities.pki.PKIServerCore;
 import de.uni.trier.infsec.functionalities.pkienc.Decryptor;
 import de.uni.trier.infsec.functionalities.pkienc.Encryptor;
-import de.uni.trier.infsec.functionalities.pkienc.PKIError;
 import de.uni.trier.infsec.functionalities.pkienc.RegisterEnc;
 import de.uni.trier.infsec.functionalities.pkisig.Signer;
 import de.uni.trier.infsec.functionalities.pkisig.Verifier;
@@ -29,7 +28,7 @@ public class TestPKI extends TestCase {
 	public static byte[] TEST_DATA = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
 	
 	@Test
-	public void testRealPKIRemote() throws PKIError, NetworkError, IOException {
+	public void testRealPKIRemote() throws PKI.Error, RegisterEnc.PKIError, RegisterSig.PKIError, NetworkError, IOException {
 		Process pr = null;
 		try {
 			String cmd = "java";
@@ -66,14 +65,14 @@ public class TestPKI extends TestCase {
 			try {
 				Decryptor d = new Decryptor();
 				RegisterEnc.registerEncryptor(d.getEncryptor(), TEST_ID1,RegisterEnc.DEFAULT_PKI_DOMAIN);
-			} catch (PKIError e) {
+			} catch (RegisterEnc.PKIError e) {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not throw an Error!", error);
 			error = false;
 			try {
 				RegisterEnc.getEncryptor(99292, RegisterEnc.DEFAULT_PKI_DOMAIN);
-			} catch (PKIError e) {
+			} catch (RegisterEnc.PKIError e) {
 				error = true;
 			}
 			assertTrue("Unknown ID did not throw an Error!", error);
@@ -81,7 +80,7 @@ public class TestPKI extends TestCase {
 			error = false;
 			try {
 				RegisterEnc.getEncryptor(TEST_ID1, RegisterSig.DEFAULT_PKI_DOMAIN);
-			} catch (PKIError e) {
+			} catch (RegisterEnc.PKIError e) {
 				error = true;
 			}
 			assertTrue("Unknown Wrong domain did not lead to an error!", error);
@@ -106,14 +105,14 @@ public class TestPKI extends TestCase {
 			try {
 				Signer s = new Signer();
 				RegisterSig.registerVerifier(s.getVerifier(), TEST_ID1, RegisterSig.DEFAULT_PKI_DOMAIN);
-			} catch (PKIError e) {
+			} catch (RegisterSig.PKIError e) {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not throw an Error!", error);
 			error = false;
 			try {
 				RegisterSig.getVerifier(9292, RegisterSig.DEFAULT_PKI_DOMAIN);
-			} catch (PKIError e) {
+			} catch (RegisterSig.PKIError e) {
 				error = true;
 			}
 			assertTrue("Unknown ID did not throw an Error!", error);
@@ -121,7 +120,7 @@ public class TestPKI extends TestCase {
 			error = false;
 			try {
 				RegisterSig.getVerifier(TEST_ID1, SMT.DOMAIN_SMT_ENCRYPTION);
-			} catch (PKIError e) {
+			} catch (RegisterSig.PKIError e) {
 				error = true;
 			}
 			assertTrue("Unknown Wrong domain did not lead to an error!", error);
