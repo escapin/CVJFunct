@@ -19,7 +19,7 @@ import de.uni.trier.infsec.utils.MessageTools;
  * See smt.ideal.SMT for typical usage pattern.
  */
 public class SMT {
-	
+
 	//// The public interface ////
 
 	@SuppressWarnings("serial")
@@ -42,52 +42,77 @@ public class SMT {
 		}
 	}
 
-	/**
-	 * Object representing an agent with all the restricted (private) data that are
-	 * necessary to securely send and receive authenticated message.
-	 * 
-	 * Such an object allows one to 
-	 *  - get messages from the queue or this agent (method getMessage),
-	 *    where the environment decides which message is to be delivered,
-	 *  - create a channel to another agent (channelTo and channelToAgent); such 
-	 *    a channel can be used to securely send authenticated messages to the 
-	 *    chosen agent.
-	 */
-	static public class AgentProxy 
+	static public class Sender 
 	{
-		public final int ID;
-		private Decryptor decryptor;
-		private Signer signer;
-		
-		private AgentProxy(int id, Decryptor decryptor, Signer signer) {
-			this.ID = id;
-			this.decryptor = decryptor;
-			this.signer = signer;	
+		public final int id;
+		private final Signer signer;
+
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, PKIError, NetworkError {
+			if (registrationInProgress) throw new SMTError();
+
+			// get the encryptor for the receiver
+			Encryptor recipient_encryptor;
+			try {
+				recipient_encryptor = RegisterEnc.getEncryptor(receiver_id, DOMAIN_SMT_ENCRYPTION);
+				// (may cause NetworkError)
+			}
+			catch (RegisterEnc.PKIError e) {
+				throw new PKIError();
+			}
+
+			// format the message (sign and encrypt)
+			byte[] recipient_id_as_bytes = MessageTools.intToByteArray(receiver_id);
+			byte[] message_with_recipient_id = concatenate(recipient_id_as_bytes, message);
+			byte[] signature = signer.sign(message_with_recipient_id);
+			byte[] signed = MessageTools.concatenate(signature, message_with_recipient_id);
+			byte[] signedAndEncrypted = recipient_encryptor.encrypt(signed);
+			byte[] sender_id_as_bytes = MessageTools.intToByteArray(id);
+			byte[] outputMessage = MessageTools.concatenate(sender_id_as_bytes, signedAndEncrypted);
+
+			// send it out			
+			NetworkClient.send(outputMessage, server, port);
 		}
+
+		private Sender(int id, Signer signer) {
+			this.id = id;
+			this.signer = signer;
+		}
+	}
+
+
+	static public class Receiver {
+		public final int id;
+		private final Decryptor decryptor;
 
 		public AuthenticatedMessage getMessage(int port) throws SMTError {
 			if (registrationInProgress) throw new SMTError();
+
 			try {
+				// read a message from the network
+				// (it may end up with a network error)
 				byte[] inputMessage = NetworkServer.read(port);
 				if (inputMessage == null) return null;
-				
+
 				// get the sender id and her verifier
 				byte[] sender_id_as_bytes = MessageTools.first(inputMessage);
 				int sender_id = MessageTools.byteArrayToInt(sender_id_as_bytes);
 				Verifier sender_verifier = RegisterSig.getVerifier(sender_id, DOMAIN_SMT_VERIFICATION);
-				// retrieve the message with the recipient id and the signature
+
+				// retrieve the recipient id and the signature
 				byte[] signedAndEncrypted = MessageTools.second(inputMessage);
 				byte[] signed = decryptor.decrypt(signedAndEncrypted);
 				byte[] signature = MessageTools.first(signed);
 				byte[] message_with_recipient_id = MessageTools.second(signed);
+
 				// verify the signature
 				if( !sender_verifier.verify(signature, message_with_recipient_id) )
 					return null; // invalid signature
-				// make sure that the message is intended for this proxy
+
+				// make sure that the message is intended for this receiver
 				byte[] recipient_id_as_bytes = MessageTools.first(message_with_recipient_id);
 				int recipient_id = MessageTools.byteArrayToInt(recipient_id_as_bytes);
-				if( recipient_id != ID )
-					return null; // message not intended for this proxy
+				if( recipient_id != id )
+					return null; // message not intended for this receiver
 				byte[] message = MessageTools.second(message_with_recipient_id);
 				return new AuthenticatedMessage(message, sender_id);
 			}
@@ -96,115 +121,102 @@ public class SMT {
 			}
 		}
 
-		public Channel channelTo(int recipient_id, String server, int port) throws SMTError, PKIError, NetworkError {
-			if (registrationInProgress) throw new SMTError();
-			try {
-				Encryptor recipient_encryptor = RegisterEnc.getEncryptor(recipient_id, DOMAIN_SMT_ENCRYPTION);
-				return new Channel(this.ID, recipient_id, this.signer, recipient_encryptor, server, port);
-			}
-			catch (RegisterEnc.PKIError e) {
-				throw new PKIError();
-			}
+		private Receiver(int id, Decryptor decryptor)  {
+			this.id = id;
+			this.decryptor = decryptor;
 		}
-	}
+	}	
 
-	/**
-	 * Objects representing secure and authenticated channel from sender to recipient. 
-	 * 
-	 * Such objects allow one to securely send a message to the recipient, where the
-	 * sender is authenticated to the recipient.
-	 */
-	static public class Channel 
-	{
-		private final int sender_id;
-		private final int recipient_id;
-		private final Signer sender_signer;
-		private final Encryptor recipient_encryptor;
-		private final String server;
-		private final int port;
 
-		private Channel(int sender_id, int recipient_id,
-						Signer sender_signer, Encryptor recipient_encryptor,
-						String server, int port) {
-			this.sender_id = sender_id;
-			this.recipient_id = recipient_id;
-			this.sender_signer = sender_signer;
-			this.recipient_encryptor = recipient_encryptor;
-			this.server = server;
-			this.port = port;
-		}		
-
-		public void send(byte[] message) {
-			// sign and encrypt
-			byte[] recipient_id_as_bytes = MessageTools.intToByteArray(recipient_id);
-			byte[] message_with_recipient_id = concatenate(recipient_id_as_bytes, message);
-			byte[] signature = sender_signer.sign(message_with_recipient_id);
-			byte[] signed = MessageTools.concatenate(signature, message_with_recipient_id);
-			byte[] signedAndEncrypted = recipient_encryptor.encrypt(signed);
-			byte[] sender_id_as_bytes = MessageTools.intToByteArray(sender_id);
-			byte[] outputMessage = MessageTools.concatenate(sender_id_as_bytes, signedAndEncrypted);
-			try {
-				NetworkClient.send(outputMessage, server, port);
-			} catch (NetworkError e) {}
-		}
-	}
-
-	/**
-	 * Registering an agent with the given id. 
-	 * If this id has been already used (registered), registration fails (the method returns null).
-	 *
-	 * We assume that the registration is not blocked, that is it does not ends successfully only
-	 * if the given id has been already used (but not because of some network problems).
-	 */	
-	public static AgentProxy register(int id) throws SMTError, PKIError {
+	static Sender registerSender(int id) throws SMTError, PKIError, NetworkError {
 		if (registrationInProgress) throw new SMTError();
-		registrationInProgress = true;
+		registrationInProgress = true;	
 		try {
-			Decryptor decryptor = new Decryptor();
-			RegisterEnc.registerEncryptor(decryptor.getEncryptor(), id, DOMAIN_SMT_ENCRYPTION);
+			// create and register a new signer 
 			Signer signer = new Signer();
 			RegisterSig.registerVerifier(signer.getVerifier(), id, DOMAIN_SMT_VERIFICATION);
+			// registration successful; return a new Sender object
 			registrationInProgress = false;
-			return new AgentProxy(id, decryptor, signer);
+			return new Sender(id, signer);
 		}
-		catch (RegisterSig.PKIError | RegisterEnc.PKIError err) {
+		catch (RegisterSig.PKIError err) {
 			registrationInProgress = false;
 			throw new PKIError();
 		}
 		catch (NetworkError err) {
-			throw new SMTError();
+			registrationInProgress = false;
+			throw err;
 		}
 	}
 
+	static Receiver registerReceiver(int id) throws SMTError, PKIError, NetworkError {
+		if (registrationInProgress) throw new SMTError();
+		registrationInProgress = true;	
+		try {
+			// create a new decryptor 
+			Decryptor decryptor = new Decryptor();
+			RegisterEnc.registerEncryptor(decryptor.getEncryptor(), id, DOMAIN_SMT_ENCRYPTION);
+			// registration successful; return a new Receiver object
+			registrationInProgress = false;
+			return new Receiver(id, decryptor);
+		}
+		catch (RegisterEnc.PKIError err) {
+			registrationInProgress = false;
+			throw new PKIError();
+		}
+		catch (NetworkError err) {
+			registrationInProgress = false;
+			throw err;
+		}
+	}
+
+
+	////////////////////////////////////////////////////////////////////////////
+
 	private static boolean registrationInProgress = false;
-	
-	 /**
-	  * Method for serialization AMT AgentProxy -> Bytes
-	  */
-	 public static byte[] agentToBytes(AgentProxy agent) {
-	         byte[] id = MessageTools.intToByteArray(agent.ID);
-	         byte[] signer = agent.signer.toBytes();
-	         byte[] decryptor = agent.decryptor.toBytes();
-	         byte[] out = concatenate(id, concatenate(decryptor, signer));
-	         return out;
-	 }
+	public static final byte[] DOMAIN_SMT_VERIFICATION  = new byte[] {0x02, 0x01};
+	public static final byte[] DOMAIN_SMT_ENCRYPTION  = new byte[] {0x02, 0x02};
 
-	 /**
-	  * Method for serialization AMT AgentProxy <- Bytes
-	  */
-	 public static AgentProxy agentFromBytes(byte[] bytes) {
-	         byte[] bId = first(bytes);
-	         int id = MessageTools.byteArrayToInt(bId);
-	         byte[] bDecryptor = first(second(bytes));
-	         byte[] bSigner = second(second(bytes));
+	/**
+	 * Serialization Sender -> Bytes
+	 */
+	public static byte[] senderToBytes(Sender sender) {
+		byte[] id = MessageTools.intToByteArray(sender.id);
+		byte[] signer = sender.signer.toBytes();
+		byte[] out = concatenate(id, signer);
+		return out;
+	}
 
-	         Signer signer = Signer.fromBytes(bSigner);
-	         Decryptor dec = Decryptor.fromBytes(bDecryptor);
-	         AgentProxy agent = new AgentProxy(id, dec, signer);
+	/**
+	 * Serialization Receiver -> Bytes
+	 */
+	public static byte[] receiverToBytes(Receiver receiver) {
+		byte[] id = MessageTools.intToByteArray(receiver.id);
+		byte[] signer = receiver.decryptor.toBytes();
+		byte[] out = concatenate(id, signer);
+		return out;
+	}
 
-	         return agent;
-	 }
-	 
-	 public static final byte[] DOMAIN_SMT_VERIFICATION  = new byte[] {0x02, 0x01};
-	 public static final byte[] DOMAIN_SMT_ENCRYPTION  = new byte[] {0x02, 0x02};
+
+	/**
+	 * Deserialization Sender <- Bytes
+	 */
+	public static Sender senderFromBytes(byte[] bytes) {
+		byte[] bId = first(bytes);
+		int id = MessageTools.byteArrayToInt(bId);
+		byte[] bSigner = second(bytes);
+		Signer signer = Signer.fromBytes(bSigner);
+		return new Sender(id, signer);
+	}
+
+	/**
+	 * Deserialization Receiver <- Bytes
+	 */
+	public static Receiver receiverFromBytes(byte[] bytes) {
+		byte[] bId = first(bytes);
+		int id = MessageTools.byteArrayToInt(bId);
+		byte[] bDecryptor = second(bytes);
+		Decryptor decryptor = Decryptor.fromBytes(bDecryptor);
+		return new Receiver(id, decryptor);
+	}
 }
