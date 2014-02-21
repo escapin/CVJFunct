@@ -76,7 +76,7 @@ public class SMT {
 		}
 	}
 
-	static Sender registerSender(int id) throws SMTError, PKIError, NetworkError {
+	public static Sender registerSender(int id) throws SMTError, PKIError, NetworkError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		// call the simulator, throw a network error if the simulator says so
@@ -94,7 +94,7 @@ public class SMT {
 		return sender;
 	}
 
-	static Receiver registerReceiver(int id) throws SMTError, PKIError, NetworkError {
+	public static Receiver registerReceiver(int id) throws SMTError, PKIError, NetworkError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		// call the simulator, throw a network error if the simulator says so
