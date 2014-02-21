@@ -28,6 +28,9 @@ public class SMT {
 	@SuppressWarnings("serial")
 	static public class PKIError extends Exception {}
 
+	@SuppressWarnings("serial")
+	static public class ConnectionError extends Exception {}
+
 	/** 
 	 * Pair message, sender_id. 
 	 *
@@ -47,18 +50,21 @@ public class SMT {
 		public final int id;
 		private final Signer signer;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, PKIError, NetworkError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, PKIError, ConnectionError {
 			if (registrationInProgress) throw new SMTError();
 
 			// get the encryptor for the receiver
 			Encryptor recipient_encryptor;
 			try {
 				recipient_encryptor = RegisterEnc.getEncryptor(receiver_id, DOMAIN_SMT_ENCRYPTION);
-				// (may cause NetworkError)
 			}
 			catch (RegisterEnc.PKIError e) {
 				throw new PKIError();
+			} 
+			catch (NetworkError e) {
+				throw new ConnectionError();
 			}
+			
 
 			// format the message (sign and encrypt)
 			byte[] recipient_id_as_bytes = MessageTools.intToByteArray(receiver_id);
@@ -70,7 +76,12 @@ public class SMT {
 			byte[] outputMessage = MessageTools.concatenate(sender_id_as_bytes, signedAndEncrypted);
 
 			// send it out			
-			NetworkClient.send(outputMessage, server, port);
+			try {
+				NetworkClient.send(outputMessage, server, port);
+			} 
+			catch (NetworkError e) {
+				throw new ConnectionError();
+			}
 		}
 
 		private Sender(int id, Signer signer) {
@@ -83,6 +94,15 @@ public class SMT {
 	static public class Receiver {
 		public final int id;
 		private final Decryptor decryptor;
+		
+		public void listenOn(int port) throws ConnectionError {
+			try {
+				NetworkServer.listenForRequests(port);
+			}
+			catch (NetworkError e) {
+				throw new ConnectionError();
+			}
+		}
 
 		public AuthenticatedMessage getMessage(int port) throws SMTError {
 			if (registrationInProgress) throw new SMTError();
@@ -128,7 +148,7 @@ public class SMT {
 	}	
 
 
-	static Sender registerSender(int id) throws SMTError, PKIError, NetworkError {
+	public static Sender registerSender(int id) throws SMTError, PKIError, ConnectionError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;	
 		try {
@@ -145,11 +165,11 @@ public class SMT {
 		}
 		catch (NetworkError err) {
 			registrationInProgress = false;
-			throw err;
+			throw new ConnectionError();
 		}
 	}
 
-	static Receiver registerReceiver(int id) throws SMTError, PKIError, NetworkError {
+	public static Receiver registerReceiver(int id) throws SMTError, PKIError, ConnectionError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;	
 		try {
@@ -166,7 +186,7 @@ public class SMT {
 		}
 		catch (NetworkError err) {
 			registrationInProgress = false;
-			throw err;
+			throw new ConnectionError();
 		}
 	}
 
