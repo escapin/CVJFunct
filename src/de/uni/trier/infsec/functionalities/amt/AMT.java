@@ -16,6 +16,9 @@ public class AMT {
 	@SuppressWarnings("serial")
 	static public class AMTError extends Exception {}
 
+	@SuppressWarnings("serial")
+    static public class ConnectionError extends Exception {}
+
 	/** 
 	 * Pair (message, sender_id).
 	 * 
@@ -34,7 +37,7 @@ public class AMT {
 	{
 		public final int id;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, PKIError, NetworkError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, PKIError, ConnectionError {
 			if (registrationInProgress) throw new AMTError();
 
 			// get from the simulator a message to be later sent out
@@ -42,7 +45,12 @@ public class AMT {
 			// log the sent message along with the sender and receiver identifiers			
 			log.add(new LogEntry(MessageTools.copyOf(message), id, receiver_id));
 			// sent out the message from the simulator
-			NetworkClient.send(output_message, server, port);
+			try {
+				NetworkClient.send(output_message, server, port);
+			}
+			catch (NetworkError e) {
+				throw new ConnectionError();
+			}
 		}
 
 		private Sender(int id) {
@@ -50,12 +58,12 @@ public class AMT {
 		}
 	}
 	
-	public static Sender registerSender(int id) throws AMTError, PKIError, NetworkError {
+	public static Sender registerSender(int id) throws AMTError, PKIError, ConnectionError {
 		if (registrationInProgress) throw new AMTError();
 		registrationInProgress = true;
 		// call the simulator, throw a network error if the simulator says so
 		boolean network_ok = AMTEnv.registerSender(id);
-		if (!network_ok) throw new NetworkError();
+		if (!network_ok) throw new ConnectionError();
 		// check whether the id has not been claimed
 		if( registeredSenders.exists(id) ) {
 			registrationInProgress = false;
@@ -68,6 +76,10 @@ public class AMT {
 		return sender;
 	}
 	
+	public static void listenOn(int port) throws ConnectionError {
+		boolean ok = AMTEnv.listenOn(port);
+		if (!ok) throw new ConnectionError();
+	}
 
 	public static AuthenticatedMessage getMessage(int id, int port) throws AMTError {
 		if (registrationInProgress) throw new AMTError();			
@@ -82,7 +94,6 @@ public class AMT {
 		// return new authenticated message
 		return new AuthenticatedMessage(MessageTools.copyOf(smtmsg.message), smtmsg.sender_id);
 	}
-
 
 
 	//// Implementation ////
