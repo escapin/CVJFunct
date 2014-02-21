@@ -128,7 +128,7 @@ public class SMT {
 	}	
 
 
-	static Sender registerSender(int id) throws SMTError, PKIError, NetworkError {
+	public static Sender registerSender(int id) throws SMTError, PKIError, NetworkError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;	
 		try {
@@ -149,7 +149,7 @@ public class SMT {
 		}
 	}
 
-	static Receiver registerReceiver(int id) throws SMTError, PKIError, NetworkError {
+	public static Receiver registerReceiver(int id) throws SMTError, PKIError, NetworkError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;	
 		try {
