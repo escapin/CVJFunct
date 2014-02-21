@@ -24,6 +24,9 @@ public class AMT {
 	@SuppressWarnings("serial")
 	static public class PKIError extends Exception {}
 
+	@SuppressWarnings("serial")
+    static public class ConnectionError extends Exception {}
+
 	/** 
 	 * Pair message, sender_id. 
 	 *
@@ -43,7 +46,7 @@ public class AMT {
 		public final int id;
 		private final Signer signer;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, PKIError, NetworkError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, PKIError, ConnectionError {
 			if (registrationInProgress) throw new AMTError();
 
 			// format the message
@@ -55,7 +58,11 @@ public class AMT {
 			byte[] outputMessage = MessageTools.concatenate(sender_id_as_bytes, signed);
 
 			// send it out			
-			NetworkClient.send(outputMessage, server, port);
+			try {
+				NetworkClient.send(outputMessage, server, port);
+			} catch (NetworkError e) {
+				throw new ConnectionError();
+			}
 		}
 
 		private Sender(int id, Signer signer) {
@@ -64,7 +71,7 @@ public class AMT {
 		}
 	}
 
-	public static Sender registerSender(int id) throws AMTError, PKIError, NetworkError {
+	public static Sender registerSender(int id) throws AMTError, PKIError, ConnectionError {
 		if (registrationInProgress) throw new AMTError();
 		registrationInProgress = true;	
 		try {
@@ -81,10 +88,18 @@ public class AMT {
 		}
 		catch (NetworkError err) {
 			registrationInProgress = false;
-			throw err;
+			throw new ConnectionError();
 		}
 	}
 
+	public static void listenOn(int port) throws ConnectionError {
+		try {
+			NetworkServer.listenForRequests(port);
+		}
+		catch (NetworkError e) {
+			throw new ConnectionError();
+		}
+	}
 
 	public static AuthenticatedMessage getMessage(int id, int port) throws AMTError {
 		if (registrationInProgress) throw new AMTError();
