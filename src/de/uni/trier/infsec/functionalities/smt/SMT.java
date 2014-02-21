@@ -16,6 +16,9 @@ public class SMT {
 	@SuppressWarnings("serial")
 	static public class SMTError extends Exception {}
 
+	@SuppressWarnings("serial")
+	static public class ConnectionError extends Exception {}
+
 	/** 
 	 * Pair (message, sender_id).
 	 * 
@@ -34,19 +37,24 @@ public class SMT {
 	{
 		public final int id;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, PKIError, NetworkError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, PKIError, ConnectionError {
 			if (registrationInProgress) throw new SMTError();
 
 			// get from the simulator a message to be later sent out
 			byte[] output_message = SMTEnv.sendTo(message.length, id, receiver_id, server, port);
-			if (output_message == null) throw new NetworkError();
+			if (output_message == null) throw new ConnectionError();
 			// get the answer from PKI
 			if (!registeredReceivers.exists(receiver_id))
 				throw new PKIError();
 			// log the sent message along with the sender and receiver identifiers			
 			log.add(new LogEntry(MessageTools.copyOf(message), id, receiver_id));
 			// sent out the message from the simulator
-			NetworkClient.send(output_message, server, port);
+			try {
+				NetworkClient.send(output_message, server, port);
+			}
+			catch( NetworkError e ) {
+				throw new ConnectionError();
+			}
 		}
 
 		private Sender(int id) {
@@ -56,6 +64,11 @@ public class SMT {
 
 	static public class Receiver {
 		public final int id;
+
+		public void listenOn(int port) throws ConnectionError {
+			boolean ok = SMTEnv.listenOn(port);
+			if (!ok) throw new ConnectionError();
+		}
 
 		public AuthenticatedMessage getMessage(int port) throws SMTError {
 			if (registrationInProgress) throw new SMTError();			
@@ -76,12 +89,12 @@ public class SMT {
 		}
 	}
 
-	public static Sender registerSender(int id) throws SMTError, PKIError, NetworkError {
+	public static Sender registerSender(int id) throws SMTError, PKIError, ConnectionError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		// call the simulator, throw a network error if the simulator says so
 		boolean network_ok = SMTEnv.registerSender(id);
-		if (!network_ok) throw new NetworkError();
+		if (!network_ok) throw new ConnectionError();
 		// check whether the id has not been claimed
 		if( registeredSenders.exists(id) ) {
 			registrationInProgress = false;
@@ -94,12 +107,12 @@ public class SMT {
 		return sender;
 	}
 
-	public static Receiver registerReceiver(int id) throws SMTError, PKIError, NetworkError {
+	public static Receiver registerReceiver(int id) throws SMTError, PKIError, ConnectionError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		// call the simulator, throw a network error if the simulator says so
 		boolean network_ok =  SMTEnv.registerReceiver(id);
-		if (!network_ok) throw new NetworkError();
+		if (!network_ok) throw new ConnectionError();
 		// check whether the id has not been claimed
 		if( registeredReceivers.exists(id) ) {
 			registrationInProgress = false;

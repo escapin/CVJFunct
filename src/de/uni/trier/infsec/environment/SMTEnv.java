@@ -30,4 +30,10 @@ public class SMTEnv {
 		Environment.untrustedOutput(port);
 		return Environment.untrustedInput();
 	}
+
+	public static boolean listenOn(int port) {
+		Environment.untrustedOutput(7805);
+		Environment.untrustedOutput(port);
+		return Environment.untrustedInput()==0;
+	}
 }
