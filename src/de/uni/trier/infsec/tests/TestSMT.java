@@ -12,14 +12,13 @@ import de.uni.trier.infsec.functionalities.smt.SMT;
 //import de.uni.trier.infsec.functionalities.smt.SMT.AgentProxy;
 import de.uni.trier.infsec.functionalities.smt.SMT.AuthenticatedMessage;
 //import de.uni.trier.infsec.functionalities.smt.SMT.Channel;
+import de.uni.trier.infsec.functionalities.smt.SMT.ConnectionError;
 import de.uni.trier.infsec.functionalities.smt.SMT.PKIError;
 import de.uni.trier.infsec.functionalities.smt.SMT.Receiver;
 import de.uni.trier.infsec.functionalities.smt.SMT.SMTError;
 import de.uni.trier.infsec.functionalities.smt.SMT.Sender;
 import static de.uni.trier.infsec.functionalities.smt.SMT.registerSender;
 import static de.uni.trier.infsec.functionalities.smt.SMT.registerReceiver;
-import de.uni.trier.infsec.lib.network.NetworkError;
-import de.uni.trier.infsec.lib.network.NetworkServer;
 import de.uni.trier.infsec.utils.Utilities;
 
 public class TestSMT extends TestCase {
@@ -29,13 +28,14 @@ public class TestSMT extends TestCase {
 
 
 	@Test
-	public void testSMT() throws PKIError, NetworkError, Exception, SMTError {
+	public void testSMT() throws PKIError, ConnectionError, Exception, SMTError {
 		Process pr = null;
 		String server="localhost";
-		int testPort=7777;
+		int port=7777;
 		try {
 			PKI.useLocalMode();
-			//PKI.useRemoteMode();
+			// PKI.useRemoteMode(); // you'd need to start also PKIServerApp
+			
 			
 			Sender sender01 = registerSender(TEST_ID1);
 			Receiver receiver02 = registerReceiver(TEST_ID2);
@@ -48,13 +48,15 @@ public class TestSMT extends TestCase {
 			
 			// p2.getMessage(7777); // Starts listening for messages
 			
-			// Channel c1 = p1.channelTo(TEST_ID2, "localhost", 7777);
+			// Channel c1 = p1.channelTo(TEST_ID2, server, 7777);
 			// c1.send(TEST_DATA);
-			NetworkServer.listenForRequests(testPort);
-			sender01.sendTo(TEST_DATA, TEST_ID2, "localhost", testPort);
+			
+			receiver02.listenOn(port);
+			Thread.sleep(500);
+			sender01.sendTo(TEST_DATA, TEST_ID2, server, port);
 			Thread.sleep(500);
 			// AuthenticatedMessage msg = p2.getMessage(7777);
-			AuthenticatedMessage msg = receiver02.getMessage(testPort);
+			AuthenticatedMessage msg = receiver02.getMessage(port);
 			
 			System.out.println("REC " + Utilities.byteArrayToHexString(msg.message));
 			assertTrue("Received data is not equal to sent data", Utilities.arrayEqual(TEST_DATA, msg.message));
@@ -79,8 +81,10 @@ public class TestSMT extends TestCase {
 			
 			error = false;
 			try {
-				sender01.sendTo(TEST_DATA, TEST_ID2 + 1, "localhost", testPort);
-			} catch (NetworkError e) {
+				sender01.sendTo(TEST_DATA, TEST_ID2, server, port + 1);
+				//FIXME: this is not a fixme. At this point you should have a the stack traced of a 
+				// NetworkError printed because the port is uncorrect
+			} catch (ConnectionError e) {
 				error = true;
 			}
 			assertTrue("Invalid request did not lead to an error", error);
