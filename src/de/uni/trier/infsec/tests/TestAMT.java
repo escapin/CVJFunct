@@ -9,13 +9,13 @@ import org.junit.Test;
 import de.uni.trier.infsec.functionalities.amt.AMT;
 import de.uni.trier.infsec.functionalities.amt.AMT.AMTError;
 import de.uni.trier.infsec.functionalities.amt.AMT.PKIError;
-import de.uni.trier.infsec.functionalities.amt.AMT.AgentProxy;
 import de.uni.trier.infsec.functionalities.amt.AMT.AuthenticatedMessage;
-import de.uni.trier.infsec.functionalities.amt.AMT.Channel;
+import de.uni.trier.infsec.functionalities.amt.AMT.Sender;
 import de.uni.trier.infsec.functionalities.pki.PKI;
 import de.uni.trier.infsec.functionalities.pki.PKIServerCore;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.Utilities;
+
 
 public class TestAMT extends TestCase {
 	public static int TEST_ID1 = 42424242;
@@ -25,27 +25,28 @@ public class TestAMT extends TestCase {
 
 	@Test
 	public void testAMT() throws PKIError, NetworkError, Exception, AMTError {
+		String server="localhost";
+		int port=7777;
+		
 		PKI.useLocalMode();
+		
+		Sender sender = AMT.registerSender(TEST_ID1);
+		sender = AMT.senderFromBytes(AMT.senderToBytes(sender));
+		
+		
+		AMT.listenOn(port); // Starts listening for messages
 
-		AgentProxy p1 = AMT.register(TEST_ID1);
-		AgentProxy p2 = AMT.register(TEST_ID2);
 		
-		p2 = AMT.agentFromBytes(AMT.agentToBytes(p2));
-		p1 = AMT.agentFromBytes(AMT.agentToBytes(p1));
-		
-		p2.getMessage(7777); // Starts listening for messages
-		
-		Channel c1 = p1.channelTo(TEST_ID2, "localhost", 7777);
-		c1.send(TEST_DATA);
-		Thread.sleep(5000);
-		AuthenticatedMessage msg = p2.getMessage(7777);
+		sender.sendTo(TEST_DATA, TEST_ID2, server, port);
+		Thread.sleep(500);
+		AuthenticatedMessage msg = AMT.getMessage(TEST_ID2, port);
 		
 		System.out.println("REC " + Utilities.byteArrayToHexString(msg.message));
 		assertTrue("Received data is not equal to sent data", Utilities.arrayEqual(TEST_DATA, msg.message));
 		
 		boolean error = false;
 		try {
-			AMT.register(TEST_ID2);
+			AMT.registerSender(TEST_ID1);
 		} catch (PKIError e) {
 			error = true;
 		}

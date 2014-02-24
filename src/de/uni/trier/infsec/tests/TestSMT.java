@@ -40,22 +40,13 @@ public class TestSMT extends TestCase {
 			Sender sender01 = registerSender(TEST_ID1);
 			Receiver receiver02 = registerReceiver(TEST_ID2);
 			
-			// AgentProxy p1 = SMT.register(TEST_ID1);
-			// AgentProxy p2 = SMT.register(TEST_ID2);
+			sender01 = SMT.senderFromBytes(SMT.senderToBytes(sender01));
+			receiver02 = SMT.receiverFromBytes(SMT.receiverToBytes(receiver02));
 			
-			// p2 = SMT.agentFromBytes(SMT.agentToBytes(p2));
-			// p1 = SMT.agentFromBytes(SMT.agentToBytes(p1));
+			receiver02.listenOn(port); // Starts listening for messages
 			
-			// p2.getMessage(7777); // Starts listening for messages
-			
-			// Channel c1 = p1.channelTo(TEST_ID2, server, 7777);
-			// c1.send(TEST_DATA);
-			
-			receiver02.listenOn(port);
-			Thread.sleep(500);
 			sender01.sendTo(TEST_DATA, TEST_ID2, server, port);
 			Thread.sleep(500);
-			// AuthenticatedMessage msg = p2.getMessage(7777);
 			AuthenticatedMessage msg = receiver02.getMessage(port);
 			
 			System.out.println("REC " + Utilities.byteArrayToHexString(msg.message));
@@ -83,7 +74,7 @@ public class TestSMT extends TestCase {
 			try {
 				sender01.sendTo(TEST_DATA, TEST_ID2, server, port + 1);
 				//FIXME: this is not a fixme. At this point you should have a the stack traced of a 
-				// NetworkError printed because the port is uncorrect
+				// NetworkError printed because the port is incorrect
 			} catch (ConnectionError e) {
 				error = true;
 			}
