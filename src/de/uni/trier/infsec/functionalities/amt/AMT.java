@@ -39,7 +39,7 @@ public class AMT {
 	{
 		public final int id;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, RegistrationError, ConnectionError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, ConnectionError {
 			if (registrationInProgress) throw new AMTError();
 
 			// get from the simulator a message to be later sent out
