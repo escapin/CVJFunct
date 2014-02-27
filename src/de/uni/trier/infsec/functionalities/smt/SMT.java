@@ -26,7 +26,7 @@ public class SMT {
 	static public class SMTError extends Exception {}
 
 	@SuppressWarnings("serial")
-	static public class PKIError extends Exception {}
+	static public class RegistrationError extends Exception {}
 
 	@SuppressWarnings("serial")
 	static public class ConnectionError extends Exception {}
@@ -50,7 +50,7 @@ public class SMT {
 		public final int id;
 		private final Signer signer;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, PKIError, ConnectionError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, RegistrationError, ConnectionError {
 			if (registrationInProgress) throw new SMTError();
 
 			// get the encryptor for the receiver
@@ -59,7 +59,7 @@ public class SMT {
 				recipient_encryptor = RegisterEnc.getEncryptor(receiver_id, DOMAIN_SMT_ENCRYPTION);
 			}
 			catch (RegisterEnc.PKIError e) {
-				throw new PKIError();
+				throw new RegistrationError();
 			} 
 			catch (NetworkError e) {
 				throw new ConnectionError();
@@ -148,7 +148,7 @@ public class SMT {
 	}	
 
 
-	public static Sender registerSender(int id) throws SMTError, PKIError, ConnectionError {
+	public static Sender registerSender(int id) throws SMTError, RegistrationError, ConnectionError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;	
 		try {
@@ -161,7 +161,7 @@ public class SMT {
 		}
 		catch (RegisterSig.PKIError err) {
 			registrationInProgress = false;
-			throw new PKIError();
+			throw new RegistrationError();
 		}
 		catch (NetworkError err) {
 			registrationInProgress = false;
@@ -169,7 +169,7 @@ public class SMT {
 		}
 	}
 
-	public static Receiver registerReceiver(int id) throws SMTError, PKIError, ConnectionError {
+	public static Receiver registerReceiver(int id) throws SMTError, RegistrationError, ConnectionError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;	
 		try {
@@ -182,7 +182,7 @@ public class SMT {
 		}
 		catch (RegisterEnc.PKIError err) {
 			registrationInProgress = false;
-			throw new PKIError();
+			throw new RegistrationError();
 		}
 		catch (NetworkError err) {
 			registrationInProgress = false;

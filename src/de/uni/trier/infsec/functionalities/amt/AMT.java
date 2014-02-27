@@ -22,7 +22,7 @@ public class AMT {
 	static public class AMTError extends Exception {}
 
 	@SuppressWarnings("serial")
-	static public class PKIError extends Exception {}
+	static public class RegistrationError extends Exception {}
 
 	@SuppressWarnings("serial")
     static public class ConnectionError extends Exception {}
@@ -46,7 +46,7 @@ public class AMT {
 		public final int id;
 		private final Signer signer;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, PKIError, ConnectionError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, ConnectionError {
 			if (registrationInProgress) throw new AMTError();
 
 			// format the message
@@ -71,7 +71,7 @@ public class AMT {
 		}
 	}
 
-	public static Sender registerSender(int id) throws AMTError, PKIError, ConnectionError {
+	public static Sender registerSender(int id) throws AMTError, RegistrationError, ConnectionError {
 		if (registrationInProgress) throw new AMTError();
 		registrationInProgress = true;	
 		try {
@@ -84,7 +84,7 @@ public class AMT {
 		}
 		catch (RegisterSig.PKIError err) {
 			registrationInProgress = false;
-			throw new PKIError();
+			throw new RegistrationError();
 		}
 		catch (NetworkError err) {
 			registrationInProgress = false;

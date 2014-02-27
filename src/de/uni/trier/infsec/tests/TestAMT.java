@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import de.uni.trier.infsec.functionalities.amt.AMT;
 import de.uni.trier.infsec.functionalities.amt.AMT.AMTError;
-import de.uni.trier.infsec.functionalities.amt.AMT.PKIError;
+import de.uni.trier.infsec.functionalities.amt.AMT.RegistrationError;
 import de.uni.trier.infsec.functionalities.amt.AMT.AuthenticatedMessage;
 import de.uni.trier.infsec.functionalities.amt.AMT.Sender;
 import de.uni.trier.infsec.functionalities.pki.PKI;
@@ -24,7 +24,7 @@ public class TestAMT extends TestCase {
 
 
 	@Test
-	public void testAMT() throws PKIError, NetworkError, Exception, AMTError {
+	public void testAMT() throws RegistrationError, NetworkError, Exception, AMTError {
 		String server="localhost";
 		int port=7777;
 		
@@ -47,7 +47,7 @@ public class TestAMT extends TestCase {
 		boolean error = false;
 		try {
 			AMT.registerSender(TEST_ID1);
-		} catch (PKIError e) {
+		} catch (RegistrationError e) {
 			error = true;
 		}
 		assertTrue("Duplicate registration did not lead to an error", error);

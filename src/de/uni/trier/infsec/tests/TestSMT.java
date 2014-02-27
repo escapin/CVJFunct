@@ -13,7 +13,7 @@ import de.uni.trier.infsec.functionalities.smt.SMT;
 import de.uni.trier.infsec.functionalities.smt.SMT.AuthenticatedMessage;
 //import de.uni.trier.infsec.functionalities.smt.SMT.Channel;
 import de.uni.trier.infsec.functionalities.smt.SMT.ConnectionError;
-import de.uni.trier.infsec.functionalities.smt.SMT.PKIError;
+import de.uni.trier.infsec.functionalities.smt.SMT.RegistrationError;
 import de.uni.trier.infsec.functionalities.smt.SMT.Receiver;
 import de.uni.trier.infsec.functionalities.smt.SMT.SMTError;
 import de.uni.trier.infsec.functionalities.smt.SMT.Sender;
@@ -28,7 +28,7 @@ public class TestSMT extends TestCase {
 
 
 	@Test
-	public void testSMT() throws PKIError, ConnectionError, Exception, SMTError {
+	public void testSMT() throws RegistrationError, ConnectionError, Exception, SMTError {
 		Process pr = null;
 		String server="localhost";
 		int port=7777;
@@ -56,7 +56,7 @@ public class TestSMT extends TestCase {
 			try {
 				//SMT.register(TEST_ID2);
 				registerSender(TEST_ID1); // 1:1 matching SenderObj:ID 
-			} catch (PKIError e) {
+			} catch (RegistrationError e) {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not lead to an error", error);
@@ -65,7 +65,7 @@ public class TestSMT extends TestCase {
 			try {
 				//SMT.register(TEST_ID1);
 				registerReceiver(TEST_ID2); // 1:1 matching ReceiverObj:ID 
-			} catch (PKIError e) {
+			} catch (RegistrationError e) {
 				error = true;
 			}
 			assertTrue("Duplicate registration did not lead to an error", error);
