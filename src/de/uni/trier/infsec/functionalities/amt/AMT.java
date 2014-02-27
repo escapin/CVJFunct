@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.amt;
 
 import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.functionalities.pki_nocorrupt.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.environment.AMTEnv;
@@ -18,6 +17,9 @@ public class AMT {
 
 	@SuppressWarnings("serial")
     static public class ConnectionError extends Exception {}
+
+	@SuppressWarnings("serial")
+    static public class RegistrationError extends Exception {}
 
 	/** 
 	 * Pair (message, sender_id).
@@ -37,7 +39,7 @@ public class AMT {
 	{
 		public final int id;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, PKIError, ConnectionError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws AMTError, RegistrationError, ConnectionError {
 			if (registrationInProgress) throw new AMTError();
 
 			// get from the simulator a message to be later sent out
@@ -58,7 +60,7 @@ public class AMT {
 		}
 	}
 	
-	public static Sender registerSender(int id) throws AMTError, PKIError, ConnectionError {
+	public static Sender registerSender(int id) throws AMTError, RegistrationError, ConnectionError {
 		if (registrationInProgress) throw new AMTError();
 		registrationInProgress = true;
 		// call the simulator, throw a network error if the simulator says so
@@ -67,7 +69,7 @@ public class AMT {
 		// check whether the id has not been claimed
 		if( registeredSenders.exists(id) ) {
 			registrationInProgress = false;
-			throw new PKIError();
+			throw new RegistrationError();
 		}
 		// create a new agent, add it to the list of registered agents, and return it
 		registeredSenders.add(id);

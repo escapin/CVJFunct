@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.smt;
 
 import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.functionalities.pki_nocorrupt.PKIError;
 import de.uni.trier.infsec.lib.network.NetworkClient;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.environment.SMTEnv;
@@ -18,6 +17,9 @@ public class SMT {
 
 	@SuppressWarnings("serial")
 	static public class ConnectionError extends Exception {}
+
+	@SuppressWarnings("serial")
+	static public class RegistrationError extends Exception {}
 
 	/** 
 	 * Pair (message, sender_id).
@@ -37,7 +39,7 @@ public class SMT {
 	{
 		public final int id;
 
-		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, PKIError, ConnectionError {
+		public void sendTo(byte[] message, int receiver_id, String server, int port) throws SMTError, RegistrationError, ConnectionError {
 			if (registrationInProgress) throw new SMTError();
 
 			// get from the simulator a message to be later sent out
@@ -45,7 +47,7 @@ public class SMT {
 			if (output_message == null) throw new ConnectionError();
 			// get the answer from PKI
 			if (!registeredReceivers.exists(receiver_id))
-				throw new PKIError();
+				throw new RegistrationError();
 			// log the sent message along with the sender and receiver identifiers			
 			log.add(new LogEntry(MessageTools.copyOf(message), id, receiver_id));
 			// sent out the message from the simulator
@@ -89,7 +91,7 @@ public class SMT {
 		}
 	}
 
-	public static Sender registerSender(int id) throws SMTError, PKIError, ConnectionError {
+	public static Sender registerSender(int id) throws SMTError, RegistrationError, ConnectionError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		// call the simulator, throw a network error if the simulator says so
@@ -98,7 +100,7 @@ public class SMT {
 		// check whether the id has not been claimed
 		if( registeredSenders.exists(id) ) {
 			registrationInProgress = false;
-			throw new PKIError();
+			throw new RegistrationError();
 		}
 		// create a new agent, add it to the list of registered agents, and return it
 		registeredSenders.add(id);
@@ -107,7 +109,7 @@ public class SMT {
 		return sender;
 	}
 
-	public static Receiver registerReceiver(int id) throws SMTError, PKIError, ConnectionError {
+	public static Receiver registerReceiver(int id) throws SMTError, RegistrationError, ConnectionError {
 		if (registrationInProgress) throw new SMTError();
 		registrationInProgress = true;
 		// call the simulator, throw a network error if the simulator says so
@@ -116,7 +118,7 @@ public class SMT {
 		// check whether the id has not been claimed
 		if( registeredReceivers.exists(id) ) {
 			registrationInProgress = false;
-			throw new PKIError();
+			throw new RegistrationError();
 		}
 		// create a new agent, add it to the list of registered agents, and return it
 		registeredReceivers.add(id);
