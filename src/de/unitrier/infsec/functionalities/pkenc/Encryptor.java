@@ -1,36 +1,33 @@
 package de.unitrier.infsec.functionalities.pkenc;
 
 import de.unitrier.infsec.lib.crypto.CryptoLib;
-import static de.unitrier.infsec.utils.MessageTools.copyOf;
-import static de.unitrier.infsec.utils.MessageTools.getZeroMessage;
-
-// THIS FUNCTIONALITY IS OBSOLETE. USE PKI INSTEAD.
+import de.unitrier.infsec.utils.MessageTools;
 
 /**
  * Ideal functionality for public-key encryption: Encryptor
  */
 public final class Encryptor {
 
-	private MessagePairList log;
 	private byte[] publKey;
+	private Decryptor.EncryptionLog log;
 	
-	Encryptor(MessagePairList mpl, byte[] publicKey) { 
-		log = mpl;		
+	Encryptor(byte[] publicKey, Decryptor.EncryptionLog log) { 
 		publKey = publicKey;
+		this.log=log;
 	}
 		
 	public byte[] getPublicKey() {
-		return copyOf(publKey);
+		return MessageTools.copyOf(publKey);
 	}
 	
 	public byte[] encrypt(byte[] message) {
-		byte[] messageCopy = copyOf(message);
+		byte[] messageCopy = MessageTools.copyOf(message);
 		byte[] randomCipher = null;
 		// keep asking the environment for the ciphertext, until a fresh one is given:
-		while( randomCipher==null || log.contains(randomCipher) ) {
-			randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publKey)));
+		while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
+			randomCipher = MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.getZeroMessage(message.length), MessageTools.copyOf(publKey)));
 		}
 		log.add(messageCopy, randomCipher);
-		return copyOf(randomCipher);
+		return MessageTools.copyOf(randomCipher);
 	}
 }
