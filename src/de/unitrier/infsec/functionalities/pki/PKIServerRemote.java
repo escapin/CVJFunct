@@ -20,7 +20,7 @@ public class PKIServerRemote implements PKIServer {
 	public void register(int id, byte[] domain, byte[] pubKey) throws PKI.Error, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServerApp.MSG_REGISTER;
-		request.nonce = CryptoLib.generateNonce();
+		request.nonce = CryptoLib.nextNonce();
 		request.domain = domain;
 		request.payload = concatenate(intToByteArray(id), pubKey);
 
@@ -67,7 +67,7 @@ public class PKIServerRemote implements PKIServer {
 	public byte[] getKey(int id, byte[] domain) throws PKI.Error, NetworkError {
 		PKIMessage request = new PKIMessage();
 		request.request = PKIServerApp.MSG_GET_KEY;
-		request.nonce = CryptoLib.generateNonce();
+		request.nonce = CryptoLib.nextNonce();
 		request.domain = domain;
 		request.payload = MessageTools.intToByteArray(id);
 

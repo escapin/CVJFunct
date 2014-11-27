@@ -240,7 +240,7 @@ public class CryptoLib {
 		return null;
 	}
 
-	public static byte[] generateNonce() {
+	public static byte[] nextNonce() {
 		SecureRandom random = new SecureRandom();
 		byte bytes[] = new byte[nonce_length];
 		random.nextBytes(bytes);
