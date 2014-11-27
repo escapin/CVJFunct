@@ -53,9 +53,9 @@ public class CryptoLib {
 			return seckey.getEncoded();
 
 		} catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-			e.printStackTrace();
-			return null;
+			// e.printStackTrace();
 		}
+		return null;
 	}
 
 	/**
@@ -78,9 +78,9 @@ public class CryptoLib {
 			byte[] encrypted =  c.doFinal(plaintext);
 			return MessageTools.raw_concatenate(iv_bytes, encrypted);
 		} catch (Exception e) { // (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException |  e)			
-			e.printStackTrace();
-			return null;
+			//e.printStackTrace();
 		}
+		return null;
 	}
 
 	/**
@@ -90,7 +90,13 @@ public class CryptoLib {
 	 */
 	public static byte[] symkey_decrypt(byte[] key, byte[] ciphertext) {
 		// wrap the key
-		final SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+		SecretKeySpec keySpec;
+		try {
+			keySpec = new SecretKeySpec(key, "AES");
+		} catch (Exception e) {
+			// e.printStackTrace();
+			return null;			
+		}
 		// recover the iv (first 12 bytes of the ciphertext)
 		if (ciphertext.length < 12) return null;
 		IvParameterSpec iv = new IvParameterSpec(ciphertext, 0, 12); // parameters: bytes, offset, length
@@ -102,9 +108,9 @@ public class CryptoLib {
 		} catch (javax.crypto.BadPaddingException e) {
 			return null;  // mac check in GCM failed --- return bottom
 		} catch (Exception e) { // (NoSuchAlgorithmException | NoSuchProviderException	| NoSuchPaddingException |  e) {			
-			e.printStackTrace();
-			return null;
+			// e.printStackTrace();
 		}
+		return null;
 	}
 
 
@@ -113,7 +119,7 @@ public class CryptoLib {
 	 *
 	 * (Note there is a limit on the message length -- this is no hybrid encryption.)
 	 */
-	private static byte[] just_pke_encrypt(byte[] message, byte[] publicKey) {
+	public static byte[] just_pke_encrypt(byte[] message, byte[] publicKey) {
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
 			// for private keys use PKCS8EncodedKeySpec; for public keys use
@@ -127,12 +133,12 @@ public class CryptoLib {
 			return out;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		return null;
 	}
 
-	private static byte[] just_pke_decrypt(byte[] message, byte[] privKey) {
+	public static byte[] just_pke_decrypt(byte[] message, byte[] privKey) {
 		try {
 			KeyFactory kf = KeyFactory.getInstance("RSA", "BC");
 			// for private keys use PKCS8EncodedKeySpec; for public keys use
@@ -144,7 +150,7 @@ public class CryptoLib {
 			byte[] out = c.doFinal(message);
 			return out;
 		} catch (Exception e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		return null;
 	}
@@ -182,7 +188,7 @@ public class CryptoLib {
 			out.publicKey = pair.getPublic().getEncoded();
 			return out;
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return null;
 	}
@@ -200,9 +206,9 @@ public class CryptoLib {
 			signer.update(data);
 			return signer.sign();
 		} catch (NoSuchAlgorithmException | NoSuchProviderException | KeyException | SignatureException | InvalidKeySpecException e) {
-			System.out.println("Signature creation failed " + e.getLocalizedMessage());
-			return null;
+			//System.out.println("Signature creation failed " + e.getLocalizedMessage());
 		}
+		return null;
 	}
 
 	public static boolean verify(byte[] data, byte[] signature, byte[] verificationKey) {
@@ -219,9 +225,9 @@ public class CryptoLib {
 			signer.update(data);
 			return signer.verify(signature);
 		} catch (NoSuchAlgorithmException | NoSuchProviderException | KeyException | SignatureException | InvalidKeySpecException e) {
-			System.out.println("Signature verification failed " + e.getLocalizedMessage());
-			return false;
+			//System.out.println("Signature verification failed " + e.getLocalizedMessage());
 		}
+		return false;
 	}
 
 	public static KeyPair generateSignatureKeyPair() {
@@ -235,7 +241,7 @@ public class CryptoLib {
 			out.publicKey = pair.getPublic().getEncoded();
 			return out;
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return null;
 	}

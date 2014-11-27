@@ -1,27 +1,28 @@
 package de.unitrier.infsec.functionalities.pkenc;
 
 import de.unitrier.infsec.lib.crypto.CryptoLib;
-
-//THIS FUNCTIONALITY IS OBSOLETE. USE PKI INSTEAD.
+import static de.unitrier.infsec.utils.MessageTools.copyOf;
 
 /**
  * Real functionality for public-key encryption: Encryptor
  */
 public final class Encryptor {
 
-	private byte[] publKey = null;
+	private byte[] encryptionKey = null;
 	
 	// Note that this constructor is not public in the ideal functionality. 
-	public Encryptor(byte[] publicKey) { 
-		publKey = publicKey;
+	public Encryptor(byte[] encryptionKey) { 
+		this.encryptionKey = encryptionKey;
 	}
 		
-	public byte[] getPublicKey() {
-		return publKey;
+	public byte[] encrypt(byte[] message) {
+		return CryptoLib.pke_encrypt(copyOf(message), copyOf(encryptionKey));
 	}
 	
-	public byte[] encrypt(byte[] message) {
-		return CryptoLib.pke_encrypt(message, publKey);
+	public byte[] getPublicKey() {
+		return copyOf(encryptionKey);
 	}
+	
+	
 	
 }
