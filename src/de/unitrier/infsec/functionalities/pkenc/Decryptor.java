@@ -17,15 +17,9 @@ public final class Decryptor {
 
 	public Decryptor() {
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
-<<<<<<< HEAD
 		publicKey = MessageTools.copyOf(keypair.publicKey);  
 		privateKey = MessageTools.copyOf(keypair.privateKey); 
 		log = new EncryptionLog();
-=======
-		publKey = MessageTools.copyOf(keypair.publicKey);  
-		privKey = MessageTools.copyOf(keypair.privateKey);
-		this.log = new EncryptionLog();
->>>>>>> f790154ca3f53118bb30dbcbd74d3758f9e6809b
 	}
 
 	
