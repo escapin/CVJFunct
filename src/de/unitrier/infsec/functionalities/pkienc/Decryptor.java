@@ -14,9 +14,9 @@ public class Decryptor {
 
 	public Decryptor() {
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
-		this.privateKey = copyOf(keypair.privateKey);
-		this.publicKey = copyOf(keypair.publicKey);
-		this.log = new EncryptionLog();
+		privateKey = copyOf(keypair.privateKey);
+		publicKey = copyOf(keypair.publicKey);
+		log = new EncryptionLog();
 	}
 
 	/** "Decrypts" a message by, first trying to find in in the log (and returning
@@ -68,5 +68,4 @@ public class Decryptor {
 			return lookup(ciphertext) != null;
 		}
 	}
-
 }
