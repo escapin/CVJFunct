@@ -1,8 +1,7 @@
 package de.unitrier.infsec.functionalities.pkenc;
 
-import static de.unitrier.infsec.utils.MessageTools.copyOf;
-import de.unitrier.infsec.lib.crypto.CryptoLib;
 import de.unitrier.infsec.utils.MessageTools;
+import de.unitrier.infsec.lib.crypto.CryptoLib;
 
 /**
  * Ideal functionality for public-key encryption: Encryptor
@@ -27,7 +26,7 @@ public final class Encryptor {
 		while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
 			randomCipher = MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.getZeroMessage(message.length), MessageTools.copyOf(publicKey)));
 		}
-		log.add(copyOf(message), randomCipher);
-		return copyOf(randomCipher);
+		log.add(MessageTools.copyOf(message), randomCipher);
+		return MessageTools.copyOf(randomCipher);
 	}
 }

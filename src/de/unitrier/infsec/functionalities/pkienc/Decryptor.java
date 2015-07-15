@@ -1,9 +1,9 @@
 package de.unitrier.infsec.functionalities.pkienc;
 
-import static de.unitrier.infsec.utils.MessageTools.copyOf;
+import de.unitrier.infsec.utils.MessageTools;
 import de.unitrier.infsec.lib.crypto.CryptoLib;
 import de.unitrier.infsec.lib.crypto.KeyPair;
-import de.unitrier.infsec.utils.MessageTools;
+
 
 
 /** An object encapsulating the private and public keys of some party. */
@@ -14,19 +14,19 @@ public class Decryptor {
 
 	public Decryptor() {
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
-		privateKey = copyOf(keypair.privateKey);
-		publicKey = copyOf(keypair.publicKey);
+		privateKey = MessageTools.copyOf(keypair.privateKey);
+		publicKey = MessageTools.copyOf(keypair.publicKey);
 		log = new EncryptionLog();
 	}
 
 	/** "Decrypts" a message by, first trying to find in in the log (and returning
 	 *   the related plaintext) and, only if this fails, by using real decryption. */
 	public byte[] decrypt(byte[] message) {
-		byte[] messageCopy = copyOf(message);
+		byte[] messageCopy = MessageTools.copyOf(message);
 		if (!log.containsCiphertext(messageCopy)) {
-			return copyOf( CryptoLib.pke_decrypt(copyOf(privateKey), messageCopy) );
+			return MessageTools.copyOf( CryptoLib.pke_decrypt(MessageTools.copyOf(privateKey), messageCopy) );
 		} else {
-			return copyOf( log.lookup(messageCopy) );
+			return MessageTools.copyOf( log.lookup(messageCopy) );
 		}
 	}
 
