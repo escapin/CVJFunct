@@ -69,9 +69,9 @@ public class Environment {
     	return (long) x2 << 32 | x1 & 0xFFFFFFFFL;
     }
 		
-    public static void untrustedOutputLong(long x){
-    	untrustedOutput((int) x); // first 32 bit
-    	untrustedOutput((int) x >> 32); // last 32 bits
+    public static void untrustedOutputLong(long y){
+    	untrustedOutput((int) y); // first 32 bit
+    	untrustedOutput((int) y >> 32); // last 32 bits
     }
     
 
