@@ -61,7 +61,21 @@ public class Environment {
 			throw new Error();  // abort
 		}
 	}
-	
+
+    public static long untrustedInputLong(){
+    	int x1=untrustedInput(); // first 32 bits
+    	int x2=untrustedInput(); // last 32 bits
+    	
+    	return (long) x2 << 32 | x1 & 0xFFFFFFFFL;
+    }
+		
+    public static void untrustedOutputLong(long x){
+    	untrustedOutput((int) x); // first 32 bit
+    	untrustedOutput((int) x >> 32); // last 32 bits
+    }
+    
+
+    
     public static byte[] untrustedInputMessage() {
 		int len = untrustedInput();
 		if (len<0) return null;
