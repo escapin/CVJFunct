@@ -1,4 +1,4 @@
-# A collection of the most common cryptographic operations
+# A collection of cryptographic operations
 
 1. Publick Key Encryption with a Public Key Infrastructure
 2. Digital Signature with a Public Key Infrastructure
