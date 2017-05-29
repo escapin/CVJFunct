@@ -18,18 +18,15 @@
 * Apache Ant (tested with `apache-ant-1.8.4.jar`)
 
 
-The peculiarity of this implementation is that, for each cryptographic
-functionality, there exists a corresponding ideal version (see branch
-`ideal`) in such a way that each ideal functionality *realizes* the
-corresponding real functionality in the spirit of the simulation-based
-security.
-See, for instance:
-  - Canetti R.,
-    Universally Composable Security : A New Paradigm for Cryptographic Protocols
-    (https://eprint.iacr.org/2000/067)
-  - Kuesters R. and Tuengerthal M.,
-    The IITM Model: a Simple and Expressive Model for Universal Composability
-    (https://eprint.iacr.org/2013/025)
+The most interesting feature of this implementation is that, for each
+cryptographic functionality, there exists a corresponding ideal version
+(see branch `ideal`) in such a way that each ideal functionality
+*realizes* the corresponding real functionality in the spirit of the
+simulation-based security.  See, for instance: - Canetti R., Universally
+Composable Security : A New Paradigm for Cryptographic Protocols
+(https://eprint.iacr.org/2000/067) - Kuesters R. and Tuengerthal M., The
+IITM Model: a Simple and Expressive Model for Universal Composability
+(https://eprint.iacr.org/2013/025)
 
 Formal proofs of the realization results for these functionalities can be found in:
   - Kuesters R. and Scapin E. and Truderung T. and Graf J.,
