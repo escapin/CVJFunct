@@ -18,11 +18,7 @@
 * Apache Ant (tested with `apache-ant-1.8.4.jar`)
 
 
-The most interesting feature of this implementation is that, for each
-cryptographic functionality, there exists a corresponding ideal version
-(see branch `ideal`) in such a way that each ideal functionality
-*realizes* the corresponding real functionality in the spirit of the
-simulation-based security.  See, for instance:
+The most interesting feature of this implementation is that, for each (real) cryptographic functionality, there exists a corresponding ideal version (see branch `ideal`) and that the real *realizes* the ideal in the spirit of the simulation-based security.  See, for instance:
 - Canetti R.,
   Universally Composable Security: A New Paradigm for Cryptographic Protocols
   (https://eprint.iacr.org/2000/067)
