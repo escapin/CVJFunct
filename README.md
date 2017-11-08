@@ -38,9 +38,12 @@ same system when the ideal functionalities are replaced by the
 corresponding real cryptographic operations.
 
 
-Realization results of these functionalities can be found in:
+A more detailed explanation of these notions and of the CVJ Framework as
+well as the realization results of these functionalities can be found
+in:
 
 *Kuesters R. and Scapin E. and Truderung T. and Graf J.*,
+
 **[Extending and Applying a Framework for the Cryptographic Verification of Java Programs][2]**
 
 
