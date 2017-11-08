@@ -1,9 +1,10 @@
-# A collection of cryptographic operations
+# A library of cryptographic operations
 
 1. Publick Key Encryption with a Public Key Infrastructure
 2. Digital Signature with a Public Key Infrastructure
 3. Private Symmetric Encryption
 4. Nonce Generation
+
 5. Authenticated Message Transmission: an authenticated channel to a server
 6. Secure Authenticated Message Transmission: an encrypted and authenticated channel to a server
 
@@ -38,12 +39,11 @@ same system when the ideal functionalities are replaced by the
 corresponding real cryptographic operations.
 
 
-A more detailed explanation of these notions and of the CVJ Framework as
-well as the realization results of these functionalities can be found
-in:
+A more more detailed explanation of these notions and of the CVJ
+Framework and for all the realization results of these functionalities
+can be found in:
 
 *Kuesters R. and Scapin E. and Truderung T. and Graf J.*,
-
 **[Extending and Applying a Framework for the Cryptographic Verification of Java Programs][2]**
 
 
