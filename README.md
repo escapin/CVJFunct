@@ -38,7 +38,7 @@ each real functionality **realizes** the corresponding ideal
 functionality in the spirit of simulation-based security/universal
 composability (see, e.g., [[Can00][4]],[[KT13][3]]).
 
-By establishing *noninterference* properties of a Java system running
+By establishing *noninterference* properties of a Java system using
 these ideal functionalities, by the results of **[the CVJ
 Framework][1]** (a framework for the Cryptographic Verification of Java
 programs) we obtain strong *cryptographic indistinguishability*
