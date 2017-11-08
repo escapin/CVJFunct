@@ -1,2 +1,0 @@
-git archive master -o eVotingRS3.zip  src lib manual README.txt build.xml
-# git archive master -o eVotingRS3-`git describe`.zip  src lib manual README.txt build.xml

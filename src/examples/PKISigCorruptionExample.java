@@ -1,9 +1,9 @@
 package examples;
 
-import functionalities.pkisig.RegisterSig;
-import functionalities.pkisig.Signer;
-import functionalities.pkisig.UncorruptedVerifier;
-import functionalities.pkisig.Verifier;
+import funct.pkisig.RegisterSig;
+import funct.pkisig.Signer;
+import funct.pkisig.UncorruptedVerifier;
+import funct.pkisig.Verifier;
 import lib.network.NetworkError;
 
 public class PKISigCorruptionExample {

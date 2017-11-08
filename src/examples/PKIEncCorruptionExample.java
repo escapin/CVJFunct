@@ -1,9 +1,9 @@
 package examples;
 
-import functionalities.pkienc.Decryptor;
-import functionalities.pkienc.Encryptor;
-import functionalities.pkienc.RegisterEnc;
-import functionalities.pkienc.UncorruptedEncryptor;
+import funct.pkienc.Decryptor;
+import funct.pkienc.Encryptor;
+import funct.pkienc.RegisterEnc;
+import funct.pkienc.UncorruptedEncryptor;
 import lib.network.NetworkError;
 
 public class PKIEncCorruptionExample {
