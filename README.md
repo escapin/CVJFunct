@@ -1,24 +1,30 @@
 # A library of cryptographic operations
 
-1. Publick Key Encryption with a Public Key Infrastructure
-2. Digital Signature with a Public Key Infrastructure
+The library provides both real implementations and idealizations of
+the following cryptographic operations:
+
+1. Public Key Encryption with a Public Key Infrastructure
+2. Digital Signatures with a Public Key Infrastructure
 3. Private Symmetric Encryption
 4. Nonce Generation
-
 5. Authenticated Message Transmission: an authenticated channel to a server
 6. Secure Authenticated Message Transmission: an encrypted and authenticated channel to a server
+
+
+The real operations can be used for actually implementing Java
+systems. Instead, idealizations allow for tool-assisted security
+analysis of these systems. See below for detalis.
 
 
 ## Dependencies
 
 * Java JDK (tested with both `openjdk-7` and `oraclejdk-8`).
-* Java Cryptography Extension (only for oraclejdk).
+* Java Cryptography Extension (only needed for oraclejdk).
 * Bouncy Castle Cryptographic API and Test Classes (tested with `{bcprov | bctest}-jdk15on-147.jar`)
 * SQLJet (tested with `sqljet-1.1.6.jar`)
 * JUnit (tested with `junit-4.8.2.jar`)
 * JavaParser (tested with `javaparser-1.0.8.jar`)
 * Apache Ant (tested with `apache-ant-1.8.4.jar`)
-
 
 
 
