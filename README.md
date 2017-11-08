@@ -3,23 +3,24 @@
 The library provides both real implementations and idealizations of
 the following cryptographic operations:
 
-1. Public Key Encryption with a Public Key Infrastructure
-2. Digital Signatures with a Public Key Infrastructure
-3. Private Symmetric Encryption
-4. Nonce Generation
-5. Authenticated Message Transmission: an authenticated channel to a server
-6. Secure Authenticated Message Transmission: an encrypted and authenticated channel to a server
+
+1. Public Key Encryption with a Public Key Infrastructure;
+2. Digital Signatures with a Public Key Infrastructure;
+3. Private Symmetric Encryption;
+4. Nonce Generation;
+5. Authenticated Message Transmission: an authenticated channel to a server;
+6. Secure Authenticated Message Transmission: an encrypted and authenticated channel to a server.
 
 
 The real operations can be used for actually implementing Java
-systems. Instead, idealizations allow for tool-assisted security
-analysis of these systems. See below for detalis.
+systems. Instead, idealizations allow for tool-assisted analysis of the
+security of these systems. See below for detalis.
 
 
 ## Dependencies
 
 * Java JDK (tested with both `openjdk-7` and `oraclejdk-8`).
-* Java Cryptography Extension (only needed for oraclejdk).
+* Java Cryptography Extension (only needed for `oraclejdk`).
 * Bouncy Castle Cryptographic API and Test Classes (tested with `{bcprov | bctest}-jdk15on-147.jar`)
 * SQLJet (tested with `sqljet-1.1.6.jar`)
 * JUnit (tested with `junit-4.8.2.jar`)
@@ -32,9 +33,9 @@ analysis of these systems. See below for detalis.
 
 For each *real functionality* (a cryptographic operation in the branch
 `real`) there exists a corresponding *ideal functionality* (an idealized
-version of the cryptographic operation in the branch `ideal`) so that
+version of this cryptographic operation in the branch `ideal`) so that
 each real functionality **realizes** the corresponding ideal
-functionality in the spirit of the simulation-based security/universal
+functionality in the spirit of simulation-based security/universal
 composability (see, e.g., [[Can00][4]],[[KT13][3]]).
 
 By establishing *noninterference* properties of a Java system running
@@ -50,7 +51,7 @@ well as all the realization results of these functionalities can be
 found in:
 
 *Kuesters R. and Scapin E. and Truderung T. and Graf J.*,<br>
-**[Extending and Applying a Framework for the Cryptographic Verification of Java Programs][2]**
+**[Extending and Applying a Framework for the Cryptographic Verification of Java Programs][2]**.
 
 
 
