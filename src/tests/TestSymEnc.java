@@ -4,7 +4,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import functionalities.symenc.SymEnc;
+import funct.symenc.SymEnc;
 
 import java.util.Arrays;
 

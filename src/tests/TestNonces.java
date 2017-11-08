@@ -4,7 +4,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import functionalities.nonce.NonceGen;
+import funct.nonce.NonceGen;
 
 import java.util.Arrays;
 

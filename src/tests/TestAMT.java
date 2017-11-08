@@ -8,13 +8,13 @@ import utils.Utilities;
 
 import org.junit.Test;
 
-import functionalities.amt.AMT;
-import functionalities.amt.AMT.AMTError;
-import functionalities.amt.AMT.AuthenticatedMessage;
-import functionalities.amt.AMT.RegistrationError;
-import functionalities.amt.AMT.Sender;
-import functionalities.pki.PKI;
-import functionalities.pki.PKIServerCore;
+import funct.amt.AMT;
+import funct.amt.AMT.AMTError;
+import funct.amt.AMT.AuthenticatedMessage;
+import funct.amt.AMT.RegistrationError;
+import funct.amt.AMT.Sender;
+import funct.pki.PKI;
+import funct.pki.PKIServerCore;
 
 
 public class TestAMT extends TestCase {

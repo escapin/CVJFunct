@@ -1,7 +1,7 @@
 package tests;
 
-import static functionalities.smt.SMT.registerReceiver;
-import static functionalities.smt.SMT.registerSender;
+import static funct.smt.SMT.registerReceiver;
+import static funct.smt.SMT.registerSender;
 
 import java.io.File;
 
@@ -10,15 +10,15 @@ import utils.Utilities;
 
 import org.junit.Test;
 
-import functionalities.pki.PKI;
-import functionalities.pki.PKIServerCore;
-import functionalities.smt.SMT;
-import functionalities.smt.SMT.AuthenticatedMessage;
-import functionalities.smt.SMT.ConnectionError;
-import functionalities.smt.SMT.Receiver;
-import functionalities.smt.SMT.RegistrationError;
-import functionalities.smt.SMT.SMTError;
-import functionalities.smt.SMT.Sender;
+import funct.pki.PKI;
+import funct.pki.PKIServerCore;
+import funct.smt.SMT;
+import funct.smt.SMT.AuthenticatedMessage;
+import funct.smt.SMT.ConnectionError;
+import funct.smt.SMT.Receiver;
+import funct.smt.SMT.RegistrationError;
+import funct.smt.SMT.SMTError;
+import funct.smt.SMT.Sender;
 
 public class TestSMT extends TestCase {
 	public static int TEST_ID1 = 42424242;

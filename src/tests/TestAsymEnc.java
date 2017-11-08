@@ -7,10 +7,10 @@ import utils.Utilities;
 
 import org.junit.Test;
 
-import functionalities.digsig.Signer;
-import functionalities.digsig.Verifier;
-import functionalities.pkenc.Decryptor;
-import functionalities.pkenc.Encryptor;
+import funct.digsig.Signer;
+import funct.digsig.Verifier;
+import funct.pkenc.Decryptor;
+import funct.pkenc.Encryptor;
 
 public class TestAsymEnc extends TestCase {
 

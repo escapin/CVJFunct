@@ -11,15 +11,15 @@ import utils.Utilities;
 
 import org.junit.Test;
 
-import functionalities.pki.PKI;
-import functionalities.pki.PKIServerCore;
-import functionalities.pkienc.Decryptor;
-import functionalities.pkienc.Encryptor;
-import functionalities.pkienc.RegisterEnc;
-import functionalities.pkisig.RegisterSig;
-import functionalities.pkisig.Signer;
-import functionalities.pkisig.Verifier;
-import functionalities.smt.SMT;
+import funct.pki.PKI;
+import funct.pki.PKIServerCore;
+import funct.pkienc.Decryptor;
+import funct.pkienc.Encryptor;
+import funct.pkienc.RegisterEnc;
+import funct.pkisig.RegisterSig;
+import funct.pkisig.Signer;
+import funct.pkisig.Verifier;
+import funct.smt.SMT;
 
 public class TestPKI extends TestCase {
 
