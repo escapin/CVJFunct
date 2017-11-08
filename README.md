@@ -19,13 +19,13 @@ security of these systems. See below for detalis.
 
 ## Dependencies
 
-* Java JDK (tested with both `openjdk-7` and `oraclejdk-8`).
-* Java Cryptography Extension (only needed for `oraclejdk`).
-* Bouncy Castle Cryptographic API and Test Classes (tested with `{bcprov | bctest}-jdk15on-147.jar`)
-* SQLJet (tested with `sqljet-1.1.6.jar`)
-* JUnit (tested with `junit-4.8.2.jar`)
-* JavaParser (tested with `javaparser-1.0.8.jar`)
-* Apache Ant (tested with `apache-ant-1.8.4.jar`)
+* Java JDK (tested with both `openjdk-7` and `oraclejdk-8`);
+* Java Cryptography Extension (only needed for `oraclejdk`);
+* Bouncy Castle Cryptographic API and Test Classes (tested with `{bcprov | bctest}-jdk15on-147.jar`);
+* SQLJet (tested with `sqljet-1.1.6.jar`);
+* JUnit (tested with `junit-4.8.2.jar`);
+* JavaParser (tested with `javaparser-1.0.8.jar`);
+* Apache Ant (tested with `apache-ant-1.8.4.jar`).
 
 
 
