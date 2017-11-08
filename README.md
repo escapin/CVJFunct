@@ -25,7 +25,7 @@
 # The Science Behind It
 
 For each *real functionality* (a cryptographic operation in the branch
-`real`) there exists a corresponding *ideal functionality* (an "idealized"
+`real`) there exists a corresponding *ideal functionality* (an idealized
 version of the cryptographic operation in the branch `ideal`) so that
 each real functionality **realizes** the corresponding ideal
 functionality in the spirit of the simulation-based security/universal
