@@ -46,7 +46,6 @@ The underlying
 * Apache Ant (tested with `apache-ant-1.8.4.jar`)
 
 
-
 [1] https://eprint.iacr.org/2012/153 
 [2] https://eprint.iacr.org/2014/038 
 [3] https://eprint.iacr.org/2013/025
