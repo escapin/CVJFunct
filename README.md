@@ -31,19 +31,19 @@ cryptographic operation in the branch `ideal`) so that each ideal
 functionality **realizes** the corresponding real functionality in the
 spirit of the simulation-based security/universal composability ([Can00][4],[KT13][3]).
 
-By establishing *noninterference properties* of a Java system running
+By establishing *noninterference* properties of a Java system running
 these ideal functionalities, by the results of **[the CVJ
 Framework][1]** (a framework for the Cryptographic Verification of Java
-programs) whe obtain strong *cryptographic indistinguishability* of the
-same system when the ideal functionalities are replaced by the
-corresponding real cryptographic operations.
+programs) we obtain strong *cryptographic indistinguishability*
+properties of the same system when the ideal functionalities are
+replaced by the corresponding real cryptographic operations.
 
 
 A more more detailed explanation of these notions and of the CVJ
-Framework and for all the realization results of these functionalities
-can be found in:
+Framework as well as all the realization results of these
+functionalities can be found in:
 
-*Kuesters R. and Scapin E. and Truderung T. and Graf J.*,
+*Kuesters R. and Scapin E. and Truderung T. and Graf J.*,<br>
 **[Extending and Applying a Framework for the Cryptographic Verification of Java Programs][2]**
 
 
