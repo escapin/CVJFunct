@@ -32,12 +32,13 @@ spirit of the simulation-based security/universal composability ([Can00][4],[KT1
 
 By establishing *noninterference properties* of a Java system running
 these ideal functionalities, by the results of **[the CVJ
-Framework][1]** whe obtain strong *cryptographic indistinguishability*
-of the same system when the ideal functionalities are replaced by the
+Framework][1]** (a framework for the Cryptographic Verification of Java
+programs) whe obtain strong *cryptographic indistinguishability* of the
+same system when the ideal functionalities are replaced by the
 corresponding real cryptographic operations.
 
-Realization results of these functionalities can be found in:
 
+Realization results of these functionalities can be found in:
 
 *Kuesters R. and Scapin E. and Truderung T. and Graf J.*,
 **[Extending and Applying a Framework for the Cryptographic Verification of Java Programs][2]**
