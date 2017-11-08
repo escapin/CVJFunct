@@ -29,7 +29,7 @@ For each *real functionality* (a cryptographic operation in the branch
 cryptographic operation in the branch `ideal`) so that each real
 functionality **realizes** the corresponding ideal functionality in the
 spirit of the simulation-based security/universal composability
-(see, e.g., [[Can00][4],[KT13][3]]).
+(see, e.g., [[Can00][4]],[[KT13][3]]).
 
 By establishing *noninterference* properties of a Java system running
 these ideal functionalities, by the results of **[the CVJ
