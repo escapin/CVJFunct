@@ -9,7 +9,6 @@
 6. Secure Authenticated Message Transmission: an encrypted and authenticated channel to a server
 
 
-
 ## Dependencies
 
 * Java JDK (tested with both `openjdk-7` and `oraclejdk-8`).
@@ -27,9 +26,10 @@
 
 For each *real functionality* (a cryptographic operation in the branch
 `real`) there exists a corresponding *ideal functionality* (a
-cryptographic operation in the branch `ideal`) so that each ideal
-functionality **realizes** the corresponding real functionality in the
-spirit of the simulation-based security/universal composability ([Can00][4],[KT13][3]).
+cryptographic operation in the branch `ideal`) so that each real
+functionality **realizes** the corresponding ideal functionality in the
+spirit of the simulation-based security/universal composability
+(see, e.g., [[Can00][4],[KT13][3]]).
 
 By establishing *noninterference* properties of a Java system running
 these ideal functionalities, by the results of **[the CVJ
