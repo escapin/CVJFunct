@@ -1,15 +1,15 @@
-# A library of Cryptographic Operations #
+# A library of cryptographic operations #
 
 The library provides both real implementations and idealizations of
 the following cryptographic operations:
 
 
-1. Public Key Encryption with a Public Key Infrastructure
-2. Digital Signatures with a Public Key Infrastructure
-3. Private Symmetric Encryption
-4. Nonce Generation
-5. Authenticated Message Transmission: an authenticated channel to a server
-6. Secure Authenticated Message Transmission: an encrypted and authenticated channel to a server
+1. Public Key Encryption with a Public Key Infrastructure.
+2. Digital Signatures with a Public Key Infrastructure.
+3. Private Symmetric Encryption.
+4. Nonce Generation.
+5. Authenticated Message Transmission: an authenticated channel to a server.
+6. Secure Authenticated Message Transmission: an encrypted and authenticated channel to a server.
 
 
 The real operations can be used for actually implementing Java
