@@ -27,11 +27,11 @@ security of these systems. See below for detalis.
 * JUnit (tested with `junit-4.8.2.jar`)
 * Apache Ant (tested with `ant-1.8.4.jar`)
 
-## How to
+## Usage
 
 - `make` downloads the libraries and compile the sources
 
-- `make clean` remove the souces
+- `make clean` removes the souces
 
 # The Science Behind It
 
