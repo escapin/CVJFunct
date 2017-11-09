@@ -1,4 +1,4 @@
-# A library of cryptographic operations #
+# A library of cryptographic operations 
 
 The library provides both real implementations and idealizations of
 the following cryptographic operations:
@@ -25,9 +25,13 @@ security of these systems. See below for detalis.
 * JavaParser (tested with `javaparser-1.0.8.jar`)
 * SQLJet (tested with `sqljet-1.1.6.jar`)
 * JUnit (tested with `junit-4.8.2.jar`)
-* Apache Ant (tested with `apache-ant-1.8.4.jar`)
+* Apache Ant (tested with `ant-1.8.4.jar`)
 
+## How to
 
+- `make` downloads the libraries and compile the sources
+
+- `make clean` remove the souces
 
 # The Science Behind It
 
