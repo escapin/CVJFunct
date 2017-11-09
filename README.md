@@ -1,4 +1,4 @@
-# A library of cryptographic operations
+# A library of Cryptographic Operations #
 
 The library provides both real implementations and idealizations of
 the following cryptographic operations:
@@ -39,8 +39,8 @@ functionality in the spirit of simulation-based security/universal
 composability (see, e.g., [[Can00][4]],[[KT13][3]]).
 
 By establishing *noninterference* properties of a Java system using
-these ideal functionalities, by the results of **[the CVJ
-Framework][1]** (a framework for the Cryptographic Verification of Java
+these ideal functionalities, by the results of *[the CVJ
+Framework][1]* (a framework for the Cryptographic Verification of Java
 programs) we obtain strong *cryptographic indistinguishability*
 properties of the same system when the ideal functionalities are
 replaced by the corresponding real cryptographic operations.
@@ -50,8 +50,7 @@ A more detailed explanation of these notions and of the CVJ Framework as
 well as all the realization results of these functionalities can be
 found in:
 
-*Kuesters R. and Scapin E. and Truderung T. and Graf J.*,<br>
-**[Extending and Applying a Framework for the Cryptographic Verification of Java Programs][2]**.
+*Kuesters R. and Scapin E. and Truderung T. and Graf J.*,<br>**[Extending and Applying a Framework for the Cryptographic Verification of Java Programs][2]**.
 
 
 
