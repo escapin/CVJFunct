@@ -27,7 +27,7 @@ security of these systems. See below for detalis.
 
 ## Usage
 
-- `make` downloads the libraries and compile the sources
+- `make` downloads the libraries and compiles the sources
 
 - `make clean` removes the souces
 
