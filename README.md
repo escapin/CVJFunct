@@ -50,7 +50,7 @@ corresponding real cryptographic operations.
 
 A more detailed explanation of these notions and of the CVJ Framework as
 well as all the realization results of these functionalities can be
-found in [KSTG14][2].
+found in [[KSTG14][2]].
 
 
 [1]: https://eprint.iacr.org/2012/153 
