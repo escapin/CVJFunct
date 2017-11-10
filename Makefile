@@ -1,4 +1,3 @@
-# java libraries: version
 BCPROV_t=jdk16
 BCPROV_v=1.46
 JAVA_PARSER=1.0.8
