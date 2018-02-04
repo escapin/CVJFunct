@@ -62,7 +62,7 @@ public class PKIServerApp {
 			echo("Request is: Get Key");			
 			byte[] key;
 			try {
-				key = PKIServerCore.pki_getKey(MessageTools.byteArrayToInt(request.payload), request.domain);
+				key = PKIServerLocal.pki_getKey(MessageTools.byteArrayToInt(request.payload), request.domain);
 				PKIMessage out = new PKIMessage();
 				out.nonce = request.nonce;
 				out.payload = MessageTools.concatenate(request.payload, key);
@@ -88,7 +88,7 @@ public class PKIServerApp {
 			byte[] id  = MessageTools.first(request.payload);
 			byte[] key = MessageTools.second(request.payload);
 			try {
-				PKIServerCore.pki_register(MessageTools.byteArrayToInt(id), request.domain, key);
+				PKIServerLocal.pki_register(MessageTools.byteArrayToInt(id), request.domain, key);
 				PKIMessage out = new PKIMessage();
 				out.payload = MessageTools.concatenate(id, key);
 				out.nonce = request.nonce;

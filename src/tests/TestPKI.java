@@ -12,7 +12,7 @@ import utils.Utilities;
 import org.junit.Test;
 
 import funct.pki.PKI;
-import funct.pki.PKIServerCore;
+import funct.pki.PKIServerLocal;
 import funct.pkienc.Decryptor;
 import funct.pkienc.Encryptor;
 import funct.pkienc.RegisterEnc;
@@ -136,7 +136,7 @@ public class TestPKI extends TestCase {
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
-		File f = new File(PKIServerCore.DEFAULT_DATABASE);
+		File f = new File(PKIServerLocal.DEFAULT_DATABASE);
 		f.delete();
 	}
 

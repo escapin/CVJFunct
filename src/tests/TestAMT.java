@@ -14,7 +14,7 @@ import funct.amt.AMT.AuthenticatedMessage;
 import funct.amt.AMT.RegistrationError;
 import funct.amt.AMT.Sender;
 import funct.pki.PKI;
-import funct.pki.PKIServerCore;
+import funct.pki.PKIServerLocal;
 
 
 public class TestAMT extends TestCase {
@@ -56,7 +56,7 @@ public class TestAMT extends TestCase {
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
-		File f = new File(PKIServerCore.DEFAULT_DATABASE);
+		File f = new File(PKIServerLocal.DEFAULT_DATABASE);
 		f.delete();
 	}
 

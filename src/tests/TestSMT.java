@@ -11,7 +11,7 @@ import utils.Utilities;
 import org.junit.Test;
 
 import funct.pki.PKI;
-import funct.pki.PKIServerCore;
+import funct.pki.PKIServerLocal;
 import funct.smt.SMT;
 import funct.smt.SMT.AuthenticatedMessage;
 import funct.smt.SMT.ConnectionError;
@@ -89,7 +89,7 @@ public class TestSMT extends TestCase {
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
-		File f = new File(PKIServerCore.DEFAULT_DATABASE);
+		File f = new File(PKIServerLocal.DEFAULT_DATABASE);
 		f.delete();
 	}
 

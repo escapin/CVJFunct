@@ -22,7 +22,7 @@ public class PKI {
 	}
 
 	public static void useLocalMode() {
-		pki = new PKIServerCore();
+		pki = new PKIServerLocal();
 		System.out.println("Working in local mode");
 	}
 

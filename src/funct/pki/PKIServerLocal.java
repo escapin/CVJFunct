@@ -11,7 +11,7 @@ import org.tmatesoft.sqljet.core.table.SqlJetDb;
 import lib.network.NetworkError;
 import utils.Utilities;
 
-public class PKIServerCore implements PKIServer {
+public class PKIServerLocal implements PKIServer {
 	
 	public static final String DEFAULT_DATABASE = System.getProperty("java.io.tmpdir") + File.separator + "PKI_server.db";
 	private static final String DB_TABLE_NAME_PKE = "PKI";
