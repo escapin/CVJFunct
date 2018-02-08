@@ -33,9 +33,9 @@ public class PKIServerLocal implements PKIServer {
 	}
 
 	/**
-	 * Registers the key and stores it into a local filebased database.
+	 * Registers the key and stores it into a local database.
 	 * True, if key was successfully stored,
-	 * False, in case key is already registered or an error occured. 
+	 * False, in case key is already registered or an error occurred. 
 	 */
 	protected static void pki_register(int id, byte[] domain, byte[] pubKey) throws PKI.Error, NetworkError {
 		if (!dbInitialized) initDB();
