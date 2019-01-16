@@ -11,7 +11,7 @@ the following cryptographic operations:
 6. Secure Authenticated Message Transmission: an encrypted and authenticated channel to a server.
 
 The real operations can be used for actually implementing Java
-systems. Instead, idealizations allow for tool-assisted analysis of the
+systems. Instead, idealizations allow for tool-assisted analyses of the
 security of these systems. See below for detalis.
 
 
